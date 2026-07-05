@@ -746,20 +746,6 @@
 
       <button class="control-btn" id="globeBtn" title="Globe">🌐</button>
 
-      <select class="control-btn theme-select" id="mineStyleSelect" title="Select Flag Asset Style" style="width: auto; padding: 4px 8px; margin-left: 6px;">
-        <option value="1">Golf Flag (Animated)</option>
-        <option value="2">Gimbal Orb</option>
-        <option value="3">Reactor Core</option>
-        <option value="4">Satellite</option>
-        <option value="5">Steampunk Can</option>
-        <option value="6">Emerald Crystal</option>
-        <option value="7">Bio Canister</option>
-        <option value="8">Pyramid</option>
-        <option value="9">Spiked Classic</option>
-        <option value="10">EMP Core</option>
-        <option value="11">Nuclear Beacon</option>
-      </select>
-
     </div>
 
     <div class="ext-section">
@@ -1530,8 +1516,7 @@
     function createNavalMineMesh() {
       const mineGroup = new THREE.Group();
       
-      const selectEl = document.getElementById('mineStyleSelect');
-      const style = selectEl ? parseInt(selectEl.value, 10) : 1;
+      const style = 1;
 
       // Style 1: GOLF FLAG (GLTF LOADED OR PROCEDURAL FALLBACK)
       if (style === 1) {
@@ -4246,9 +4231,7 @@
       e.target.textContent = soundEnabled ? '🔊' : '🔇';
     });
 
-    document.getElementById('mineStyleSelect').addEventListener('change', () => {
-      updateAllFlagMeshes();
-    });
+
 
     function updateAllFlagMeshes() {
       state.tiles.forEach((t, i) => {
