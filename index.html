@@ -1403,8 +1403,10 @@
     function polygonToMesh(tileIndexOrPoly, mat, innerRadius = 0.97, outerRadius = 1.0) {
       const g = createPrismGeometry(tileIndexOrPoly, innerRadius, outerRadius);
       const mesh = new THREE.Mesh(g, mat);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
+      // Shadows disabled on tiles: 2000+ individual shadow draw calls are the primary FPS bottleneck
+      // Tile-to-tile self-shadowing is not visually meaningful on a tightly-packed sphere
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
       return mesh;
     }
 
@@ -2134,18 +2136,9 @@
     centerLight.decay = 2; // Decay rate
     scene.add(centerLight);
     
-    // Enable shadows for realistic 3D tile lighting
-    dir.castShadow = true;
-    dir.shadow.mapSize.width = 2048;
-    dir.shadow.mapSize.height = 2048;
-    dir.shadow.camera.near = 0.5;
-    dir.shadow.camera.far = 10;
-    dir.shadow.radius = 4;
-    dir.shadow.bias = -0.0015;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
-    renderer.shadowMap.autoUpdate = false;
-    renderer.shadowMap.needsUpdate = true;
+    // Shadows only for golf flags (not the 2000+ tiles)
+    dir.castShadow = false;
+    renderer.shadowMap.enabled = false;
 
 
 
@@ -5508,16 +5501,12 @@
       if (shouldRotate || hasVelocity) {
         // Apply rotation based on current velocity
         if (hasVelocity && shouldRotate) {
-          // Get camera's local axes in world space (only when actually rotating)
-          // Note: updateMatrixWorld is expensive but necessary for correct rotation
-          camera.updateMatrixWorld();
-          const right = new THREE.Vector3();
-          const up = new THREE.Vector3();
-          camera.matrixWorld.extractBasis(right, up, new THREE.Vector3());
+          // Reuse pre-allocated scratch vectors to avoid GC pressure
+          _lRight.set(0,0,0); _lUp.set(0,0,0); _lNormal.set(0,0,0);
+          camera.matrixWorld.extractBasis(_lRight, _lUp, _lNormal);
           
-          const rotY = new THREE.Quaternion().setFromAxisAngle(up, rotationVelocity.x);
-          const rotX = new THREE.Quaternion().setFromAxisAngle(right, rotationVelocity.y);
-          const combinedRot = rotY.multiply(rotX);
+          const rotY = tempInvQuat.setFromAxisAngle(_lUp, rotationVelocity.x);
+          const combinedRot = new THREE.Quaternion().setFromAxisAngle(_lRight, rotationVelocity.y).premultiply(rotY);
           
           tileGroup.quaternion.premultiply(combinedRot);
           wireGroup.quaternion.premultiply(combinedRot);
@@ -5705,11 +5694,6 @@
           }
         });
         forceLabelUpdate = false;
-        
-        // Trigger shadow map updates on-demand when rotating/zooming, or throttle to 15 FPS (every 4th frame) to save GPU resources
-        if (shouldRotate || hasVelocity || (Math.abs(camera.zoom - lastCameraZoom) > 0.001) || frameCount % 4 === 0) {
-          renderer.shadowMap.needsUpdate = true;
-        }
       }
       
       renderer.render(scene, camera); 
