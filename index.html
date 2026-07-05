@@ -1471,6 +1471,65 @@
       return mesh;
     }
 
+    function createNavalMineMesh() {
+      const mineGroup = new THREE.Group();
+      
+      // 1. Dark metallic core sphere
+      const coreGeo = new THREE.SphereGeometry(0.016, 12, 12);
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: 0x1d2126,
+        metalness: 0.8,
+        roughness: 0.4
+      });
+      const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+      coreMesh.castShadow = true;
+      coreMesh.receiveShadow = true;
+      mineGroup.add(coreMesh);
+      
+      // 2. Contact spikes (radial cylinder/cones pointing outward)
+      // Cone points along local Y, we rotate it to point along local Z to map easily
+      const spikeGeo = new THREE.ConeGeometry(0.0025, 0.012, 5);
+      spikeGeo.rotateX(Math.PI / 2);
+      const spikeMat = new THREE.MeshStandardMaterial({
+        color: 0x272c32,
+        metalness: 0.9,
+        roughness: 0.3
+      });
+      
+      // 8 directions (corners of a cube)
+      const dirs = [
+        new THREE.Vector3(1, 1, 1).normalize(),
+        new THREE.Vector3(1, 1, -1).normalize(),
+        new THREE.Vector3(1, -1, 1).normalize(),
+        new THREE.Vector3(1, -1, -1).normalize(),
+        new THREE.Vector3(-1, 1, 1).normalize(),
+        new THREE.Vector3(-1, 1, -1).normalize(),
+        new THREE.Vector3(-1, -1, 1).normalize(),
+        new THREE.Vector3(-1, -1, -1).normalize()
+      ];
+      dirs.forEach(dir => {
+        const spike = new THREE.Mesh(spikeGeo, spikeMat);
+        spike.position.copy(dir).multiplyScalar(0.014);
+        spike.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
+        spike.castShadow = true;
+        mineGroup.add(spike);
+      });
+      
+      // 3. Tiny flashing red status LED on top (local Y)
+      const ledGeo = new THREE.SphereGeometry(0.0025, 8, 8);
+      const ledMat = new THREE.MeshStandardMaterial({
+        color: 0xff0000,
+        emissive: 0xff0000,
+        emissiveIntensity: 2.0
+      });
+      const ledMesh = new THREE.Mesh(ledGeo, ledMat);
+      ledMesh.position.set(0, 0.016, 0);
+      mineGroup.add(ledMesh);
+      
+      mineGroup.userData = { ledMaterial: ledMat };
+      return mineGroup;
+    }
+
 
 
 
@@ -2013,7 +2072,7 @@
 
           setTimeout(() => {
             state.totalMines = mineTarget; state.flags = 0; state.safeRevealed = 0; state.gameOver=false; state.won = false; state.lives = 3; lifeLostInCurrentReveal = false; updateCounters();
-            state.tiles.forEach((t, idx)=>{ t.mine=false; t.count=0; t.flagged=false; t.revealed=false; t.isEmpty=false; if (t.label){ tileGroup.remove(t.label); t.label.material.map.dispose(); t.label.material.dispose(); t.label=null; } t.mesh.geometry.dispose(); t.mesh.geometry = createPrismGeometry(idx, 0.97, 1.0); t.mesh.material = getHiddenMaterial(t); });
+            state.tiles.forEach((t, idx)=>{ t.mine=false; t.count=0; t.flagged=false; t.revealed=false; t.isEmpty=false; if (t.label){ tileGroup.remove(t.label); t.label.material.map.dispose(); t.label.material.dispose(); t.label=null; } if (t.flagMesh){ tileGroup.remove(t.flagMesh); t.flagMesh.traverse(child => { if (child.isMesh) { if (child.geometry) child.geometry.dispose(); if (child.material) { if (Array.isArray(child.material)) child.material.forEach(m => m.dispose()); else child.material.dispose(); } } }); t.flagMesh = null; } t.mesh.geometry.dispose(); t.mesh.geometry = createPrismGeometry(idx, 0.97, 1.0); t.mesh.material = getHiddenMaterial(t); });
 
              const forbidden = excludeIndex >= 0 ? new Set([excludeIndex, ...state.neighbors[excludeIndex]]) : new Set();
 
@@ -2452,6 +2511,36 @@
       t.mesh.material = t.flagged ? matFlag : getHiddenMaterial(t); 
       // Reset scale to normal when flag state changes
       t.mesh.scale.set(1.0, 1.0, 1.0);
+      
+      if (t.flagged) {
+        // Spawn 3D naval mine mesh
+        const mineMesh = createNavalMineMesh();
+        
+        // Position it at the tile's outer surface center (radius = 1.0)
+        mineMesh.position.copy(t.center).normalize().multiplyScalar(1.0);
+        
+        // Orient it to align with the tile normal
+        mineMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), t.center.clone().normalize());
+        
+        tileGroup.add(mineMesh);
+        t.flagMesh = mineMesh;
+      } else {
+        // Remove and dispose of 3D naval mine mesh
+        if (t.flagMesh) {
+          tileGroup.remove(t.flagMesh);
+          t.flagMesh.traverse(child => {
+            if (child.isMesh) {
+              if (child.geometry) child.geometry.dispose();
+              if (child.material) {
+                if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                else child.material.dispose();
+              }
+            }
+          });
+          t.flagMesh = null;
+        }
+      }
+
       state.flags += t.flagged ? 1 : -1; 
       updateCounters();
       // Play sound for flag toggle
@@ -4892,7 +4981,7 @@
           }
         });
       }
-      // Auto-rotate number decals every frame so numbers always appear upright.
+      // Auto-rotate number decals and animate/blink 3D naval mine status LEDs.
       // Work entirely in tileGroup LOCAL space so globe rotation is accounted for.
       if (state.tiles) {
         // Convert camera-up from world into tileGroup local space
@@ -4904,7 +4993,15 @@
         const _lUp    = new THREE.Vector3();
         const _lRight  = new THREE.Vector3();
 
+        // Calculate blinking state once for this frame (300ms on, 300ms off)
+        const ledIntensity = (time % 600) < 300 ? 2.5 : 0.0;
+
         state.tiles.forEach(t => {
+          // If tile has a flag mesh, animate its LED material
+          if (t.flagMesh && t.flagMesh.userData && t.flagMesh.userData.ledMaterial) {
+            t.flagMesh.userData.ledMaterial.emissiveIntensity = ledIntensity;
+          }
+
           if (!t.label || !t.label.isMesh) return;
           // tile.center is the local position in tileGroup – normalize for the local outward normal
           _lNormal.copy(t.center).normalize();
