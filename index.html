@@ -1566,16 +1566,33 @@
       });
       
       // 5. Triple blinking warning LEDs in a triangle pattern around the top dome
-      const ledGeo = new THREE.SphereGeometry(0.0015, 6, 6);
+      const ledGlowMat = new THREE.MeshBasicMaterial({
+        color: 0xff0000,
+        transparent: true,
+        opacity: 0.38,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      const ledGeo = new THREE.SphereGeometry(0.0022, 8, 8);
+      const glowGeo = new THREE.SphereGeometry(0.0055, 8, 8);
+
       for (let i = 0; i < 3; i++) {
         const angle = (i / 3) * Math.PI * 2;
+        const pos = new THREE.Vector3(Math.cos(angle) * 0.007, 0.013, Math.sin(angle) * 0.007);
+
+        // Core LED
         const led = new THREE.Mesh(ledGeo, ledMat);
-        // Position on the top dome (y = 0.012, radius from y-axis = 0.007)
-        led.position.set(Math.cos(angle) * 0.007, 0.013, Math.sin(angle) * 0.007);
+        led.position.copy(pos);
         mineGroup.add(led);
+
+        // Glow mesh
+        const glow = new THREE.Mesh(glowGeo, ledGlowMat);
+        glow.position.copy(pos);
+        mineGroup.add(glow);
       }
       
-      mineGroup.userData = { ledMaterial: ledMat };
+      mineGroup.userData = { ledMaterial: ledMat, ledGlowMaterial: ledGlowMat };
       return mineGroup;
     }
 
@@ -5044,11 +5061,15 @@
 
         // Calculate blinking state once for this frame (300ms on, 300ms off)
         const ledIntensity = (time % 600) < 300 ? 2.5 : 0.0;
+        const glowOpacity = (time % 600) < 300 ? 0.38 : 0.0;
 
         state.tiles.forEach(t => {
           // If tile has a flag mesh, animate its LED material, floating offset, and rotation
           if (t.flagMesh && t.flagMesh.userData && t.flagMesh.userData.ledMaterial) {
             t.flagMesh.userData.ledMaterial.emissiveIntensity = ledIntensity;
+            if (t.flagMesh.userData.ledGlowMaterial) {
+              t.flagMesh.userData.ledGlowMaterial.opacity = glowOpacity;
+            }
             
             // Hover/bobbing animation along normal axis
             const hoverOffset = Math.sin(time * 0.0035 + t.index * 0.4) * 0.0025;
