@@ -1960,6 +1960,27 @@
 
       });
 
+      if (window.location.search.includes('mine')) {
+        tileGroup.visible = false;
+        wireGroup.visible = false;
+        if (state.debugMine) {
+          scene.remove(state.debugMine);
+          state.debugMine.traverse(child => {
+            if (child.isMesh) {
+              if (child.geometry) child.geometry.dispose();
+              if (child.material) {
+                if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                else child.material.dispose();
+              }
+            }
+          });
+        }
+        const debugMine = createNavalMineMesh();
+        debugMine.scale.set(40.0, 40.0, 40.0);
+        debugMine.position.set(0, 0, 0);
+        scene.add(debugMine);
+        state.debugMine = debugMine;
+      }
     }
 
 
@@ -5062,6 +5083,17 @@
         // Calculate blinking state once for this frame (300ms on, 300ms off)
         const ledIntensity = (time % 600) < 300 ? 2.5 : 0.0;
         const glowOpacity = (time % 600) < 300 ? 0.38 : 0.0;
+
+        if (state.debugMine) {
+          state.debugMine.rotateY(0.006);
+          state.debugMine.rotateX(0.003);
+          if (state.debugMine.userData.ledMaterial) {
+            state.debugMine.userData.ledMaterial.emissiveIntensity = ledIntensity;
+          }
+          if (state.debugMine.userData.ledGlowMaterial) {
+            state.debugMine.userData.ledGlowMaterial.opacity = glowOpacity;
+          }
+        }
 
         state.tiles.forEach(t => {
           // If tile has a flag mesh, animate its LED material, floating offset, and rotation
