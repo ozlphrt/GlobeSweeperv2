@@ -5468,6 +5468,7 @@
     const _lRight = new THREE.Vector3();
     const staticMatrix = new THREE.Matrix4();
     const camUpLocal = new THREE.Vector3();
+    const toCameraLocal = new THREE.Vector3();
     const tempInvQuat = new THREE.Quaternion();
 
     let lastAnimTime = 0;
@@ -5622,10 +5623,10 @@
           }
         }
 
-        const toCamera = new THREE.Vector3().copy(camera.position).normalize();
+        toCameraLocal.copy(camera.position).normalize().applyQuaternion(tempInvQuat);
 
         state.tiles.forEach(t => {
-          const dot = t.center.dot(toCamera);
+          const dot = t.center.dot(toCameraLocal);
           const isVisible = dot > 0.15;
 
           // If tile has a flag mesh, animate its respective elements (only if visible)
