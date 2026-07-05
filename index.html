@@ -1318,23 +1318,56 @@
       const positions = [];
 
       // Pre-calculate normalized vertices and scale them slightly toward the centroid for a physical gap
-      const gapFactor = currentTileIsEmpty ? -0.025 : 0.025; // -2.5% gap for empty tiles to slide under neighbors, 2.5% gap for others
+      const gapFactor = currentTileIsEmpty ? -0.025 : 0.025;
       const normVerts = poly.map(p => {
         const v = p.clone().normalize();
         return v.lerp(center, gapFactor).normalize();
       });
 
-      // 1. Outer Cap (facing outwards)
+      // ── Bevel ring: soft rounded top edge ─────────────────────────────────
+      // bevelInset: how far each top-edge vertex pulls inward toward tile center (0–1)
+      // bevelDrop:  how far the bevel bottom ring sinks below outerRadius
+      // Together they form a small chamfered slope that replaces the harsh 90° corner.
+      const tileThickness = outerRadius - innerRadius; // typically 0.03
+      const bevelInset = 0.20;                          // 20% pull toward center
+      const bevelDrop  = tileThickness * 0.55;          // sink 55% of tile thickness
+
+      // Top ring of bevel: inset version of normVerts, still at outerRadius
+      const bevelTop = normVerts.map(v =>
+        v.clone().lerp(center, bevelInset).normalize().multiplyScalar(outerRadius)
+      );
+      // Bottom ring of bevel: full lateral position but slightly sunken inward
+      const bevelBot = normVerts.map(v =>
+        v.clone().multiplyScalar(outerRadius - bevelDrop)
+      );
+
+      // 1. Outer Cap – fan from center out to bevelTop ring (inset, still flat)
       const centerOut = center.clone().multiplyScalar(outerRadius);
       for (let i = 0; i < n; i++) {
-        const aOut = normVerts[i].clone().multiplyScalar(outerRadius);
-        const bOut = normVerts[(i + 1) % n].clone().multiplyScalar(outerRadius);
+        const a = bevelTop[i];
+        const b = bevelTop[(i + 1) % n];
         positions.push(centerOut.x, centerOut.y, centerOut.z);
-        positions.push(aOut.x, aOut.y, aOut.z);
-        positions.push(bOut.x, bOut.y, bOut.z);
+        positions.push(a.x, a.y, a.z);
+        positions.push(b.x, b.y, b.z);
       }
 
-      // 2. Inner Cap (facing inwards)
+      // 2. Bevel strip – slanted quads from bevelTop down to bevelBot (the rounded chamfer)
+      for (let i = 0; i < n; i++) {
+        const tA = bevelTop[i];
+        const tB = bevelTop[(i + 1) % n];
+        const bA = bevelBot[i];
+        const bB = bevelBot[(i + 1) % n];
+
+        positions.push(tA.x, tA.y, tA.z);
+        positions.push(tB.x, tB.y, tB.z);
+        positions.push(bB.x, bB.y, bB.z);
+
+        positions.push(tA.x, tA.y, tA.z);
+        positions.push(bB.x, bB.y, bB.z);
+        positions.push(bA.x, bA.y, bA.z);
+      }
+
+      // 3. Inner Cap (facing inwards) – unchanged
       const centerIn = center.clone().multiplyScalar(innerRadius);
       for (let i = 0; i < n; i++) {
         const aIn = normVerts[i].clone().multiplyScalar(innerRadius);
@@ -1344,9 +1377,7 @@
         positions.push(aIn.x, aIn.y, aIn.z);
       }
 
-
-
-      // 3. Side Quads (connecting inner and outer caps)
+      // 4. Side Quads – now run from innerRadius up to bevelBot (not outerRadius)
       for (let i = 0; i < n; i++) {
         const vA = poly[i];
         const vB = poly[(i + 1) % n];
@@ -1366,20 +1397,17 @@
                 if (!hasB && p.distanceToSquared(vB) < 1e-8) hasB = true;
                 if (hasA && hasB) break;
               }
-              if (hasA && hasB) {
-                skipWall = true;
-                break;
-              }
+              if (hasA && hasB) { skipWall = true; break; }
             }
           }
         }
 
         if (skipWall) continue;
 
-        const aIn = normVerts[i].clone().multiplyScalar(innerRadius);
-        const aOut = normVerts[i].clone().multiplyScalar(outerRadius);
-        const bIn = normVerts[(i + 1) % n].clone().multiplyScalar(innerRadius);
-        const bOut = normVerts[(i + 1) % n].clone().multiplyScalar(outerRadius);
+        const aIn  = normVerts[i].clone().multiplyScalar(innerRadius);
+        const bIn  = normVerts[(i + 1) % n].clone().multiplyScalar(innerRadius);
+        const aOut = bevelBot[i];          // top of wall = bottom of bevel
+        const bOut = bevelBot[(i + 1) % n];
 
         // Quad Triangle 1
         positions.push(aIn.x, aIn.y, aIn.z);
