@@ -1317,66 +1317,34 @@
       const n = poly.length;
       const positions = [];
 
+      // Pre-calculate normalized vertices and scale them slightly toward the centroid for a physical gap
       const gapFactor = currentTileIsEmpty ? -0.025 : 0.025;
       const normVerts = poly.map(p => {
         const v = p.clone().normalize();
         return v.lerp(center, gapFactor).normalize();
       });
 
-      // ── Subtle quarter-circle bevel ────────────────────────────────────────
-      // Approximates a smooth rounded edge with N rings spaced along a 90° arc.
-      // Each ring step is only ~22.5°, making the faceted seams imperceptible.
-      const tileThickness = outerRadius - innerRadius; // ~0.03
-      const bevelInset = 0.06;                         // 6% pull toward center — very subtle
-      const bevelDrop  = tileThickness * 0.30;         // 30% of tile thickness radially
-      const numSteps   = 4;                            // 4 rings → smooth ~22.5° per step
-
-      // Build parametric bevel rings along a quarter-circle profile
-      // ring[0]  = boundary of flat top cap (max inset, full radius)
-      // ring[N]  = top of side wall         (no inset,  radius - bevelDrop)
-      const bevelRings = [];
-      for (let s = 0; s <= numSteps; s++) {
-        const angle  = (s / numSteps) * (Math.PI / 2);
-        const inset  = bevelInset * Math.cos(angle);   // tapers from bevelInset → 0
-        const radial = outerRadius - bevelDrop * Math.sin(angle); // drops from outerRadius → outerRadius-bevelDrop
-        bevelRings.push(
-          normVerts.map(v => v.clone().lerp(center, inset).normalize().multiplyScalar(radial))
-        );
-      }
-
-      // Helper
-      const pv = v => positions.push(v.x, v.y, v.z);
-
-      // 1. Flat top cap — fan from center to ring[0]
+      // 1. Outer Cap (facing outwards)
       const centerOut = center.clone().multiplyScalar(outerRadius);
       for (let i = 0; i < n; i++) {
-        pv(centerOut);
-        pv(bevelRings[0][i]);
-        pv(bevelRings[0][(i + 1) % n]);
+        const aOut = normVerts[i].clone().multiplyScalar(outerRadius);
+        const bOut = normVerts[(i + 1) % n].clone().multiplyScalar(outerRadius);
+        positions.push(centerOut.x, centerOut.y, centerOut.z);
+        positions.push(aOut.x, aOut.y, aOut.z);
+        positions.push(bOut.x, bOut.y, bOut.z);
       }
 
-      // 2. Bevel strips — quads between every consecutive pair of rings
-      for (let s = 0; s < numSteps; s++) {
-        const rA = bevelRings[s];
-        const rB = bevelRings[s + 1];
-        for (let i = 0; i < n; i++) {
-          const tA = rA[i], tB = rA[(i + 1) % n];
-          const bA = rB[i], bB = rB[(i + 1) % n];
-          pv(tA); pv(tB); pv(bB);
-          pv(tA); pv(bB); pv(bA);
-        }
-      }
-
-      // 3. Inner cap — unchanged
+      // 2. Inner Cap (facing inwards)
       const centerIn = center.clone().multiplyScalar(innerRadius);
       for (let i = 0; i < n; i++) {
         const aIn = normVerts[i].clone().multiplyScalar(innerRadius);
         const bIn = normVerts[(i + 1) % n].clone().multiplyScalar(innerRadius);
-        pv(centerIn); pv(bIn); pv(aIn);
+        positions.push(centerIn.x, centerIn.y, centerIn.z);
+        positions.push(bIn.x, bIn.y, bIn.z);
+        positions.push(aIn.x, aIn.y, aIn.z);
       }
 
-      // 4. Side quads — inner → bevelRings[numSteps] (top of wall = bottom of bevel)
-      const wallTop = bevelRings[numSteps];
+      // 3. Side Quads (connecting inner and outer caps)
       for (let i = 0; i < n; i++) {
         const vA = poly[i];
         const vB = poly[(i + 1) % n];
@@ -1400,12 +1368,17 @@
         if (skipWall) continue;
 
         const aIn  = normVerts[i].clone().multiplyScalar(innerRadius);
+        const aOut = normVerts[i].clone().multiplyScalar(outerRadius);
         const bIn  = normVerts[(i + 1) % n].clone().multiplyScalar(innerRadius);
-        const aOut = wallTop[i];
-        const bOut = wallTop[(i + 1) % n];
+        const bOut = normVerts[(i + 1) % n].clone().multiplyScalar(outerRadius);
 
-        pv(aIn); pv(bIn); pv(bOut);
-        pv(aIn); pv(bOut); pv(aOut);
+        positions.push(aIn.x, aIn.y, aIn.z);
+        positions.push(bIn.x, bIn.y, bIn.z);
+        positions.push(bOut.x, bOut.y, bOut.z);
+
+        positions.push(aIn.x, aIn.y, aIn.z);
+        positions.push(bOut.x, bOut.y, bOut.z);
+        positions.push(aOut.x, aOut.y, aOut.z);
       }
 
       const g = new THREE.BufferGeometry();
