@@ -2119,11 +2119,13 @@
 
     const hemi = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.5); scene.add(hemi);
 
-    const dir = new THREE.PointLight(0xffffff, 0.7); dir.position.set(2.8, 1.8, -1.2); scene.add(dir); // PointLight with distance falloff
+    const dir = new THREE.DirectionalLight(0xffffff, 0.7); dir.position.set(2.8, 1.8, -1.2); scene.add(dir);
     
-    // Configure distance-based intensity falloff
-    dir.distance = 20; // Distance at which intensity becomes 0
-    dir.decay = 2; // Decay rate (1 = linear, 2 = physically correct)
+    // Configure directional light shadow camera frustum (radius = 1.0 globe)
+    dir.shadow.camera.left = -1.6;
+    dir.shadow.camera.right = 1.6;
+    dir.shadow.camera.top = 1.6;
+    dir.shadow.camera.bottom = -1.6;
     
     // Center point light for illuminating internal faces of tiles
     const centerLight = new THREE.PointLight(0xff0000, 1.3);
@@ -2137,9 +2139,9 @@
     dir.shadow.mapSize.width = 2048;
     dir.shadow.mapSize.height = 2048;
     dir.shadow.camera.near = 0.5;
-    dir.shadow.camera.far = 25;
+    dir.shadow.camera.far = 10;
     dir.shadow.radius = 4;
-    dir.shadow.bias = -0.002;
+    dir.shadow.bias = -0.0015;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.shadowMap.autoUpdate = false;
