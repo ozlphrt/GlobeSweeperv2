@@ -1474,57 +1474,106 @@
     function createNavalMineMesh() {
       const mineGroup = new THREE.Group();
       
-      // 1. Dark metallic core sphere
-      const coreGeo = new THREE.SphereGeometry(0.016, 12, 12);
+      // Materials
       const coreMat = new THREE.MeshStandardMaterial({
-        color: 0x1d2126,
+        color: 0x1a1d20,
+        metalness: 0.85,
+        roughness: 0.35
+      });
+      const bronzeMat = new THREE.MeshStandardMaterial({
+        color: 0xaa7c4c,
+        metalness: 0.9,
+        roughness: 0.25
+      });
+      const steelMat = new THREE.MeshStandardMaterial({
+        color: 0x7a838a,
+        metalness: 0.95,
+        roughness: 0.2
+      });
+      const darkMetalMat = new THREE.MeshStandardMaterial({
+        color: 0x272c32,
         metalness: 0.8,
         roughness: 0.4
       });
+      const ledMat = new THREE.MeshStandardMaterial({
+        color: 0xff3333,
+        emissive: 0xff0000,
+        emissiveIntensity: 2.0
+      });
+
+      // 1. Dark metallic core sphere
+      const coreGeo = new THREE.SphereGeometry(0.016, 16, 16);
       const coreMesh = new THREE.Mesh(coreGeo, coreMat);
       coreMesh.castShadow = true;
       coreMesh.receiveShadow = true;
       mineGroup.add(coreMesh);
       
-      // 2. Contact spikes (radial cylinder/cones pointing outward)
-      // Cone points along local Y, we rotate it to point along local Z to map easily
-      const spikeGeo = new THREE.ConeGeometry(0.0025, 0.012, 5);
-      spikeGeo.rotateX(Math.PI / 2);
-      const spikeMat = new THREE.MeshStandardMaterial({
-        color: 0x272c32,
-        metalness: 0.9,
-        roughness: 0.3
-      });
-      
-      // 8 directions (corners of a cube)
+      // 2. Equatorial reinforcement band (Torus)
+      const bandGeo = new THREE.TorusGeometry(0.015, 0.0018, 8, 24);
+      bandGeo.rotateX(Math.PI / 2); // align with horizontal plane
+      const bandMesh = new THREE.Mesh(bandGeo, bronzeMat);
+      bandMesh.castShadow = true;
+      mineGroup.add(bandMesh);
+
+      // 3. Tiny rivets on the equatorial band
+      const rivetGeo = new THREE.SphereGeometry(0.0012, 6, 6);
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const rivet = new THREE.Mesh(rivetGeo, bronzeMat);
+        rivet.position.set(Math.cos(angle) * 0.015, 0, Math.sin(angle) * 0.015);
+        mineGroup.add(rivet);
+      }
+
+      // 4. Detailed contact horns (6 main directions + 4 diagonals for density)
+      // Each horn has: a bronze base socket, a steel rod, and a dark metal tip
+      const baseGeo = new THREE.CylinderGeometry(0.0028, 0.0028, 0.003, 6);
+      baseGeo.rotateX(Math.PI / 2); // point along Z
+      const rodGeo = new THREE.CylinderGeometry(0.0012, 0.0012, 0.008, 6);
+      rodGeo.rotateX(Math.PI / 2);
+      const tipGeo = new THREE.SphereGeometry(0.0018, 6, 6);
+
       const dirs = [
-        new THREE.Vector3(1, 1, 1).normalize(),
-        new THREE.Vector3(1, 1, -1).normalize(),
-        new THREE.Vector3(1, -1, 1).normalize(),
-        new THREE.Vector3(1, -1, -1).normalize(),
-        new THREE.Vector3(-1, 1, 1).normalize(),
-        new THREE.Vector3(-1, 1, -1).normalize(),
-        new THREE.Vector3(-1, -1, 1).normalize(),
-        new THREE.Vector3(-1, -1, -1).normalize()
+        new THREE.Vector3(1, 0, 0), new THREE.Vector3(-1, 0, 0),
+        new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, -1, 0),
+        new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, -1),
+        new THREE.Vector3(0.707, 0.707, 0).normalize(),
+        new THREE.Vector3(-0.707, 0.707, 0).normalize(),
+        new THREE.Vector3(0.707, -0.707, 0).normalize(),
+        new THREE.Vector3(-0.707, -0.707, 0).normalize()
       ];
+
       dirs.forEach(dir => {
-        const spike = new THREE.Mesh(spikeGeo, spikeMat);
-        spike.position.copy(dir).multiplyScalar(0.014);
-        spike.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
-        spike.castShadow = true;
-        mineGroup.add(spike);
+        const hornGroup = new THREE.Group();
+        
+        // Base socket
+        const base = new THREE.Mesh(baseGeo, bronzeMat);
+        base.position.copy(dir).multiplyScalar(0.014);
+        hornGroup.add(base);
+
+        // Rod
+        const rod = new THREE.Mesh(rodGeo, steelMat);
+        rod.position.copy(dir).multiplyScalar(0.018);
+        hornGroup.add(rod);
+
+        // Tip
+        const tip = new THREE.Mesh(tipGeo, darkMetalMat);
+        tip.position.copy(dir).multiplyScalar(0.021);
+        hornGroup.add(tip);
+
+        // Orient the entire horn to face outward along normal
+        hornGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
+        mineGroup.add(hornGroup);
       });
       
-      // 3. Tiny flashing red status LED on top (local Y)
-      const ledGeo = new THREE.SphereGeometry(0.0025, 8, 8);
-      const ledMat = new THREE.MeshStandardMaterial({
-        color: 0xff0000,
-        emissive: 0xff0000,
-        emissiveIntensity: 2.0
-      });
-      const ledMesh = new THREE.Mesh(ledGeo, ledMat);
-      ledMesh.position.set(0, 0.016, 0);
-      mineGroup.add(ledMesh);
+      // 5. Triple blinking warning LEDs in a triangle pattern around the top dome
+      const ledGeo = new THREE.SphereGeometry(0.0015, 6, 6);
+      for (let i = 0; i < 3; i++) {
+        const angle = (i / 3) * Math.PI * 2;
+        const led = new THREE.Mesh(ledGeo, ledMat);
+        // Position on the top dome (y = 0.012, radius from y-axis = 0.007)
+        led.position.set(Math.cos(angle) * 0.007, 0.013, Math.sin(angle) * 0.007);
+        mineGroup.add(led);
+      }
       
       mineGroup.userData = { ledMaterial: ledMat };
       return mineGroup;
@@ -4997,9 +5046,16 @@
         const ledIntensity = (time % 600) < 300 ? 2.5 : 0.0;
 
         state.tiles.forEach(t => {
-          // If tile has a flag mesh, animate its LED material
+          // If tile has a flag mesh, animate its LED material, floating offset, and rotation
           if (t.flagMesh && t.flagMesh.userData && t.flagMesh.userData.ledMaterial) {
             t.flagMesh.userData.ledMaterial.emissiveIntensity = ledIntensity;
+            
+            // Hover/bobbing animation along normal axis
+            const hoverOffset = Math.sin(time * 0.0035 + t.index * 0.4) * 0.0025;
+            t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0 + hoverOffset);
+            
+            // Slow axial rotation around its normal (local Y-axis)
+            t.flagMesh.rotateY(0.012);
           }
 
           if (!t.label || !t.label.isMesh) return;
