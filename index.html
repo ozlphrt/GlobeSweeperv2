@@ -1533,15 +1533,37 @@
         depthWrite: false
       });
 
-      const ring1Mat = new THREE.MeshStandardMaterial({
-        color: 0x7a838a,
-        metalness: 0.95,
-        roughness: 0.2
+      function createSparkTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 16;
+        canvas.height = 16;
+        const ctx = canvas.getContext('2d');
+        const grad = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+        grad.addColorStop(0.3, 'rgba(210, 180, 255, 0.9)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 16, 16);
+        return new THREE.CanvasTexture(canvas);
+      }
+      
+      const sparkTex = createSparkTexture();
+
+      const ring1Mat = new THREE.PointsMaterial({
+        color: 0x00ffff,
+        size: 0.0035,
+        map: sparkTex,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
       });
-      const ring2Mat = new THREE.MeshStandardMaterial({
-        color: 0xaa7c4c,
-        metalness: 0.95,
-        roughness: 0.15
+      const ring2Mat = new THREE.PointsMaterial({
+        color: 0xff33bb,
+        size: 0.0035,
+        map: sparkTex,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
       });
 
       // 1. Central pulsing plasma core sphere
@@ -1551,23 +1573,33 @@
       coreMesh.receiveShadow = true;
       mineGroup.add(coreMesh);
       
-      // 2. Real physical point light source to cast reflections on rings
+      // 2. Real physical point light source to cast reflections
       const coreLight = new THREE.PointLight(0x9b30ff, 1.5, 0.08, 2.0);
       mineGroup.add(coreLight);
       
-      // 3. Inner Gimbal Ring (Torus)
-      const ring1Geo = new THREE.TorusGeometry(0.015, 0.0012, 8, 24);
-      const ring1Mesh = new THREE.Mesh(ring1Geo, ring1Mat);
-      ring1Mesh.castShadow = true;
-      ring1Mesh.receiveShadow = true;
+      // 3. Inner Orbit Particles
+      const innerOrbitGeo = new THREE.BufferGeometry();
+      const innerOrbitPos = [];
+      const innerCount = 36;
+      for (let i = 0; i < innerCount; i++) {
+        const angle = (i / innerCount) * Math.PI * 2;
+        innerOrbitPos.push(Math.cos(angle) * 0.015, Math.sin(angle) * 0.015, 0);
+      }
+      innerOrbitGeo.setAttribute('position', new THREE.Float32BufferAttribute(innerOrbitPos, 3));
+      const ring1Mesh = new THREE.Points(innerOrbitGeo, ring1Mat);
       mineGroup.add(ring1Mesh);
 
-      // 4. Outer Gimbal Ring (Torus) - rotated initially
-      const ring2Geo = new THREE.TorusGeometry(0.019, 0.0012, 8, 24);
-      const ring2Mesh = new THREE.Mesh(ring2Geo, ring2Mat);
+      // 4. Outer Orbit Particles - rotated initially
+      const outerOrbitGeo = new THREE.BufferGeometry();
+      const outerOrbitPos = [];
+      const outerCount = 48;
+      for (let i = 0; i < outerCount; i++) {
+        const angle = (i / outerCount) * Math.PI * 2;
+        outerOrbitPos.push(Math.cos(angle) * 0.019, Math.sin(angle) * 0.019, 0);
+      }
+      outerOrbitGeo.setAttribute('position', new THREE.Float32BufferAttribute(outerOrbitPos, 3));
+      const ring2Mesh = new THREE.Points(outerOrbitGeo, ring2Mat);
       ring2Mesh.quaternion.setFromEuler(new THREE.Euler(Math.PI / 4, Math.PI / 4, 0));
-      ring2Mesh.castShadow = true;
-      ring2Mesh.receiveShadow = true;
       mineGroup.add(ring2Mesh);
 
       // 5. Soft Violet Radial Gradient Glow Sprite for atmospheric aura
@@ -1604,6 +1636,7 @@
         coreMaterial: coreMat, 
         ledGlowMaterial: ledGlowMat, 
         glowTexture: glowTex,
+        sparkTexture: sparkTex,
         ring1: ring1Mesh,
         ring2: ring2Mesh,
         pointLight: coreLight
@@ -2174,7 +2207,7 @@
 
           setTimeout(() => {
             state.totalMines = mineTarget; state.flags = 0; state.safeRevealed = 0; state.gameOver=false; state.won = false; state.lives = 3; lifeLostInCurrentReveal = false; updateCounters();
-            state.tiles.forEach((t, idx)=>{ t.mine=false; t.count=0; t.flagged=false; t.revealed=false; t.isEmpty=false; if (t.label){ tileGroup.remove(t.label); t.label.material.map.dispose(); t.label.material.dispose(); t.label=null; } if (t.flagMesh){ tileGroup.remove(t.flagMesh); if (t.flagMesh.userData && t.flagMesh.userData.glowTexture) { t.flagMesh.userData.glowTexture.dispose(); } t.flagMesh.traverse(child => { if (child.isMesh || child.isSprite) { if (child.geometry) child.geometry.dispose(); if (child.material) { if (child.material.map) child.material.map.dispose(); if (Array.isArray(child.material)) { child.material.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); } else { child.material.dispose(); } } } }); t.flagMesh = null; } t.mesh.geometry.dispose(); t.mesh.geometry = createPrismGeometry(idx, 0.97, 1.0); t.mesh.material = getHiddenMaterial(t); });
+            state.tiles.forEach((t, idx)=>{ t.mine=false; t.count=0; t.flagged=false; t.revealed=false; t.isEmpty=false; if (t.label){ tileGroup.remove(t.label); t.label.material.map.dispose(); t.label.material.dispose(); t.label=null; } if (t.flagMesh){ tileGroup.remove(t.flagMesh); if (t.flagMesh.userData) { if (t.flagMesh.userData.glowTexture) t.flagMesh.userData.glowTexture.dispose(); if (t.flagMesh.userData.sparkTexture) t.flagMesh.userData.sparkTexture.dispose(); } t.flagMesh.traverse(child => { if (child.isMesh || child.isSprite || child.isPoints) { if (child.geometry) child.geometry.dispose(); if (child.material) { if (child.material.map) child.material.map.dispose(); if (Array.isArray(child.material)) { child.material.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); } else { child.material.dispose(); } } } }); t.flagMesh = null; } t.mesh.geometry.dispose(); t.mesh.geometry = createPrismGeometry(idx, 0.97, 1.0); t.mesh.material = getHiddenMaterial(t); });
 
              const forbidden = excludeIndex >= 0 ? new Set([excludeIndex, ...state.neighbors[excludeIndex]]) : new Set();
 
@@ -2630,11 +2663,12 @@
         // Remove and dispose of 3D naval mine mesh
         if (t.flagMesh) {
           tileGroup.remove(t.flagMesh);
-          if (t.flagMesh.userData && t.flagMesh.userData.glowTexture) {
-            t.flagMesh.userData.glowTexture.dispose();
+          if (t.flagMesh.userData) {
+            if (t.flagMesh.userData.glowTexture) t.flagMesh.userData.glowTexture.dispose();
+            if (t.flagMesh.userData.sparkTexture) t.flagMesh.userData.sparkTexture.dispose();
           }
           t.flagMesh.traverse(child => {
-            if (child.isMesh || child.isSprite) {
+            if (child.isMesh || child.isSprite || child.isPoints) {
               if (child.geometry) child.geometry.dispose();
               if (child.material) {
                 if (child.material.map) child.material.map.dispose();
