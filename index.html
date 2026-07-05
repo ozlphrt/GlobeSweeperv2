@@ -1476,11 +1476,19 @@
       
       // Materials
       const coreMat = new THREE.MeshStandardMaterial({
-        color: 0x9b30ff,
+        color: 0xffffff,
         emissive: 0x9b30ff,
-        emissiveIntensity: 2.0,
+        emissiveIntensity: 3.5,
         metalness: 0.1,
         roughness: 0.1
+      });
+      const rimGlowMat = new THREE.MeshBasicMaterial({
+        color: 0xd050ff,
+        transparent: true,
+        opacity: 0.65,
+        blending: THREE.AdditiveBlending,
+        side: THREE.BackSide,
+        depthWrite: false
       });
       const ring1Mat = new THREE.MeshStandardMaterial({
         color: 0x7a838a,
@@ -1493,12 +1501,21 @@
         roughness: 0.15
       });
 
-      // 1. Central self-lit emissive core sphere
-      const coreGeo = new THREE.SphereGeometry(0.010, 16, 16);
+      // 1. Central self-lit emissive core sphere (white-hot center)
+      const coreGeo = new THREE.SphereGeometry(0.0075, 16, 16);
       const coreMesh = new THREE.Mesh(coreGeo, coreMat);
       coreMesh.castShadow = true;
       coreMesh.receiveShadow = true;
       mineGroup.add(coreMesh);
+      
+      // 1.5. Volumetric Rim Glow outer shell (creates glowing edges)
+      const rimGeo = new THREE.SphereGeometry(0.011, 16, 16);
+      const rimMesh = new THREE.Mesh(rimGeo, rimGlowMat);
+      mineGroup.add(rimMesh);
+
+      // 1.6. Real physical point light source to cast reflections on rings
+      const coreLight = new THREE.PointLight(0x9b30ff, 1.5, 0.08, 2.0);
+      mineGroup.add(coreLight);
       
       // 2. Inner Gimbal Ring (Torus)
       const ring1Geo = new THREE.TorusGeometry(0.015, 0.0012, 8, 24);
@@ -1550,7 +1567,9 @@
         ledGlowMaterial: ledGlowMat, 
         glowTexture: glowTex,
         ring1: ring1Mesh,
-        ring2: ring2Mesh
+        ring2: ring2Mesh,
+        pointLight: coreLight,
+        rimMaterial: rimGlowMat
       };
       return mineGroup;
     }
@@ -5069,6 +5088,12 @@
           if (state.debugMine.userData.ledGlowMaterial) {
             state.debugMine.userData.ledGlowMaterial.opacity = glowAlpha;
           }
+          if (state.debugMine.userData.pointLight) {
+            state.debugMine.userData.pointLight.intensity = coreEmissive * 0.7;
+          }
+          if (state.debugMine.userData.rimMaterial) {
+            state.debugMine.userData.rimMaterial.opacity = 0.35 + Math.sin(time * 0.008) * 0.15;
+          }
         }
 
         state.tiles.forEach(t => {
@@ -5085,12 +5110,18 @@
             }
             
             // Pulsing emissive glow (offset by tile index to prevent uniform pulsing)
-            const tileEmissive = 1.2 + Math.sin(time * 0.008 + t.index * 0.5) * 0.8;
-            const tileGlowAlpha = 0.3 + Math.sin(time * 0.008 + t.index * 0.5) * 0.2;
+            const tileEmissive = 2.0 + Math.sin(time * 0.008 + t.index * 0.5) * 1.2;
+            const tileGlowAlpha = 0.35 + Math.sin(time * 0.008 + t.index * 0.5) * 0.15;
             
             t.flagMesh.userData.coreMaterial.emissiveIntensity = tileEmissive;
             if (t.flagMesh.userData.ledGlowMaterial) {
               t.flagMesh.userData.ledGlowMaterial.opacity = tileGlowAlpha;
+            }
+            if (t.flagMesh.userData.pointLight) {
+              t.flagMesh.userData.pointLight.intensity = tileEmissive * 0.5;
+            }
+            if (t.flagMesh.userData.rimMaterial) {
+              t.flagMesh.userData.rimMaterial.opacity = tileGlowAlpha + 0.1;
             }
             
             // Hover/bobbing animation along normal axis
