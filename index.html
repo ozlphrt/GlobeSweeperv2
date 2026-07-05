@@ -1476,123 +1476,82 @@
       
       // Materials
       const coreMat = new THREE.MeshStandardMaterial({
-        color: 0x1a1d20,
-        metalness: 0.85,
-        roughness: 0.35
+        color: 0x9b30ff,
+        emissive: 0x9b30ff,
+        emissiveIntensity: 2.0,
+        metalness: 0.1,
+        roughness: 0.1
       });
-      const bronzeMat = new THREE.MeshStandardMaterial({
-        color: 0xaa7c4c,
-        metalness: 0.9,
-        roughness: 0.25
-      });
-      const steelMat = new THREE.MeshStandardMaterial({
+      const ring1Mat = new THREE.MeshStandardMaterial({
         color: 0x7a838a,
         metalness: 0.95,
         roughness: 0.2
       });
-      const darkMetalMat = new THREE.MeshStandardMaterial({
-        color: 0x272c32,
-        metalness: 0.8,
-        roughness: 0.4
-      });
-      const ledMat = new THREE.MeshStandardMaterial({
-        color: 0xff3333,
-        emissive: 0xff0000,
-        emissiveIntensity: 2.0
+      const ring2Mat = new THREE.MeshStandardMaterial({
+        color: 0xaa7c4c,
+        metalness: 0.95,
+        roughness: 0.15
       });
 
-      // 1. Dark metallic core sphere
-      const coreGeo = new THREE.SphereGeometry(0.016, 16, 16);
+      // 1. Central self-lit emissive core sphere
+      const coreGeo = new THREE.SphereGeometry(0.010, 16, 16);
       const coreMesh = new THREE.Mesh(coreGeo, coreMat);
       coreMesh.castShadow = true;
       coreMesh.receiveShadow = true;
       mineGroup.add(coreMesh);
       
-      // 2. Equatorial reinforcement band (Torus)
-      const bandGeo = new THREE.TorusGeometry(0.015, 0.0018, 8, 24);
-      bandGeo.rotateX(Math.PI / 2); // align with horizontal plane
-      const bandMesh = new THREE.Mesh(bandGeo, bronzeMat);
-      bandMesh.castShadow = true;
-      mineGroup.add(bandMesh);
+      // 2. Inner Gimbal Ring (Torus)
+      const ring1Geo = new THREE.TorusGeometry(0.015, 0.0012, 8, 24);
+      const ring1Mesh = new THREE.Mesh(ring1Geo, ring1Mat);
+      ring1Mesh.castShadow = true;
+      ring1Mesh.receiveShadow = true;
+      mineGroup.add(ring1Mesh);
 
-      // 3. Tiny rivets on the equatorial band
-      const rivetGeo = new THREE.SphereGeometry(0.0012, 6, 6);
-      for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2;
-        const rivet = new THREE.Mesh(rivetGeo, bronzeMat);
-        rivet.position.set(Math.cos(angle) * 0.015, 0, Math.sin(angle) * 0.015);
-        mineGroup.add(rivet);
+      // 3. Outer Gimbal Ring (Torus) - rotated initially
+      const ring2Geo = new THREE.TorusGeometry(0.019, 0.0012, 8, 24);
+      const ring2Mesh = new THREE.Mesh(ring2Geo, ring2Mat);
+      ring2Mesh.quaternion.setFromEuler(new THREE.Euler(Math.PI / 4, Math.PI / 4, 0));
+      ring2Mesh.castShadow = true;
+      ring2Mesh.receiveShadow = true;
+      mineGroup.add(ring2Mesh);
+
+      // 4. Soft Violet Radial Gradient Glow Sprite
+      function createVioletGlowTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        const ctx = canvas.getContext('2d');
+        const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+        grad.addColorStop(0, 'rgba(155, 48, 255, 1.0)');
+        grad.addColorStop(0.3, 'rgba(138, 43, 226, 0.6)');
+        grad.addColorStop(0.6, 'rgba(138, 43, 226, 0.2)');
+        grad.addColorStop(1, 'rgba(138, 43, 226, 0.0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 32, 32);
+        return new THREE.CanvasTexture(canvas);
       }
 
-      // 4. Detailed contact horns (6 main directions + 4 diagonals for density)
-      // Each horn has: a bronze base socket, a steel rod, and a dark metal tip
-      const baseGeo = new THREE.CylinderGeometry(0.0028, 0.0028, 0.003, 6);
-      baseGeo.rotateX(Math.PI / 2); // point along Z
-      const rodGeo = new THREE.CylinderGeometry(0.0012, 0.0012, 0.008, 6);
-      rodGeo.rotateX(Math.PI / 2);
-      const tipGeo = new THREE.SphereGeometry(0.0018, 6, 6);
-
-      const dirs = [
-        new THREE.Vector3(1, 0, 0), new THREE.Vector3(-1, 0, 0),
-        new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, -1, 0),
-        new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, -1),
-        new THREE.Vector3(0.707, 0.707, 0).normalize(),
-        new THREE.Vector3(-0.707, 0.707, 0).normalize(),
-        new THREE.Vector3(0.707, -0.707, 0).normalize(),
-        new THREE.Vector3(-0.707, -0.707, 0).normalize()
-      ];
-
-      dirs.forEach(dir => {
-        const hornGroup = new THREE.Group();
-        
-        // Base socket
-        const base = new THREE.Mesh(baseGeo, bronzeMat);
-        base.position.copy(dir).multiplyScalar(0.014);
-        hornGroup.add(base);
-
-        // Rod
-        const rod = new THREE.Mesh(rodGeo, steelMat);
-        rod.position.copy(dir).multiplyScalar(0.018);
-        hornGroup.add(rod);
-
-        // Tip
-        const tip = new THREE.Mesh(tipGeo, darkMetalMat);
-        tip.position.copy(dir).multiplyScalar(0.021);
-        hornGroup.add(tip);
-
-        // Orient the entire horn to face outward along normal
-        hornGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir);
-        mineGroup.add(hornGroup);
-      });
-      
-      // 5. Triple blinking warning LEDs in a triangle pattern around the top dome
-      const ledGlowMat = new THREE.MeshBasicMaterial({
-        color: 0xff0000,
+      const glowTex = createVioletGlowTexture();
+      const ledGlowMat = new THREE.SpriteMaterial({
+        map: glowTex,
+        color: 0x9b30ff,
         transparent: true,
-        opacity: 0.38,
+        opacity: 0.6,
         blending: THREE.AdditiveBlending,
         depthWrite: false
       });
 
-      const ledGeo = new THREE.SphereGeometry(0.0022, 8, 8);
-      const glowGeo = new THREE.SphereGeometry(0.0055, 8, 8);
-
-      for (let i = 0; i < 3; i++) {
-        const angle = (i / 3) * Math.PI * 2;
-        const pos = new THREE.Vector3(Math.cos(angle) * 0.007, 0.013, Math.sin(angle) * 0.007);
-
-        // Core LED
-        const led = new THREE.Mesh(ledGeo, ledMat);
-        led.position.copy(pos);
-        mineGroup.add(led);
-
-        // Glow mesh
-        const glow = new THREE.Mesh(glowGeo, ledGlowMat);
-        glow.position.copy(pos);
-        mineGroup.add(glow);
-      }
+      const glow = new THREE.Sprite(ledGlowMat);
+      glow.scale.set(0.042, 0.042, 1.0);
+      mineGroup.add(glow);
       
-      mineGroup.userData = { ledMaterial: ledMat, ledGlowMaterial: ledGlowMat };
+      mineGroup.userData = { 
+        coreMaterial: coreMat, 
+        ledGlowMaterial: ledGlowMat, 
+        glowTexture: glowTex,
+        ring1: ring1Mesh,
+        ring2: ring2Mesh
+      };
       return mineGroup;
     }
 
@@ -2159,7 +2118,7 @@
 
           setTimeout(() => {
             state.totalMines = mineTarget; state.flags = 0; state.safeRevealed = 0; state.gameOver=false; state.won = false; state.lives = 3; lifeLostInCurrentReveal = false; updateCounters();
-            state.tiles.forEach((t, idx)=>{ t.mine=false; t.count=0; t.flagged=false; t.revealed=false; t.isEmpty=false; if (t.label){ tileGroup.remove(t.label); t.label.material.map.dispose(); t.label.material.dispose(); t.label=null; } if (t.flagMesh){ tileGroup.remove(t.flagMesh); t.flagMesh.traverse(child => { if (child.isMesh) { if (child.geometry) child.geometry.dispose(); if (child.material) { if (Array.isArray(child.material)) child.material.forEach(m => m.dispose()); else child.material.dispose(); } } }); t.flagMesh = null; } t.mesh.geometry.dispose(); t.mesh.geometry = createPrismGeometry(idx, 0.97, 1.0); t.mesh.material = getHiddenMaterial(t); });
+            state.tiles.forEach((t, idx)=>{ t.mine=false; t.count=0; t.flagged=false; t.revealed=false; t.isEmpty=false; if (t.label){ tileGroup.remove(t.label); t.label.material.map.dispose(); t.label.material.dispose(); t.label=null; } if (t.flagMesh){ tileGroup.remove(t.flagMesh); if (t.flagMesh.userData && t.flagMesh.userData.glowTexture) { t.flagMesh.userData.glowTexture.dispose(); } t.flagMesh.traverse(child => { if (child.isMesh || child.isSprite) { if (child.geometry) child.geometry.dispose(); if (child.material) { if (child.material.map) child.material.map.dispose(); if (Array.isArray(child.material)) { child.material.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); } else { child.material.dispose(); } } } }); t.flagMesh = null; } t.mesh.geometry.dispose(); t.mesh.geometry = createPrismGeometry(idx, 0.97, 1.0); t.mesh.material = getHiddenMaterial(t); });
 
              const forbidden = excludeIndex >= 0 ? new Set([excludeIndex, ...state.neighbors[excludeIndex]]) : new Set();
 
@@ -2615,12 +2574,22 @@
         // Remove and dispose of 3D naval mine mesh
         if (t.flagMesh) {
           tileGroup.remove(t.flagMesh);
+          if (t.flagMesh.userData && t.flagMesh.userData.glowTexture) {
+            t.flagMesh.userData.glowTexture.dispose();
+          }
           t.flagMesh.traverse(child => {
-            if (child.isMesh) {
+            if (child.isMesh || child.isSprite) {
               if (child.geometry) child.geometry.dispose();
               if (child.material) {
-                if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
-                else child.material.dispose();
+                if (child.material.map) child.material.map.dispose();
+                if (Array.isArray(child.material)) {
+                  child.material.forEach(m => {
+                    if (m.map) m.map.dispose();
+                    m.dispose();
+                  });
+                } else {
+                  child.material.dispose();
+                }
               }
             }
           });
@@ -5080,35 +5049,53 @@
         const _lUp    = new THREE.Vector3();
         const _lRight  = new THREE.Vector3();
 
-        // Calculate blinking state once for this frame (300ms on, 300ms off)
-        const ledIntensity = (time % 600) < 300 ? 2.5 : 0.0;
-        const glowOpacity = (time % 600) < 300 ? 0.38 : 0.0;
+        // Calculate pulsing state once for this frame (sinusoidal pulse)
+        const coreEmissive = 1.2 + Math.sin(time * 0.008) * 0.8;
+        const glowAlpha = 0.3 + Math.sin(time * 0.008) * 0.2;
 
         if (state.debugMine) {
-          state.debugMine.rotateY(0.006);
-          state.debugMine.rotateX(0.003);
-          if (state.debugMine.userData.ledMaterial) {
-            state.debugMine.userData.ledMaterial.emissiveIntensity = ledIntensity;
+          // Slow axial rotations for the rings of the fullscreen debug mine
+          if (state.debugMine.userData.ring1) {
+            state.debugMine.userData.ring1.rotateX(0.02);
+            state.debugMine.userData.ring1.rotateY(0.005);
+          }
+          if (state.debugMine.userData.ring2) {
+            state.debugMine.userData.ring2.rotateY(-0.015);
+            state.debugMine.userData.ring2.rotateZ(0.01);
+          }
+          if (state.debugMine.userData.coreMaterial) {
+            state.debugMine.userData.coreMaterial.emissiveIntensity = coreEmissive;
           }
           if (state.debugMine.userData.ledGlowMaterial) {
-            state.debugMine.userData.ledGlowMaterial.opacity = glowOpacity;
+            state.debugMine.userData.ledGlowMaterial.opacity = glowAlpha;
           }
         }
 
         state.tiles.forEach(t => {
-          // If tile has a flag mesh, animate its LED material, floating offset, and rotation
-          if (t.flagMesh && t.flagMesh.userData && t.flagMesh.userData.ledMaterial) {
-            t.flagMesh.userData.ledMaterial.emissiveIntensity = ledIntensity;
+          // If tile has a flag mesh, animate its core, gimbals, and floating offset
+          if (t.flagMesh && t.flagMesh.userData && t.flagMesh.userData.coreMaterial) {
+            // Animate rings
+            if (t.flagMesh.userData.ring1) {
+              t.flagMesh.userData.ring1.rotateX(0.02);
+              t.flagMesh.userData.ring1.rotateY(0.005);
+            }
+            if (t.flagMesh.userData.ring2) {
+              t.flagMesh.userData.ring2.rotateY(-0.015);
+              t.flagMesh.userData.ring2.rotateZ(0.01);
+            }
+            
+            // Pulsing emissive glow (offset by tile index to prevent uniform pulsing)
+            const tileEmissive = 1.2 + Math.sin(time * 0.008 + t.index * 0.5) * 0.8;
+            const tileGlowAlpha = 0.3 + Math.sin(time * 0.008 + t.index * 0.5) * 0.2;
+            
+            t.flagMesh.userData.coreMaterial.emissiveIntensity = tileEmissive;
             if (t.flagMesh.userData.ledGlowMaterial) {
-              t.flagMesh.userData.ledGlowMaterial.opacity = glowOpacity;
+              t.flagMesh.userData.ledGlowMaterial.opacity = tileGlowAlpha;
             }
             
             // Hover/bobbing animation along normal axis
             const hoverOffset = Math.sin(time * 0.0035 + t.index * 0.4) * 0.0025;
             t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0 + hoverOffset);
-            
-            // Slow axial rotation around its normal (local Y-axis)
-            t.flagMesh.rotateY(0.012);
           }
 
           if (!t.label || !t.label.isMesh) return;
