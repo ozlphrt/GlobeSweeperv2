@@ -746,6 +746,19 @@
 
       <button class="control-btn" id="globeBtn" title="Globe">🌐</button>
 
+      <select class="control-btn theme-select" id="mineStyleSelect" title="Select Mine Asset Style" style="width: auto; padding: 4px 8px; margin-left: 6px;">
+        <option value="1">Gimbal Orb</option>
+        <option value="2">Reactor Core</option>
+        <option value="3">Satellite</option>
+        <option value="4">Steampunk Can</option>
+        <option value="5">Emerald Crystal</option>
+        <option value="6">Bio Canister</option>
+        <option value="7">Pyramid</option>
+        <option value="8">Spiked Classic</option>
+        <option value="9">EMP Core</option>
+        <option value="10">Nuclear Beacon</option>
+      </select>
+
     </div>
 
     <div class="ext-section">
@@ -1474,173 +1487,457 @@
     function createNavalMineMesh() {
       const mineGroup = new THREE.Group();
       
-      // 1. Procedural plasma shader with integrated glowing Fresnel edges
-      const coreMat = new THREE.ShaderMaterial({
-        vertexShader: `
-          varying vec3 vNormal;
-          varying vec3 vViewPosition;
-          varying vec3 vPosition;
-          void main() {
-            vNormal = normalize(normalMatrix * normal);
-            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-            vViewPosition = -mvPosition.xyz;
-            vPosition = position;
-            gl_Position = projectionMatrix * mvPosition;
-          }
-        `,
-        fragmentShader: `
-          varying vec3 vNormal;
-          varying vec3 vViewPosition;
-          varying vec3 vPosition;
-          uniform float time;
-          uniform vec3 color1;
-          uniform vec3 color2;
-          void main() {
-            vec3 normal = normalize(vNormal);
-            vec3 viewDir = normalize(vViewPosition);
-            
-            // Generate moving multi-frequency noise wave fields for organic plasma turbulence
-            vec3 p = vPosition * 140.0;
-            float t = time * 0.0035;
-            
-            float w1 = sin(p.x + t) + sin(p.y + t) + sin(p.z + t);
-            float w2 = sin(2.0 * p.x - t * 1.6) + sin(2.0 * p.y + t * 1.3) + sin(2.0 * p.z - t * 0.9);
-            float w3 = sin(4.0 * p.x + t * 2.2) * sin(4.0 * p.y - t * 1.8);
-            
-            float noise = (w1 + 0.5 * w2 + 0.25 * w3) / 1.75;
-            float factor = clamp(noise * 0.5 + 0.5, 0.0, 1.0);
-            
-            // Smoothly blend violet core and bright pink electric plasma accents
-            vec3 plasma = mix(color1, color2, factor);
-            
-            // Fresnel rim glowing edges
-            float vDot = abs(dot(normal, viewDir));
-            float edgeGlow = pow(1.0 - vDot, 2.5);
-            vec3 glow = vec3(0.92, 0.55, 1.0) * edgeGlow * 1.6;
-            
-            // Soft alpha falloff at the absolute geometric boundary to eliminate sharp edge circles
-            float alpha = pow(vDot, 0.45);
-            
-            gl_FragColor = vec4((plasma + glow) * alpha, alpha);
-          }
-        `,
-        uniforms: {
-          time: { value: 0.0 },
-          color1: { value: new THREE.Color(0x5a0bad) }, // Violet base
-          color2: { value: new THREE.Color(0xff22aa) }  // Hot pink filaments
-        },
-        transparent: true,
-        depthWrite: false
-      });
+      const selectEl = document.getElementById('mineStyleSelect');
+      const style = selectEl ? parseInt(selectEl.value, 10) : 1;
 
-      function createSparkTexture() {
+      // Style 1: GIMBAL PLASMA ORB
+      if (style === 1) {
+        const coreMat = new THREE.ShaderMaterial({
+          vertexShader: `
+            varying vec3 vNormal;
+            varying vec3 vViewPosition;
+            varying vec3 vPosition;
+            void main() {
+              vNormal = normalize(normalMatrix * normal);
+              vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+              vViewPosition = -mvPosition.xyz;
+              vPosition = position;
+              gl_Position = projectionMatrix * mvPosition;
+            }
+          `,
+          fragmentShader: `
+            varying vec3 vNormal;
+            varying vec3 vViewPosition;
+            varying vec3 vPosition;
+            uniform float time;
+            uniform vec3 color1;
+            uniform vec3 color2;
+            void main() {
+              vec3 normal = normalize(vNormal);
+              vec3 viewDir = normalize(vViewPosition);
+              vec3 p = vPosition * 140.0;
+              float t = time * 0.0035;
+              float w1 = sin(p.x + t) + sin(p.y + t) + sin(p.z + t);
+              float w2 = sin(2.0 * p.x - t * 1.6) + sin(2.0 * p.y + t * 1.3) + sin(2.0 * p.z - t * 0.9);
+              float w3 = sin(4.0 * p.x + t * 2.2) * sin(4.0 * p.y - t * 1.8);
+              float noise = (w1 + 0.5 * w2 + 0.25 * w3) / 1.75;
+              float factor = clamp(noise * 0.5 + 0.5, 0.0, 1.0);
+              vec3 plasma = mix(color1, color2, factor);
+              float vDot = abs(dot(normal, viewDir));
+              float edgeGlow = pow(1.0 - vDot, 2.5);
+              vec3 glow = vec3(0.92, 0.55, 1.0) * edgeGlow * 1.6;
+              float alpha = pow(vDot, 0.45);
+              gl_FragColor = vec4((plasma + glow) * alpha, alpha);
+            }
+          `,
+          uniforms: {
+            time: { value: 0.0 },
+            color1: { value: new THREE.Color(0x5a0bad) },
+            color2: { value: new THREE.Color(0xff22aa) }
+          },
+          transparent: true,
+          depthWrite: false
+        });
+
+        function createSparkTexture() {
+          const canvas = document.createElement('canvas');
+          canvas.width = 16;
+          canvas.height = 16;
+          const ctx = canvas.getContext('2d');
+          const grad = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
+          grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+          grad.addColorStop(0.3, 'rgba(210, 180, 255, 0.9)');
+          grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, 16, 16);
+          return new THREE.CanvasTexture(canvas);
+        }
+        
+        const sparkTex = createSparkTexture();
+
+        const ring1Mat = new THREE.PointsMaterial({
+          color: 0x00ffff,
+          size: 0.045,
+          map: sparkTex,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+        const ring2Mat = new THREE.PointsMaterial({
+          color: 0xff33bb,
+          size: 0.045,
+          map: sparkTex,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+
+        const coreGeo = new THREE.SphereGeometry(0.010, 24, 24);
+        const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+        coreMesh.castShadow = true;
+        coreMesh.receiveShadow = true;
+        mineGroup.add(coreMesh);
+        
+        const coreLight = new THREE.PointLight(0x9b30ff, 1.5, 0.08, 2.0);
+        mineGroup.add(coreLight);
+        
+        const innerOrbitGeo = new THREE.BufferGeometry();
+        const innerOrbitPos = [];
+        const innerCount = 36;
+        for (let i = 0; i < innerCount; i++) {
+          const angle = (i / innerCount) * Math.PI * 2;
+          innerOrbitPos.push(Math.cos(angle) * 0.015, Math.sin(angle) * 0.015, 0);
+        }
+        innerOrbitGeo.setAttribute('position', new THREE.Float32BufferAttribute(innerOrbitPos, 3));
+        const ring1Mesh = new THREE.Points(innerOrbitGeo, ring1Mat);
+        mineGroup.add(ring1Mesh);
+
+        const outerOrbitGeo = new THREE.BufferGeometry();
+        const outerOrbitPos = [];
+        const outerCount = 48;
+        for (let i = 0; i < outerCount; i++) {
+          const angle = (i / outerCount) * Math.PI * 2;
+          outerOrbitPos.push(Math.cos(angle) * 0.019, Math.sin(angle) * 0.019, 0);
+        }
+        outerOrbitGeo.setAttribute('position', new THREE.Float32BufferAttribute(outerOrbitPos, 3));
+        const ring2Mesh = new THREE.Points(outerOrbitGeo, ring2Mat);
+        ring2Mesh.quaternion.setFromEuler(new THREE.Euler(Math.PI / 4, Math.PI / 4, 0));
+        mineGroup.add(ring2Mesh);
+
+        function createVioletGlowTexture() {
+          const canvas = document.createElement('canvas');
+          canvas.width = 32;
+          canvas.height = 32;
+          const ctx = canvas.getContext('2d');
+          const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+          grad.addColorStop(0, 'rgba(155, 48, 255, 0.7)');
+          grad.addColorStop(0.3, 'rgba(138, 43, 226, 0.4)');
+          grad.addColorStop(0.6, 'rgba(138, 43, 226, 0.15)');
+          grad.addColorStop(1, 'rgba(138, 43, 226, 0.0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, 32, 32);
+          return new THREE.CanvasTexture(canvas);
+        }
+
+        const glowTex = createVioletGlowTexture();
+        const ledGlowMat = new THREE.SpriteMaterial({
+          map: glowTex,
+          color: 0x9b30ff,
+          transparent: true,
+          opacity: 0.5,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+
+        const glow = new THREE.Sprite(ledGlowMat);
+        glow.scale.set(0.042, 0.042, 1.0);
+        mineGroup.add(glow);
+        
+        mineGroup.userData = { 
+          style: 1,
+          coreMaterial: coreMat, 
+          ledGlowMaterial: ledGlowMat, 
+          glowTexture: glowTex,
+          sparkTexture: sparkTex,
+          ring1: ring1Mesh,
+          ring2: ring2Mesh,
+          pointLight: coreLight
+        };
+      }
+      
+      // Style 2: SCI-FI REACTOR CORE
+      else if (style === 2) {
+        const coreGeo = new THREE.CylinderGeometry(0.007, 0.007, 0.022, 12);
+        const coreMat = new THREE.MeshStandardMaterial({
+          color: 0x00ffff,
+          emissive: 0x00ffff,
+          emissiveIntensity: 2.0,
+          roughness: 0.1
+        });
+        const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+        coreMesh.castShadow = true;
+        coreMesh.receiveShadow = true;
+        mineGroup.add(coreMesh);
+
+        const capGeo = new THREE.CylinderGeometry(0.0085, 0.0085, 0.003, 12);
+        const capMat = new THREE.MeshStandardMaterial({ color: 0x24282c, roughness: 0.4 });
+        
+        const topCap = new THREE.Mesh(capGeo, capMat);
+        topCap.position.y = 0.011;
+        mineGroup.add(topCap);
+        
+        const bottomCap = new THREE.Mesh(capGeo, capMat);
+        bottomCap.position.y = -0.011;
+        mineGroup.add(bottomCap);
+
+        const ringGeo = new THREE.TorusGeometry(0.0078, 0.0009, 4, 12);
+        ringGeo.rotateX(Math.PI/2);
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0xaa7c4c, metalness: 0.9, roughness: 0.2 });
+        
+        const r1 = new THREE.Mesh(ringGeo, ringMat);
+        r1.position.y = 0.005;
+        mineGroup.add(r1);
+
+        const r2 = new THREE.Mesh(ringGeo, ringMat);
+        r2.position.y = -0.005;
+        mineGroup.add(r2);
+
+        const warnGeo = new THREE.SphereGeometry(0.002, 8, 8);
+        const warnMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 2.0 });
+        const warnLed = new THREE.Mesh(warnGeo, warnMat);
+        warnLed.position.y = 0.013;
+        mineGroup.add(warnLed);
+
+        mineGroup.userData = { style: 2, ledMaterial: warnMat };
+      }
+      
+      // Style 3: ORBITAL SATELLITE
+      else if (style === 3) {
+        const bodyGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.016, 6);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x56606a, metalness: 0.8, roughness: 0.3 });
+        const bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
+        bodyMesh.castShadow = true;
+        bodyMesh.receiveShadow = true;
+        mineGroup.add(bodyMesh);
+
+        const panelGeo = new THREE.BoxGeometry(0.028, 0.008, 0.001);
+        const panelMat = new THREE.MeshStandardMaterial({ color: 0x0044bb, emissive: 0x002288, roughness: 0.1 });
+        
+        const p1 = new THREE.Mesh(panelGeo, panelMat);
+        p1.position.set(0.016, 0, 0);
+        mineGroup.add(p1);
+        
+        const p2 = new THREE.Mesh(panelGeo, panelMat);
+        p2.position.set(-0.016, 0, 0);
+        mineGroup.add(p2);
+
+        const antGeo = new THREE.CylinderGeometry(0.0008, 0.0008, 0.008, 4);
+        const antMat = new THREE.MeshStandardMaterial({ color: 0x24282c });
+        const antenna = new THREE.Mesh(antGeo, antMat);
+        antenna.position.y = 0.012;
+        mineGroup.add(antenna);
+
+        const beaconGeo = new THREE.SphereGeometry(0.0016, 6, 6);
+        const beaconMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000 });
+        const beacon = new THREE.Mesh(beaconGeo, beaconMat);
+        beacon.position.y = 0.016;
+        mineGroup.add(beacon);
+
+        mineGroup.userData = { style: 3, ledMaterial: beaconMat, rot: bodyMesh };
+      }
+      
+      // Style 4: STEAMPUNK CANISTER
+      else if (style === 4) {
+        const bodyGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.020, 10);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xc8753a, metalness: 0.9, roughness: 0.3 });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.castShadow = true;
+        mineGroup.add(body);
+
+        const bandGeo = new THREE.TorusGeometry(0.0085, 0.001, 4, 12);
+        bandGeo.rotateX(Math.PI/2);
+        const bandMat = new THREE.MeshStandardMaterial({ color: 0x2c3034, metalness: 0.8 });
+        
+        const b1 = new THREE.Mesh(bandGeo, bandMat);
+        b1.position.y = 0.006;
+        mineGroup.add(b1);
+        
+        const b2 = new THREE.Mesh(bandGeo, bandMat);
+        b2.position.y = -0.006;
+        mineGroup.add(b2);
+
+        const gearGeo = new THREE.CylinderGeometry(0.005, 0.005, 0.002, 8);
+        const gearMat = new THREE.MeshStandardMaterial({ color: 0xd4a32b, metalness: 0.9, roughness: 0.25 });
+        const gear = new THREE.Mesh(gearGeo, gearMat);
+        gear.position.y = 0.011;
+        mineGroup.add(gear);
+
+        const valveGeo = new THREE.SphereGeometry(0.0015, 6, 6);
+        const valveMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xffaa00 });
+        const valve = new THREE.Mesh(valveGeo, valveMat);
+        valve.position.set(0.004, 0.004, 0.006);
+        mineGroup.add(valve);
+
+        mineGroup.userData = { style: 4, rot: gear, ledMaterial: valveMat };
+      }
+      
+      // Style 5: EMERALD CRYSTAL CLUSTER
+      else if (style === 5) {
+        const cryMat = new THREE.MeshStandardMaterial({
+          color: 0x00ff66,
+          emissive: 0x00ff66,
+          emissiveIntensity: 2.0,
+          transparent: true,
+          opacity: 0.85
+        });
+
+        const shards = [];
+        const cryGeo = new THREE.ConeGeometry(0.0045, 0.020, 4);
+        
+        const c1 = new THREE.Mesh(cryGeo, cryMat);
+        c1.position.set(0, 0, 0);
+        mineGroup.add(c1);
+        shards.push(c1);
+
+        const directions = [
+          { pos: new THREE.Vector3(0.005, 0, 0.003), rot: new THREE.Euler(0.2, 0, 0.3) },
+          { pos: new THREE.Vector3(-0.005, 0, -0.003), rot: new THREE.Euler(-0.2, 0, -0.3) },
+          { pos: new THREE.Vector3(0.003, 0, -0.005), rot: new THREE.Euler(0, 0.2, -0.3) },
+          { pos: new THREE.Vector3(-0.003, 0, 0.005), rot: new THREE.Euler(0, -0.2, 0.3) }
+        ];
+
+        directions.forEach(d => {
+          const s = new THREE.Mesh(cryGeo, cryMat);
+          s.position.copy(d.pos);
+          s.quaternion.setFromEuler(d.rot);
+          mineGroup.add(s);
+          shards.push(s);
+        });
+
+        mineGroup.userData = { style: 5, crystals: shards, ledMaterial: cryMat };
+      }
+      
+      // Style 6: BIOHAZARD CANISTER
+      else if (style === 6) {
+        const tubeGeo = new THREE.CylinderGeometry(0.0035, 0.0035, 0.018, 8);
+        const tubeMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.3 });
+        
+        const t1 = new THREE.Mesh(tubeGeo, tubeMat); t1.position.set(0.004, 0, 0); mineGroup.add(t1);
+        const t2 = new THREE.Mesh(tubeGeo, tubeMat); t2.position.set(-0.002, 0, 0.0035); mineGroup.add(t2);
+        const t3 = new THREE.Mesh(tubeGeo, tubeMat); t3.position.set(-0.002, 0, -0.0035); mineGroup.add(t3);
+
+        const strapGeo = new THREE.CylinderGeometry(0.0075, 0.0075, 0.003, 6);
+        const strapMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+        const strap = new THREE.Mesh(strapGeo, strapMat);
+        mineGroup.add(strap);
+
+        const ledGeo = new THREE.SphereGeometry(0.0018, 6, 6);
+        const ledMat = new THREE.MeshStandardMaterial({ color: 0x39ff14, emissive: 0x39ff14 });
+        const led = new THREE.Mesh(ledGeo, ledMat);
+        led.position.set(0, 0.010, 0);
+        mineGroup.add(led);
+
+        mineGroup.userData = { style: 6, ledMaterial: ledMat };
+      }
+      
+      // Style 7: OBSIDIAN PYRAMID (MONOLITH)
+      else if (style === 7) {
+        const pyramidGeo = new THREE.ConeGeometry(0.011, 0.020, 3);
+        const pyramidMat = new THREE.MeshStandardMaterial({ color: 0x141619, roughness: 0.1, metalness: 0.9 });
+        const pyramid = new THREE.Mesh(pyramidGeo, pyramidMat);
+        pyramid.castShadow = true;
+        pyramid.receiveShadow = true;
+        mineGroup.add(pyramid);
+
+        const innerGeo = new THREE.SphereGeometry(0.004, 8, 8);
+        const innerMat = new THREE.MeshStandardMaterial({ color: 0x00aaff, emissive: 0x00aaff });
+        const inner = new THREE.Mesh(innerGeo, innerMat);
+        inner.position.y = -0.002;
+        mineGroup.add(inner);
+
+        mineGroup.userData = { style: 7, rot: pyramid, ledMaterial: innerMat };
+      }
+      
+      // Style 8: SPIKED NAVAL MINE (UPGRADED CLASSIC)
+      else if (style === 8) {
+        const coreGeo = new THREE.SphereGeometry(0.011, 12, 12);
+        const coreMat = new THREE.MeshStandardMaterial({ color: 0x2c3034, metalness: 0.9, roughness: 0.3 });
+        const core = new THREE.Mesh(coreGeo, coreMat);
+        core.castShadow = true;
+        core.receiveShadow = true;
+        mineGroup.add(core);
+
+        const spikeGeo = new THREE.ConeGeometry(0.002, 0.008, 4);
+        spikeGeo.rotateX(Math.PI/2);
+        const spikeMat = new THREE.MeshStandardMaterial({ color: 0xaa7c4c, metalness: 0.9 });
+
+        const dirs = [
+          new THREE.Vector3(1,0,0), new THREE.Vector3(-1,0,0),
+          new THREE.Vector3(0,1,0), new THREE.Vector3(0,-1,0),
+          new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,-1)
+        ];
+        dirs.forEach(d => {
+          const s = new THREE.Mesh(spikeGeo, spikeMat);
+          s.position.copy(d).multiplyScalar(0.012);
+          s.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), d);
+          mineGroup.add(s);
+        });
+
+        const ledGeo = new THREE.SphereGeometry(0.0018, 6, 6);
+        const ledMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000 });
+        const led = new THREE.Mesh(ledGeo, ledMat);
+        led.position.set(0, 0.012, 0);
+        mineGroup.add(led);
+
+        mineGroup.userData = { style: 8, ledMaterial: ledMat };
+      }
+      
+      // Style 9: MAGNETIC EMP CORE
+      else if (style === 9) {
+        const ringGeo = new THREE.TorusGeometry(0.013, 0.0016, 6, 18);
+        ringGeo.rotateX(Math.PI/2);
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0x22252a, metalness: 0.9, roughness: 0.25 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        mineGroup.add(ring);
+
+        const floatGeo = new THREE.SphereGeometry(0.0055, 8, 8);
+        const floatMat = new THREE.MeshStandardMaterial({ color: 0x00d2ff, emissive: 0x00d2ff, emissiveIntensity: 2.0 });
+        const floatCore = new THREE.Mesh(floatGeo, floatMat);
+        mineGroup.add(floatCore);
+
+        const sparkGeo = new THREE.BufferGeometry();
+        const pos = [];
+        const count = 12;
+        for (let i = 0; i < count; i++) {
+          const angle = (i / count) * Math.PI * 2;
+          pos.push(Math.cos(angle) * 0.009, 0, Math.sin(angle) * 0.009);
+        }
+        sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        
         const canvas = document.createElement('canvas');
-        canvas.width = 16;
-        canvas.height = 16;
+        canvas.width = 8; canvas.height = 8;
         const ctx = canvas.getContext('2d');
-        const grad = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
-        grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
-        grad.addColorStop(0.3, 'rgba(210, 180, 255, 0.9)');
-        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 16, 16);
-        return new THREE.CanvasTexture(canvas);
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,8,8);
+        const tex = new THREE.CanvasTexture(canvas);
+
+        const sparkMat = new THREE.PointsMaterial({
+          color: 0x00d2ff,
+          size: 0.022,
+          map: tex,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+
+        const points = new THREE.Points(sparkGeo, sparkMat);
+        mineGroup.add(points);
+
+        mineGroup.userData = { style: 9, rot: ring, rot2: points, ledMaterial: floatMat, sparkTexture: tex };
       }
       
-      const sparkTex = createSparkTexture();
+      // Style 10: NUCLEAR BEACON
+      else if (style === 10) {
+        const postGeo = new THREE.CylinderGeometry(0.002, 0.002, 0.016, 8);
+        const postMat = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.4 });
+        const post = new THREE.Mesh(postGeo, postMat);
+        mineGroup.add(post);
 
-      const ring1Mat = new THREE.PointsMaterial({
-        color: 0x00ffff,
-        size: 0.045,
-        map: sparkTex,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-      const ring2Mat = new THREE.PointsMaterial({
-        color: 0xff33bb,
-        size: 0.045,
-        map: sparkTex,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
+        const brackGeo = new THREE.TorusGeometry(0.005, 0.001, 4, 12);
+        brackGeo.rotateX(Math.PI/2);
+        const brackMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+        const brack = new THREE.Mesh(brackGeo, brackMat);
+        brack.position.y = 0.004;
+        mineGroup.add(brack);
 
-      // 1. Central pulsing plasma core sphere
-      const coreGeo = new THREE.SphereGeometry(0.010, 24, 24);
-      const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-      coreMesh.castShadow = true;
-      coreMesh.receiveShadow = true;
-      mineGroup.add(coreMesh);
-      
-      // 2. Real physical point light source to cast reflections
-      const coreLight = new THREE.PointLight(0x9b30ff, 1.5, 0.08, 2.0);
-      mineGroup.add(coreLight);
-      
-      // 3. Inner Orbit Particles
-      const innerOrbitGeo = new THREE.BufferGeometry();
-      const innerOrbitPos = [];
-      const innerCount = 36;
-      for (let i = 0; i < innerCount; i++) {
-        const angle = (i / innerCount) * Math.PI * 2;
-        innerOrbitPos.push(Math.cos(angle) * 0.015, Math.sin(angle) * 0.015, 0);
-      }
-      innerOrbitGeo.setAttribute('position', new THREE.Float32BufferAttribute(innerOrbitPos, 3));
-      const ring1Mesh = new THREE.Points(innerOrbitGeo, ring1Mat);
-      mineGroup.add(ring1Mesh);
+        const lightGeo = new THREE.SphereGeometry(0.003, 8, 8);
+        const lightMat = new THREE.MeshStandardMaterial({ color: 0xff3300, emissive: 0xff3300, emissiveIntensity: 2.0 });
+        const light = new THREE.Mesh(lightGeo, lightMat);
+        light.position.y = 0.009;
+        mineGroup.add(light);
 
-      // 4. Outer Orbit Particles - rotated initially
-      const outerOrbitGeo = new THREE.BufferGeometry();
-      const outerOrbitPos = [];
-      const outerCount = 48;
-      for (let i = 0; i < outerCount; i++) {
-        const angle = (i / outerCount) * Math.PI * 2;
-        outerOrbitPos.push(Math.cos(angle) * 0.019, Math.sin(angle) * 0.019, 0);
-      }
-      outerOrbitGeo.setAttribute('position', new THREE.Float32BufferAttribute(outerOrbitPos, 3));
-      const ring2Mesh = new THREE.Points(outerOrbitGeo, ring2Mat);
-      ring2Mesh.quaternion.setFromEuler(new THREE.Euler(Math.PI / 4, Math.PI / 4, 0));
-      mineGroup.add(ring2Mesh);
-
-      // 5. Soft Violet Radial Gradient Glow Sprite for atmospheric aura
-      function createVioletGlowTexture() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 32;
-        canvas.height = 32;
-        const ctx = canvas.getContext('2d');
-        const grad = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-        grad.addColorStop(0, 'rgba(155, 48, 255, 0.7)');
-        grad.addColorStop(0.3, 'rgba(138, 43, 226, 0.4)');
-        grad.addColorStop(0.6, 'rgba(138, 43, 226, 0.15)');
-        grad.addColorStop(1, 'rgba(138, 43, 226, 0.0)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 32, 32);
-        return new THREE.CanvasTexture(canvas);
+        mineGroup.userData = { style: 10, ledMaterial: lightMat };
       }
 
-      const glowTex = createVioletGlowTexture();
-      const ledGlowMat = new THREE.SpriteMaterial({
-        map: glowTex,
-        color: 0x9b30ff,
-        transparent: true,
-        opacity: 0.5,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false
-      });
-
-      const glow = new THREE.Sprite(ledGlowMat);
-      glow.scale.set(0.042, 0.042, 1.0);
-      mineGroup.add(glow);
-      
-      mineGroup.userData = { 
-        coreMaterial: coreMat, 
-        ledGlowMaterial: ledGlowMat, 
-        glowTexture: glowTex,
-        sparkTexture: sparkTex,
-        ring1: ring1Mesh,
-        ring2: ring2Mesh,
-        pointLight: coreLight
-      };
       return mineGroup;
     }
 
@@ -3869,6 +4166,69 @@
       e.target.textContent = soundEnabled ? '🔊' : '🔇';
     });
 
+    document.getElementById('mineStyleSelect').addEventListener('change', () => {
+      updateAllFlagMeshes();
+    });
+
+    function updateAllFlagMeshes() {
+      state.tiles.forEach((t, i) => {
+        if (t.flagged && t.flagMesh) {
+          tileGroup.remove(t.flagMesh);
+          if (t.flagMesh.userData) {
+            if (t.flagMesh.userData.glowTexture) t.flagMesh.userData.glowTexture.dispose();
+            if (t.flagMesh.userData.sparkTexture) t.flagMesh.userData.sparkTexture.dispose();
+          }
+          t.flagMesh.traverse(child => {
+            if (child.isMesh || child.isSprite || child.isPoints) {
+              if (child.geometry) child.geometry.dispose();
+              if (child.material) {
+                if (child.material.map) child.material.map.dispose();
+                if (Array.isArray(child.material)) {
+                  child.material.forEach(m => {
+                    if (m.map) m.map.dispose();
+                    m.dispose();
+                  });
+                } else {
+                  child.material.dispose();
+                }
+              }
+            }
+          });
+          
+          const mineMesh = createNavalMineMesh();
+          mineMesh.position.copy(t.center).normalize().multiplyScalar(1.0);
+          mineMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), t.center.clone().normalize());
+          tileGroup.add(mineMesh);
+          t.flagMesh = mineMesh;
+        }
+      });
+
+      if (state.debugMine) {
+        scene.remove(state.debugMine);
+        state.debugMine.traverse(child => {
+          if (child.isMesh || child.isSprite || child.isPoints) {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+              if (child.material.map) child.material.map.dispose();
+              if (Array.isArray(child.material)) {
+                child.material.forEach(m => {
+                  if (m.map) m.map.dispose();
+                  m.dispose();
+                });
+              } else {
+                child.material.dispose();
+              }
+            }
+          }
+        });
+        const debugMine = createNavalMineMesh();
+        debugMine.scale.set(40.0, 40.0, 40.0);
+        debugMine.position.set(0, 0, 0);
+        scene.add(debugMine);
+        state.debugMine = debugMine;
+      }
+    }
+
     document.getElementById('globeBtn').addEventListener('click', ()=>{
 
       camera.position.set(0, 0, 3.4);
@@ -5144,51 +5504,85 @@
         const glowAlpha = 0.3 + Math.sin(time * 0.008) * 0.2;
 
         if (state.debugMine) {
-          // Slow axial rotations for the rings of the fullscreen debug mine
-          if (state.debugMine.userData.ring1) {
-            state.debugMine.userData.ring1.rotateX(0.02);
-            state.debugMine.userData.ring1.rotateY(0.005);
+          const ud = state.debugMine.userData;
+          if (ud.ring1) {
+            ud.ring1.rotateX(0.02);
+            ud.ring1.rotateY(0.005);
           }
-          if (state.debugMine.userData.ring2) {
-            state.debugMine.userData.ring2.rotateY(-0.015);
-            state.debugMine.userData.ring2.rotateZ(0.01);
+          if (ud.ring2) {
+            ud.ring2.rotateY(-0.015);
+            ud.ring2.rotateZ(0.01);
           }
-          if (state.debugMine.userData.coreMaterial) {
-            state.debugMine.userData.coreMaterial.uniforms.time.value = time;
+          if (ud.coreMaterial) {
+            if (ud.coreMaterial.uniforms && ud.coreMaterial.uniforms.time) {
+              ud.coreMaterial.uniforms.time.value = time;
+            } else {
+              ud.coreMaterial.emissiveIntensity = coreEmissive;
+            }
           }
-          if (state.debugMine.userData.ledGlowMaterial) {
-            state.debugMine.userData.ledGlowMaterial.opacity = glowAlpha;
+          if (ud.ledMaterial) {
+            ud.ledMaterial.emissiveIntensity = coreEmissive;
           }
-          if (state.debugMine.userData.pointLight) {
-            state.debugMine.userData.pointLight.intensity = coreEmissive * 0.7;
+          if (ud.ledGlowMaterial) {
+            ud.ledGlowMaterial.opacity = glowAlpha;
+          }
+          if (ud.pointLight) {
+            ud.pointLight.intensity = coreEmissive * 0.7;
+          }
+          if (ud.rot) {
+            ud.rot.rotateY(0.02);
+          }
+          if (ud.rot2) {
+            ud.rot2.rotateY(-0.015);
+          }
+          if (ud.crystals) {
+            ud.crystals.forEach((c, idx) => {
+              c.rotateY(0.008 * (idx % 2 === 0 ? 1 : -1));
+            });
           }
         }
 
         state.tiles.forEach(t => {
-          // If tile has a flag mesh, animate its core, gimbals, and floating offset
-          if (t.flagMesh && t.flagMesh.userData && t.flagMesh.userData.coreMaterial) {
-            // Animate rings
-            if (t.flagMesh.userData.ring1) {
-              t.flagMesh.userData.ring1.rotateX(0.02);
-              t.flagMesh.userData.ring1.rotateY(0.005);
-            }
-            if (t.flagMesh.userData.ring2) {
-              t.flagMesh.userData.ring2.rotateY(-0.015);
-              t.flagMesh.userData.ring2.rotateZ(0.01);
-            }
-            
-            // Animate moving plasma waves in shader
-            t.flagMesh.userData.coreMaterial.uniforms.time.value = time;
-            
-            // Pulsing emissive glow (offset by tile index to prevent uniform pulsing)
+          // If tile has a flag mesh, animate its respective elements
+          if (t.flagMesh && t.flagMesh.userData) {
+            const ud = t.flagMesh.userData;
             const tileEmissive = 2.0 + Math.sin(time * 0.008 + t.index * 0.5) * 1.2;
             const tileGlowAlpha = 0.35 + Math.sin(time * 0.008 + t.index * 0.5) * 0.15;
             
-            if (t.flagMesh.userData.ledGlowMaterial) {
-              t.flagMesh.userData.ledGlowMaterial.opacity = tileGlowAlpha;
+            if (ud.ring1) {
+              ud.ring1.rotateX(0.02);
+              ud.ring1.rotateY(0.005);
             }
-            if (t.flagMesh.userData.pointLight) {
-              t.flagMesh.userData.pointLight.intensity = tileEmissive * 0.5;
+            if (ud.ring2) {
+              ud.ring2.rotateY(-0.015);
+              ud.ring2.rotateZ(0.01);
+            }
+            if (ud.coreMaterial) {
+              if (ud.coreMaterial.uniforms && ud.coreMaterial.uniforms.time) {
+                ud.coreMaterial.uniforms.time.value = time;
+              } else {
+                ud.coreMaterial.emissiveIntensity = tileEmissive;
+              }
+            }
+            if (ud.ledMaterial) {
+              ud.ledMaterial.emissiveIntensity = tileEmissive * 0.7;
+            }
+            if (ud.ledGlowMaterial) {
+              ud.ledGlowMaterial.opacity = tileGlowAlpha;
+            }
+            if (ud.pointLight) {
+              ud.pointLight.intensity = tileEmissive * 0.5;
+            }
+            if (ud.rot) {
+              ud.rot.rotateY(0.02);
+            }
+            if (ud.rot2) {
+              ud.rot2.rotateY(-0.015);
+            }
+            if (ud.crystals) {
+              ud.crystals.forEach((c, idx) => {
+                c.rotateY(0.008 * (idx % 2 === 0 ? 1 : -1));
+              });
             }
             
             // Hover/bobbing animation along normal axis
