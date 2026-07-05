@@ -1514,17 +1514,23 @@
             vec3 plasma = mix(color1, color2, factor);
             
             // Fresnel rim glowing edges
-            float edge = pow(1.0 - abs(dot(normal, viewDir)), 3.0);
-            vec3 glow = vec3(0.92, 0.55, 1.0) * edge * 1.8;
+            float vDot = abs(dot(normal, viewDir));
+            float edgeGlow = pow(1.0 - vDot, 2.5);
+            vec3 glow = vec3(0.92, 0.55, 1.0) * edgeGlow * 1.6;
             
-            gl_FragColor = vec4(plasma + glow, 1.0);
+            // Soft alpha falloff at the absolute geometric boundary to eliminate sharp edge circles
+            float alpha = pow(vDot, 0.45);
+            
+            gl_FragColor = vec4((plasma + glow) * alpha, alpha);
           }
         `,
         uniforms: {
           time: { value: 0.0 },
           color1: { value: new THREE.Color(0x5a0bad) }, // Violet base
           color2: { value: new THREE.Color(0xff22aa) }  // Hot pink filaments
-        }
+        },
+        transparent: true,
+        depthWrite: false
       });
 
       const ring1Mat = new THREE.MeshStandardMaterial({
