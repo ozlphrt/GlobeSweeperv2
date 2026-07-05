@@ -1482,12 +1482,39 @@
         metalness: 0.1,
         roughness: 0.1
       });
-      const rimGlowMat = new THREE.MeshBasicMaterial({
-        color: 0xd050ff,
+      const rimGlowMat = new THREE.ShaderMaterial({
+        vertexShader: `
+          varying vec3 vNormal;
+          varying vec3 vViewPosition;
+          void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            vViewPosition = -mvPosition.xyz;
+            gl_Position = projectionMatrix * mvPosition;
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vNormal;
+          varying vec3 vViewPosition;
+          uniform vec3 glowColor;
+          uniform float coef;
+          uniform float power;
+          uniform float opacity;
+          void main() {
+            vec3 normal = normalize(vNormal);
+            vec3 viewDir = normalize(vViewPosition);
+            float intensity = pow(coef - abs(dot(normal, viewDir)), power);
+            gl_FragColor = vec4(glowColor * intensity, intensity * opacity);
+          }
+        `,
+        uniforms: {
+          glowColor: { value: new THREE.Color(0xd050ff) },
+          coef: { value: 1.0 },
+          power: { value: 3.5 },
+          opacity: { value: 0.8 }
+        },
         transparent: true,
-        opacity: 0.65,
         blending: THREE.AdditiveBlending,
-        side: THREE.BackSide,
         depthWrite: false
       });
       const ring1Mat = new THREE.MeshStandardMaterial({
@@ -5092,7 +5119,7 @@
             state.debugMine.userData.pointLight.intensity = coreEmissive * 0.7;
           }
           if (state.debugMine.userData.rimMaterial) {
-            state.debugMine.userData.rimMaterial.opacity = 0.35 + Math.sin(time * 0.008) * 0.15;
+            state.debugMine.userData.rimMaterial.uniforms.opacity.value = 0.35 + Math.sin(time * 0.008) * 0.15;
           }
         }
 
@@ -5121,7 +5148,7 @@
               t.flagMesh.userData.pointLight.intensity = tileEmissive * 0.5;
             }
             if (t.flagMesh.userData.rimMaterial) {
-              t.flagMesh.userData.rimMaterial.opacity = tileGlowAlpha + 0.1;
+              t.flagMesh.userData.rimMaterial.uniforms.opacity.value = tileGlowAlpha + 0.1;
             }
             
             // Hover/bobbing animation along normal axis
