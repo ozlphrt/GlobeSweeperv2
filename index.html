@@ -2996,6 +2996,7 @@
       const s = makeNumberDecal(t, n, labelColorHex);
 
       tileGroup.add(s); t.label = s;
+      forceLabelUpdate = true;
 
     }
 
@@ -5459,7 +5460,16 @@
     let frameCount = 0;
     const fpsCounter = document.getElementById('fpsCounter');
 
+    // Reusable math entities to eliminate runtime object allocation overhead inside the render loop
+    const _lNormal = new THREE.Vector3();
+    const _lUp = new THREE.Vector3();
+    const _lRight = new THREE.Vector3();
+    const staticMatrix = new THREE.Matrix4();
+    const camUpLocal = new THREE.Vector3();
+    const tempInvQuat = new THREE.Quaternion();
+
     let lastAnimTime = 0;
+    let forceLabelUpdate = true;
 
     renderer.setAnimationLoop((time)=>{
       const dt = lastAnimTime === 0 ? 0.016 : (time - lastAnimTime) * 0.001;
@@ -5559,13 +5569,10 @@
       // Work entirely in tileGroup LOCAL space so globe rotation is accounted for.
       if (state.tiles) {
         // Convert camera-up from world into tileGroup local space
-        const camUpLocal = new THREE.Vector3(0, 1, 0)
+        tempInvQuat.copy(tileGroup.quaternion).invert();
+        camUpLocal.set(0, 1, 0)
           .applyQuaternion(camera.quaternion)
-          .applyQuaternion(tileGroup.quaternion.clone().invert());
-
-        const _lNormal = new THREE.Vector3();
-        const _lUp    = new THREE.Vector3();
-        const _lRight  = new THREE.Vector3();
+          .applyQuaternion(tempInvQuat);
 
         // Calculate pulsing state once for this frame (sinusoidal pulse)
         const coreEmissive = 1.2 + Math.sin(time * 0.008) * 0.8;
@@ -5664,23 +5671,27 @@
             t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0 + hoverOffset);
           }
 
-          if (!t.label || !t.label.isMesh) return;
-          // tile.center is the local position in tileGroup – normalize for the local outward normal
-          _lNormal.copy(t.center).normalize();
+          const needsLabelUpdate = shouldRotate || hasVelocity || (Math.abs(camera.zoom - lastCameraZoom) > 0.001) || forceLabelUpdate;
+          if (needsLabelUpdate) {
+            if (!t.label || !t.label.isMesh) return;
+            // tile.center is the local position in tileGroup – normalize for the local outward normal
+            _lNormal.copy(t.center).normalize();
 
-          // Project camera-up (local) onto this tile's tangent plane
-          _lUp.copy(camUpLocal).addScaledVector(_lNormal, -camUpLocal.dot(_lNormal));
-          if (_lUp.lengthSq() < 1e-6) return;
-          _lUp.normalize();
+            // Project camera-up (local) onto this tile's tangent plane
+            _lUp.copy(camUpLocal).addScaledVector(_lNormal, -camUpLocal.dot(_lNormal));
+            if (_lUp.lengthSq() < 1e-6) return;
+            _lUp.normalize();
 
-          // right-hand rule in local space: right = up × normal
-          _lRight.crossVectors(_lUp, _lNormal).normalize();
+            // right-hand rule in local space: right = up × normal
+            _lRight.crossVectors(_lUp, _lNormal).normalize();
 
-          // Set label's LOCAL quaternion: X→right, Y→up, Z→normal
-          t.label.quaternion.setFromRotationMatrix(
-            new THREE.Matrix4().makeBasis(_lRight, _lUp, _lNormal)
-          );
+            // Set label's LOCAL quaternion: X→right, Y→up, Z→normal
+            t.label.quaternion.setFromRotationMatrix(
+              staticMatrix.makeBasis(_lRight, _lUp, _lNormal)
+            );
+          }
         });
+        forceLabelUpdate = false;
       }
       
       renderer.render(scene, camera); 
