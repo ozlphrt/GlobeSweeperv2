@@ -2141,7 +2141,9 @@
     dir.shadow.radius = 4;
     dir.shadow.bias = -0.002;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.autoUpdate = false;
+    renderer.shadowMap.needsUpdate = true;
 
 
 
@@ -5620,9 +5622,14 @@
           }
         }
 
+        const toCamera = new THREE.Vector3().copy(camera.position).normalize();
+
         state.tiles.forEach(t => {
-          // If tile has a flag mesh, animate its respective elements
-          if (t.flagMesh && t.flagMesh.userData) {
+          const dot = t.center.dot(toCamera);
+          const isVisible = dot > 0.15;
+
+          // If tile has a flag mesh, animate its respective elements (only if visible)
+          if (t.flagMesh && t.flagMesh.userData && isVisible) {
             const ud = t.flagMesh.userData;
             const tileEmissive = 2.0 + Math.sin(time * 0.008 + t.index * 0.5) * 1.2;
             const tileGlowAlpha = 0.35 + Math.sin(time * 0.008 + t.index * 0.5) * 0.15;
@@ -5663,7 +5670,10 @@
               });
             }
             if (ud.mixer) {
-              ud.mixer.update(dt);
+              // Stagger skeletal/morph mixer animations to 30fps (even vs odd frames) to save 50% CPU
+              if ((t.index + frameCount) % 2 === 0) {
+                ud.mixer.update(dt * 2.0);
+              }
             }
             
             // Hover/bobbing animation along normal axis
@@ -5672,7 +5682,7 @@
           }
 
           const needsLabelUpdate = shouldRotate || hasVelocity || (Math.abs(camera.zoom - lastCameraZoom) > 0.001) || forceLabelUpdate;
-          if (needsLabelUpdate) {
+          if (needsLabelUpdate && isVisible) {
             if (!t.label || !t.label.isMesh) return;
             // tile.center is the local position in tileGroup – normalize for the local outward normal
             _lNormal.copy(t.center).normalize();
@@ -5692,6 +5702,11 @@
           }
         });
         forceLabelUpdate = false;
+        
+        // Trigger shadow map updates on-demand when rotating/zooming, or throttle to 15 FPS (every 4th frame) to save GPU resources
+        if (shouldRotate || hasVelocity || (Math.abs(camera.zoom - lastCameraZoom) > 0.001) || frameCount % 4 === 0) {
+          renderer.shadowMap.needsUpdate = true;
+        }
       }
       
       renderer.render(scene, camera); 
