@@ -224,6 +224,58 @@
 
     .control-btn.reset { width: auto; padding: 0 14px; font-size: 12px; font-weight: 600; }
 
+    /* Extended features: themes and powerups */
+    .ext-section {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 10px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 280px;
+      transition: all 0.3s ease;
+    }
+    .ext-title {
+      font-size: 11px;
+      font-weight: 900;
+      color: #000000;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .theme-select {
+      width: 100%;
+      height: 32px;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(0,0,0,0.15);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 0 8px;
+      cursor: pointer;
+      color: #000000;
+      outline: none;
+      transition: background 0.2s;
+    }
+    .theme-select:hover {
+      background: rgba(255,255,255,0.8);
+    }
+
+    .ui.compact .ext-section {
+      opacity: 0;
+      visibility: hidden;
+      max-height: 0;
+      overflow: hidden;
+      pointer-events: none;
+      margin-top: 0;
+      padding: 0;
+      border: none;
+    }
+
     .row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; }
 
     .row label { font-size: 12px; opacity: 0.9; }
@@ -696,6 +748,18 @@
 
     </div>
 
+    <div class="ext-section">
+      <div class="ext-title">
+        <span>Visual Theme</span>
+      </div>
+      <select class="theme-select" id="themeSelect">
+        <option value="standard">Standard Style</option>
+        <option value="earth">Earth Style</option>
+        <option value="volcanic">Volcanic Style</option>
+      </select>
+    </div>
+
+
     <div class="instructions-section">
       <div class="instructions-title">How to Play</div>
       <ul class="instructions-list">
@@ -932,6 +996,21 @@
 
 
   <script>
+    // Force unregister service worker and clear old caches to apply updates
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (const r of registrations) {
+          r.unregister();
+        }
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(names => {
+        for (const name of names) {
+          caches.delete(name);
+        }
+      });
+    }
 
     // ===== Geometry core =====
 
@@ -1183,89 +1262,213 @@
 
 
 
-    function polygonToMesh(poly, mat) {
+    function createPrismGeometry(tileIndexOrPoly, innerRadius, outerRadius) {
+      const isIndex = typeof tileIndexOrPoly === 'number';
+      const poly = isIndex ? state.polys[tileIndexOrPoly] : tileIndexOrPoly;
+      const tileIndex = isIndex ? tileIndexOrPoly : -1;
+      const currentTileIsEmpty = isIndex && state.tiles && state.tiles[tileIndex] && state.tiles[tileIndex].isEmpty;
 
-      const center = new THREE.Vector3(); poly.forEach(p=>center.add(p)); center.multiplyScalar(1/poly.length).normalize();
+      const center = new THREE.Vector3();
+      poly.forEach(p => center.add(p));
+      center.multiplyScalar(1 / poly.length).normalize();
 
       const n = poly.length;
-
       const positions = [];
 
-      for (let i=0;i<n;i++){
+      // Pre-calculate normalized vertices and scale them slightly toward the centroid for a physical gap
+      const gapFactor = currentTileIsEmpty ? -0.025 : 0.025; // -2.5% gap for empty tiles to slide under neighbors, 2.5% gap for others
+      const normVerts = poly.map(p => {
+        const v = p.clone().normalize();
+        return v.lerp(center, gapFactor).normalize();
+      });
 
-        const a = poly[i];
+      // 1. Outer Cap (facing outwards)
+      const centerOut = center.clone().multiplyScalar(outerRadius);
+      for (let i = 0; i < n; i++) {
+        const aOut = normVerts[i].clone().multiplyScalar(outerRadius);
+        const bOut = normVerts[(i + 1) % n].clone().multiplyScalar(outerRadius);
+        positions.push(centerOut.x, centerOut.y, centerOut.z);
+        positions.push(aOut.x, aOut.y, aOut.z);
+        positions.push(bOut.x, bOut.y, bOut.z);
+      }
 
-        const b = poly[(i+1)%n];
+      // 2. Inner Cap (facing inwards)
+      const centerIn = center.clone().multiplyScalar(innerRadius);
+      for (let i = 0; i < n; i++) {
+        const aIn = normVerts[i].clone().multiplyScalar(innerRadius);
+        const bIn = normVerts[(i + 1) % n].clone().multiplyScalar(innerRadius);
+        positions.push(centerIn.x, centerIn.y, centerIn.z);
+        positions.push(bIn.x, bIn.y, bIn.z);
+        positions.push(aIn.x, aIn.y, aIn.z);
+      }
 
-        positions.push(center.x,center.y,center.z, a.x,a.y,a.z, b.x,b.y,b.z);
 
+
+      // 3. Side Quads (connecting inner and outer caps)
+      for (let i = 0; i < n; i++) {
+        const vA = poly[i];
+        const vB = poly[(i + 1) % n];
+
+        let skipWall = false;
+        if (currentTileIsEmpty && state.neighbors[tileIndex] && state.tiles) {
+          const neighbors = state.neighbors[tileIndex];
+          for (let k = 0; k < neighbors.length; k++) {
+            const nbIdx = neighbors[k];
+            const nbTile = state.tiles[nbIdx];
+            if (nbTile && nbTile.isEmpty) {
+              const nbPoly = state.polys[nbIdx];
+              let hasA = false, hasB = false;
+              for (let m = 0; m < nbPoly.length; m++) {
+                const p = nbPoly[m];
+                if (!hasA && p.distanceToSquared(vA) < 1e-8) hasA = true;
+                if (!hasB && p.distanceToSquared(vB) < 1e-8) hasB = true;
+                if (hasA && hasB) break;
+              }
+              if (hasA && hasB) {
+                skipWall = true;
+                break;
+              }
+            }
+          }
+        }
+
+        if (skipWall) continue;
+
+        const aIn = normVerts[i].clone().multiplyScalar(innerRadius);
+        const aOut = normVerts[i].clone().multiplyScalar(outerRadius);
+        const bIn = normVerts[(i + 1) % n].clone().multiplyScalar(innerRadius);
+        const bOut = normVerts[(i + 1) % n].clone().multiplyScalar(outerRadius);
+
+        // Quad Triangle 1
+        positions.push(aIn.x, aIn.y, aIn.z);
+        positions.push(bIn.x, bIn.y, bIn.z);
+        positions.push(bOut.x, bOut.y, bOut.z);
+
+        // Quad Triangle 2
+        positions.push(aIn.x, aIn.y, aIn.z);
+        positions.push(bOut.x, bOut.y, bOut.z);
+        positions.push(aOut.x, aOut.y, aOut.z);
       }
 
       const g = new THREE.BufferGeometry();
-
-      g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(positions),3));
-
-      // Compute normals for lighting - required for MeshStandardMaterial
-      // For flat faces, we need to compute face normals first, then vertex normals
+      g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(positions), 3));
       g.computeVertexNormals();
-      
-      // Ensure normals point outward from sphere center (each face is a triangle from center)
-      // Since we're using DoubleSide, normals should work in both directions, but let's ensure they point out
-      const normals = g.attributes.normal;
-      if (normals) {
-        const positions = g.attributes.position;
-        for (let i = 0; i < normals.count; i++) {
-          const nx = positions.getX(i);
-          const ny = positions.getY(i);
-          const nz = positions.getZ(i);
-          // Normalize the position vector to get outward normal
-          const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
-          if (len > 0) {
-            normals.setXYZ(i, nx / len, ny / len, nz / len);
-          }
-        }
-        normals.needsUpdate = true;
-      }
+      g.computeBoundingSphere();
+      g.computeBoundingBox();
+      return g;
+    }
 
-      return new THREE.Mesh(g, mat);
-
+    function polygonToMesh(tileIndexOrPoly, mat, innerRadius = 0.97, outerRadius = 1.0) {
+      const g = createPrismGeometry(tileIndexOrPoly, innerRadius, outerRadius);
+      const mesh = new THREE.Mesh(g, mat);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      return mesh;
     }
 
 
 
-    function makeNumberSprite(n, scale, colorOverride = null) {
-
-      const size = 128; const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
-
+    function makeNumberDecal(tile, n, colorOverride = null) {
+      const size = 256; 
+      const canvas = document.createElement('canvas'); 
+      canvas.width = size; 
+      canvas.height = size;
       const ctx = canvas.getContext('2d');
 
-      ctx.fillStyle = 'rgba(0,0,0,0)'; ctx.fillRect(0,0,size,size);
+      ctx.fillStyle = 'rgba(0,0,0,0)'; 
+      ctx.fillRect(0, 0, size, size);
 
-      ctx.font = '700 72px system-ui, Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '700 60px system-ui, Arial'; 
+      ctx.textAlign = 'center'; 
+      ctx.textBaseline = 'middle';
 
-      // All numbers use the same color (from debug panel or default)
-      // If no color provided, calculate lighter version of revealed tile color
       let finalColor = colorOverride;
       if (!finalColor) {
         const revealedColor = document.getElementById('debugTileRevealed')?.value || '#4c5b7b';
         finalColor = lightenColor(revealedColor, 0.55);
       }
       ctx.fillStyle = finalColor;
-
-      ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 8;
-
+      ctx.shadowColor = 'rgba(0,0,0,0.5)'; 
+      ctx.shadowBlur = 8;
       ctx.fillText(String(n), size/2, size/2);
 
-      const tex = new THREE.CanvasTexture(canvas); tex.anisotropy = 4; tex.needsUpdate = true;
+      const tex = new THREE.CanvasTexture(canvas); 
+      tex.anisotropy = 4; 
+      tex.needsUpdate = true;
 
-      const m = new THREE.SpriteMaterial({ map: tex, transparent: true });
+      // Build geometry in LOCAL space: flat in XY plane, centered at origin.
+      // The mesh will be positioned at tile center and oriented with Z = outward normal.
+      // Per-frame we only rotate around Z to keep the number upright.
+      const poly = state.polys[tile.index];
+      const center = tile.center.clone().normalize();
 
-      const s = new THREE.Sprite(m);
+      // Build a stable tangent frame for projecting polygon into local XY
+      const ref = Math.abs(center.x) < 0.9 ? new THREE.Vector3(1,0,0) : new THREE.Vector3(0,1,0);
+      const tanX = new THREE.Vector3().crossVectors(ref, center).normalize(); // local +X
+      const tanY = new THREE.Vector3().crossVectors(center, tanX).normalize(); // local +Y
 
-      const k = scale != null ? scale : 0.12; s.scale.set(k,k,k);
+      // Find geometric center of polygon in tangent space
+      let cx2d = 0, cy2d = 0;
+      poly.forEach(p => { cx2d += p.dot(tanX); cy2d += p.dot(tanY); });
+      cx2d /= poly.length; cy2d /= poly.length;
 
-      return s;
+      // Measure max radius in tangent space
+      let maxR = 0.01;
+      poly.forEach(p => {
+        const dx = p.dot(tanX) - cx2d;
+        const dy = p.dot(tanY) - cy2d;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d > maxR) maxR = d;
+      });
+      // Use larger scale to sample only the center of the canvas texture,
+      // completely clipping the outer 30% border where privacy watermarks are injected.
+      const uvScale = maxR * 3.2;
 
+      // Build positions in local XY, UV from texture center
+      const positions = [];
+      const uvs = [];
+      const indices = [];
+      const offset = 0.003; // tiny Z offset to avoid z-fighting
+
+      // center vertex
+      positions.push(0, 0, offset);
+      uvs.push(0.5, 0.5);
+
+      for (let i = 0; i < poly.length; i++) {
+        const p = poly[i];
+        const lx = p.dot(tanX) - cx2d;
+        const ly = p.dot(tanY) - cy2d;
+        positions.push(lx, ly, offset);
+        uvs.push(0.5 + lx / uvScale, 0.5 + ly / uvScale);
+      }
+
+      for (let i = 1; i <= poly.length; i++) {
+        const next = i === poly.length ? 1 : i + 1;
+        indices.push(0, i, next);
+      }
+
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(positions), 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(uvs), 2));
+      g.setIndex(indices);
+      g.computeVertexNormals();
+
+      const mat = new THREE.MeshBasicMaterial({ 
+        map: tex, 
+        transparent: true,
+        depthWrite: false,
+        side: THREE.DoubleSide
+      });
+
+      const mesh = new THREE.Mesh(g, mat);
+
+      // Position mesh at tile surface (accounting for dynamic topographic extrusion)
+      const outerR = 1.0 + tile.count * 0.04;
+      mesh.position.copy(tile.center).normalize().multiplyScalar(outerR);
+      // Quaternion will be set every frame by the render loop upright-tracking code
+
+      mesh.renderOrder = 2;
+      return mesh;
     }
 
 
@@ -1306,71 +1509,49 @@
 
 
     function buildEdgeLines(polys, colorHex, colorPent, neighbors, tiles) {
-
       const pts = [], pentPts = [];
-      
-      // Build a map of edges to tiles for quick lookup
-      // An edge is defined by two vertices (as a sorted pair)
-      const edgeToTiles = new Map();
-      
-      // For each tile, record which edges it has
-      polys.forEach((poly, tileIndex) => {
-        const n = poly.length;
-        for (let i = 0; i < n; i++) {
-          const a = poly[i];
-          const b = poly[(i + 1) % n];
-          // Create a unique key for the edge (sorted vertices)
-          const edgeKey = a.x < b.x || (a.x === b.x && a.y < b.y) || (a.x === b.x && a.y === b.y && a.z < b.z)
-            ? `${a.x},${a.y},${a.z}_${b.x},${b.y},${b.z}`
-            : `${b.x},${b.y},${b.z}_${a.x},${a.y},${a.z}`;
-          
-          if (!edgeToTiles.has(edgeKey)) {
-            edgeToTiles.set(edgeKey, []);
-          }
-          edgeToTiles.get(edgeKey).push(tileIndex);
-        }
-      });
 
-      // Build edge lines, skipping edges between two empty tiles
       for (let tileIndex = 0; tileIndex < polys.length; tileIndex++) {
+        const t = tiles ? tiles[tileIndex] : null;
+        if (t && t.isEmpty) {
+          continue;
+        }
+
         const poly = polys[tileIndex];
         const n = poly.length;
-        const tileIsEmpty = tiles && tiles[tileIndex] && tiles[tileIndex].isEmpty;
+
+        // Determine current outer radius for this tile
+        let outerRadius = 1.0;
+        if (t && t.revealed) {
+          outerRadius = 1.0 + t.count * 0.04;
+        }
+
+        const normVerts = poly.map(p => p.clone().normalize());
 
         for (let i = 0; i < n; i++) {
-          const a = poly[i];
-          const b = poly[(i + 1) % n];
+          const a = normVerts[i].clone().multiplyScalar(outerRadius);
+          const b = normVerts[(i + 1) % n].clone().multiplyScalar(outerRadius);
+
+          pts.push(a.x, a.y, a.z, b.x, b.y, b.z);
           
-          // Create edge key
-          const edgeKey = a.x < b.x || (a.x === b.x && a.y < b.y) || (a.x === b.x && a.y === b.y && a.z < b.z)
-            ? `${a.x},${a.y},${a.z}_${b.x},${b.y},${b.z}`
-            : `${b.x},${b.y},${b.z}_${a.x},${a.y},${a.z}`;
-          
-          // Get all tiles sharing this edge
-          const tilesOnEdge = edgeToTiles.get(edgeKey) || [];
-          
-          // Check if all tiles on this edge are empty
-          const allEmpty = tilesOnEdge.every(tIdx => tiles && tiles[tIdx] && tiles[tIdx].isEmpty);
-          
-          // Only draw edge if not all adjacent tiles are empty
-          if (!allEmpty) {
-            pts.push(a.x, a.y, a.z, b.x, b.y, b.z);
-            
-            if (n === 5) {
-              pentPts.push(a.x, a.y, a.z, b.x, b.y, b.z);
-            }
+          if (n === 5) {
+            pentPts.push(a.x, a.y, a.z, b.x, b.y, b.z);
           }
         }
       }
 
-      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(pts), 3));
-
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(pts), 3));
       const lines = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: colorHex }));
 
-      let pentLines = null; if (pentPts.length) { const gp = new THREE.BufferGeometry(); gp.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(pentPts), 3)); pentLines = new THREE.LineSegments(gp, new THREE.LineBasicMaterial({ color: colorPent })); }
+      let pentLines = null;
+      if (pentPts.length) {
+        const gp = new THREE.BufferGeometry();
+        gp.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(pentPts), 3));
+        pentLines = new THREE.LineSegments(gp, new THREE.LineBasicMaterial({ color: colorPent }));
+      }
 
       return { lines, pentLines };
-
     }
 
 
@@ -1416,16 +1597,16 @@
     centerLight.decay = 2; // Decay rate
     scene.add(centerLight);
     
-    // Shadows disabled by default (very expensive - 2048x2048 shadow maps for many tiles)
-    // Enable shadows only if needed (uncomment below)
-    // dir.castShadow = true;
-    // dir.shadow.mapSize.width = 1024; // Reduced from 2048 for better performance
-    // dir.shadow.mapSize.height = 1024;
-    // dir.shadow.camera.near = 0.5;
-    // dir.shadow.camera.far = 50;
-    // dir.shadow.radius = 4;
-    // renderer.shadowMap.enabled = true;
-    // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // Enable shadows for realistic 3D tile lighting
+    dir.castShadow = true;
+    dir.shadow.mapSize.width = 2048;
+    dir.shadow.mapSize.height = 2048;
+    dir.shadow.camera.near = 0.5;
+    dir.shadow.camera.far = 25;
+    dir.shadow.radius = 4;
+    dir.shadow.bias = -0.002;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 
 
@@ -1484,7 +1665,116 @@
 
 
 
-    const state = { f: 15, polys: [], neighbors: [], tiles: [], firstClick: true, gameOver: false, safeRevealed: 0, totalMines: 0, flags: 0, lives: 3, won: false };
+    // Extended game state variables
+    const state = { 
+      f: 15, 
+      polys: [], 
+      neighbors: [], 
+      tiles: [], 
+      firstClick: true, 
+      gameOver: false, 
+      safeRevealed: 0, 
+      totalMines: 0, 
+      flags: 0, 
+      lives: 3, 
+      won: false,
+      currentTheme: 'standard'
+    };
+
+    // Extended Theme Materials
+    const matHiddenLand = new THREE.MeshStandardMaterial({
+      color: 0x3a5f25, // Forestry Green
+      side: THREE.DoubleSide,
+      roughness: 0.9,
+      metalness: 0.0
+    });
+    
+    const matHiddenOcean = new THREE.MeshStandardMaterial({
+      color: 0x1d4e89, // Deep Blue
+      side: THREE.DoubleSide,
+      roughness: 0.2,
+      metalness: 0.1
+    });
+
+    const matRevealedLand = new THREE.MeshStandardMaterial({
+      color: 0xd2b48c, // Tan/Sand
+      side: THREE.DoubleSide,
+      roughness: 0.8,
+      metalness: 0.0
+    });
+
+    const matRevealedOcean = new THREE.MeshStandardMaterial({
+      color: 0x4cc9f0, // Shallow Cyan Water
+      side: THREE.DoubleSide,
+      roughness: 0.1,
+      metalness: 0.1
+    });
+
+    const matHiddenObsidian = new THREE.MeshStandardMaterial({
+      color: 0x151618, // Dark Obsidian
+      side: THREE.DoubleSide,
+      roughness: 0.9,
+      metalness: 0.2
+    });
+
+    const matRevealedLava = new THREE.MeshStandardMaterial({
+      color: 0xff3300, // Fiery orange/red
+      side: THREE.DoubleSide,
+      roughness: 0.8,
+      metalness: 0.0,
+      emissive: 0xff3300,
+      emissiveIntensity: 0.8
+    });
+
+    const matVolcanicEmpty = new THREE.MeshStandardMaterial({
+      color: 0x221111,
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+      depthTest: true,
+      side: THREE.DoubleSide,
+      roughness: 0.8,
+      metalness: 0.0
+    });
+
+    function getEarthTileType(center) {
+      const scale = 2.0;
+      const nx = center.x * scale;
+      const ny = center.y * scale;
+      const nz = center.z * scale;
+      
+      const val = Math.sin(nx) * Math.cos(ny) + 
+                  Math.sin(ny) * Math.cos(nz) + 
+                  Math.sin(nz) * Math.cos(nx) + 
+                  Math.sin(nx * 3) * Math.sin(ny * 3) * Math.sin(nz * 3) * 0.4;
+                  
+      return val > -0.15 ? 'land' : 'ocean';
+    }
+
+    function getHiddenMaterial(tile) {
+      if (state.currentTheme === 'earth') {
+        return getEarthTileType(tile.center) === 'land' ? matHiddenLand : matHiddenOcean;
+      } else if (state.currentTheme === 'volcanic') {
+        return matHiddenObsidian;
+      }
+      return matHidden;
+    }
+
+    function getRevealedMaterial(tile) {
+      if (state.currentTheme === 'earth') {
+        return getEarthTileType(tile.center) === 'land' ? matRevealedLand : matRevealedOcean;
+      } else if (state.currentTheme === 'volcanic') {
+        return matRevealedLava;
+      }
+      return matRevealed;
+    }
+
+    function getEmptyMaterial() {
+      if (state.currentTheme === 'volcanic') {
+        return matVolcanicEmpty;
+      }
+      return matEmpty;
+    }
 
     let revealQueue = [];
     let revealQueueSet = new Set(); // Track queued tiles for O(1) lookup instead of O(n) includes()
@@ -1498,22 +1788,11 @@
 
 
     function rebuildWireframe() {
-      // Rebuild wireframe, skipping edges between empty tiles
+      // Rebuild wireframe (doing nothing, as gridlines are removed)
       scene.remove(wireGroup);
       wireGroup.clear();
       wireGroup = new THREE.Group();
       scene.add(wireGroup);
-      
-      const hexColor = wireHexMaterial ? wireHexMaterial.color.getHex() : 0x0f0f10;
-      const pentColor = wirePentMaterial ? wirePentMaterial.color.getHex() : 0x1e2129;
-      
-      const { lines, pentLines } = buildEdgeLines(state.polys, hexColor, pentColor, state.neighbors, state.tiles);
-      
-      wireHexMaterial = lines.material;
-      if (pentLines) wirePentMaterial = pentLines.material;
-      
-      wireGroup.add(lines);
-      if (pentLines) wireGroup.add(pentLines);
     }
 
     function buildTiles() {
@@ -1533,13 +1812,18 @@
 
       if (pentLines) wirePentMaterial = pentLines.material;
 
-      wireGroup.add(lines); if (pentLines) wireGroup.add(pentLines);
-
       state.tiles = state.polys.map((poly, i)=>{
 
-        const mesh = polygonToMesh(poly, matHidden); // Share material instead of cloning
-
         const center = new THREE.Vector3(); poly.forEach(p=>center.add(p)); center.multiplyScalar(1/poly.length).normalize();
+
+        let mat = matHidden;
+        if (state.currentTheme === 'earth') {
+          mat = getEarthTileType(center) === 'land' ? matHiddenLand : matHiddenOcean;
+        } else if (state.currentTheme === 'volcanic') {
+          mat = matHiddenObsidian;
+        }
+
+        const mesh = polygonToMesh(i, mat);
 
         // Set renderOrder so empty tiles render first (behind other tiles)
         // This ensures edges of other tiles are visible through empty tiles
@@ -1729,31 +2013,35 @@
 
           setTimeout(() => {
             state.totalMines = mineTarget; state.flags = 0; state.safeRevealed = 0; state.gameOver=false; state.won = false; state.lives = 3; lifeLostInCurrentReveal = false; updateCounters();
+            state.tiles.forEach((t, idx)=>{ t.mine=false; t.count=0; t.flagged=false; t.revealed=false; t.isEmpty=false; if (t.label){ tileGroup.remove(t.label); t.label.material.map.dispose(); t.label.material.dispose(); t.label=null; } t.mesh.geometry.dispose(); t.mesh.geometry = createPrismGeometry(idx, 0.97, 1.0); t.mesh.material = getHiddenMaterial(t); });
 
-            state.tiles.forEach(t=>{ t.mine=false; t.count=0; t.flagged=false; t.revealed=false; t.isEmpty=false; if (t.label){ tileGroup.remove(t.label); t.label.material.map.dispose(); t.label.material.dispose(); t.label=null; } t.mesh.material = t.isEmpty ? matEmpty : matHidden; });
+             const forbidden = excludeIndex >= 0 ? new Set([excludeIndex, ...state.neighbors[excludeIndex]]) : new Set();
 
-            const forbidden = excludeIndex >= 0 ? new Set([excludeIndex, ...state.neighbors[excludeIndex]]) : new Set();
+             let placed = 0; const indices = [...state.tiles.keys()].filter(i=>!forbidden.has(i) && !state.tiles[i].isEmpty);
 
-            let placed = 0; const indices = [...state.tiles.keys()].filter(i=>!forbidden.has(i) && !state.tiles[i].isEmpty);
-
-            // Handle empty tiles
-            if (emptyTilePercent > 0) {
-              const emptyCount = Math.floor(indices.length * emptyTilePercent / 100);
-              for (let i = indices.length - 1; i > 0 && emptyCount > 0; i--) {
-                const j = (Math.random() * (i + 1)) | 0;
-                [indices[i], indices[j]] = [indices[j], indices[i]];
+             // Handle empty tiles
+             if (emptyTilePercent > 0) {
+               const emptyCount = Math.floor(indices.length * emptyTilePercent / 100);
+               for (let i = indices.length - 1; i > 0 && emptyCount > 0; i--) {
+                 const j = (Math.random() * (i + 1)) | 0;
+                 [indices[i], indices[j]] = [indices[j], indices[i]];
+               }
+               for (let i = 0; i < emptyCount; i++) {
+                 const idx = indices[i];
+                 state.tiles[idx].count = 0;
+                 state.tiles[idx].isEmpty = true;
+               }
+               for (let i = 0; i < emptyCount; i++) {
+                 const idx = indices[i];
+                 state.tiles[idx].mesh.geometry.dispose();
+                 state.tiles[idx].mesh.geometry = createPrismGeometry(idx, 0.93, 0.96);
+                 state.tiles[idx].mesh.material = getEmptyMaterial();
+               }
+               indices.splice(0, emptyCount);
               }
-              for (let i = 0; i < emptyCount; i++) {
-                const idx = indices[i];
-                state.tiles[idx].count = 0;
-                state.tiles[idx].isEmpty = true;
-                state.tiles[idx].mesh.material = matEmpty; // Share material for empty tiles
-              }
-              indices.splice(0, emptyCount);
               
               // Rebuild wireframe to hide edges between empty tiles
               rebuildWireframe();
-            }
 
             // Simple random mine placement
             for (let i=indices.length-1;i>0;i--){ const j=(Math.random()* (i+1))|0; [indices[i],indices[j]]=[indices[j],indices[i]]; }
@@ -1860,12 +2148,11 @@
       if (t.mine) {
         t.mesh.material = matMine;
       } else if (t.isEmpty) {
-        t.mesh.material = matEmpty;
+        t.mesh.material = getEmptyMaterial();
       } else {
-        t.mesh.material = matRevealed;
+        t.mesh.material = getRevealedMaterial(t);
       }
-
-      if (t.mine){ 
+      if (t.mine) {
         if (!document.getElementById('debugImmortal')?.checked) {
           gameLost(i); 
           if (state.lives > 0) {
@@ -1877,6 +2164,7 @@
       }
 
       state.safeRevealed++;
+
 
       if (t.count>0 && !t.isEmpty){ addLabel(i, t.count); }
 
@@ -1943,7 +2231,10 @@
                 return;
               }
             } else {
-              t.mesh.material = matRevealed;
+              const outerR = 1.0 + t.count * 0.04;
+              t.mesh.geometry.dispose();
+              t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, outerR);
+              t.mesh.material = getRevealedMaterial(t);
               state.safeRevealed++;
             }
             
@@ -1975,6 +2266,7 @@
         // Batch expensive operations at the end
         updateCounters();
         checkWin();
+        rebuildWireframe();
         
         isRevealing = false;
         isInitialReveal = false;
@@ -1992,6 +2284,7 @@
           // Batch expensive operations at the end
           updateCounters();
           checkWin();
+          rebuildWireframe();
           
           isRevealing = false;
           revealQueueSet.clear();
@@ -2032,8 +2325,12 @@
               return;
             }
           } else {
-            t.mesh.material = matRevealed;
+            const outerR = 1.0 + t.count * 0.04;
+            t.mesh.geometry.dispose();
+            t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, outerR);
+            t.mesh.material = getRevealedMaterial(t);
             state.safeRevealed++; // Only count non-empty, non-mine tiles
+
             
             // Play sound for each tile revealed during normal cascade
             playSound('reveal');
@@ -2089,6 +2386,7 @@
       // If tile has a number (count > 0), reveal it directly without cascade
       if (t.count > 0) {
         if (t.mine) {
+
           t.mesh.material = matMine;
           if (!document.getElementById('debugImmortal')?.checked) {
             gameLost(i);
@@ -2098,12 +2396,17 @@
           t.revealed = true;
           // Reset scale to normal when revealed
           t.mesh.scale.set(1.0, 1.0, 1.0);
-          t.mesh.material = matRevealed;
+          const outerR = 1.0 + t.count * 0.04;
+          t.mesh.geometry.dispose();
+          t.mesh.geometry = createPrismGeometry(state.polys[i], 0.97, outerR);
+          t.mesh.material = getRevealedMaterial(t);
           state.safeRevealed++;
+
           addLabel(i, t.count);
           playSound('reveal');
           updateCounters();
           checkWin();
+          rebuildWireframe();
         }
         return;
       }
@@ -2134,7 +2437,7 @@
         labelColorHex = '#787e87'; // Default label color
       }
 
-      const s = makeNumberSprite(n, labelScale(state.f), labelColorHex); s.position.copy(t.center).multiplyScalar(1.009);
+      const s = makeNumberDecal(t, n, labelColorHex);
 
       tileGroup.add(s); t.label = s;
 
@@ -2146,7 +2449,7 @@
       const t = state.tiles[i]; 
       if (t.revealed || state.gameOver) return; 
       t.flagged = !t.flagged; 
-      t.mesh.material = t.flagged ? matFlag : matHidden; 
+      t.mesh.material = t.flagged ? matFlag : getHiddenMaterial(t); 
       // Reset scale to normal when flag state changes
       t.mesh.scale.set(1.0, 1.0, 1.0);
       state.flags += t.flagged ? 1 : -1; 
@@ -3278,6 +3581,15 @@
           case 'lifeLost':
             playGameOver();
             break;
+          case 'powerup':
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(330, now);
+            oscillator.frequency.exponentialRampToValueAtTime(660, now + 0.15);
+            gainNode.gain.setValueAtTime(0.15, now);
+            gainNode.gain.linearRampToValueAtTime(0.001, now + 0.15);
+            oscillator.start(now);
+            oscillator.stop(now + 0.15);
+            break;
         }
       } catch (e) {
         console.warn('Error playing sound:', e);
@@ -3784,9 +4096,7 @@
                 labelColorHex = '#787e87'; // Default label color
               }
 
-              const s = makeNumberSprite(t.count, labelScale(state.f), labelColorHex);
-
-              s.position.copy(t.center).multiplyScalar(debugSettings.labelOffset || 1.009);
+              const s = makeNumberDecal(t, t.count, labelColorHex);
 
               tileGroup.add(s);
 
@@ -4039,28 +4349,17 @@
         if (t.label && t.count > 0 && !t.isEmpty) {
 
           const canvas = document.createElement('canvas');
-
-          canvas.width = 128; canvas.height = 128;
-
+          canvas.width = 256; canvas.height = 256;
           const ctx = canvas.getContext('2d');
-
           ctx.fillStyle = 'rgba(0,0,0,0)';
-
-          ctx.fillRect(0,0,128,128);
-
-          ctx.font = '700 72px system-ui, Arial';
-
+          ctx.fillRect(0,0,256,256);
+          ctx.font = '700 60px system-ui, Arial';
           ctx.textAlign = 'center';
-
           ctx.textBaseline = 'middle';
-
           ctx.fillStyle = color;
-
           ctx.shadowColor = 'rgba(0,0,0,0.5)';
-
           ctx.shadowBlur = 8;
-
-          ctx.fillText(String(t.count), 64, 64);
+          ctx.fillText(String(t.count), 128, 128);
 
           t.label.material.map.dispose();
 
@@ -4593,6 +4892,37 @@
           }
         });
       }
+      // Auto-rotate number decals every frame so numbers always appear upright.
+      // Work entirely in tileGroup LOCAL space so globe rotation is accounted for.
+      if (state.tiles) {
+        // Convert camera-up from world into tileGroup local space
+        const camUpLocal = new THREE.Vector3(0, 1, 0)
+          .applyQuaternion(camera.quaternion)
+          .applyQuaternion(tileGroup.quaternion.clone().invert());
+
+        const _lNormal = new THREE.Vector3();
+        const _lUp    = new THREE.Vector3();
+        const _lRight  = new THREE.Vector3();
+
+        state.tiles.forEach(t => {
+          if (!t.label || !t.label.isMesh) return;
+          // tile.center is the local position in tileGroup – normalize for the local outward normal
+          _lNormal.copy(t.center).normalize();
+
+          // Project camera-up (local) onto this tile's tangent plane
+          _lUp.copy(camUpLocal).addScaledVector(_lNormal, -camUpLocal.dot(_lNormal));
+          if (_lUp.lengthSq() < 1e-6) return;
+          _lUp.normalize();
+
+          // right-hand rule in local space: right = up × normal
+          _lRight.crossVectors(_lUp, _lNormal).normalize();
+
+          // Set label's LOCAL quaternion: X→right, Y→up, Z→normal
+          t.label.quaternion.setFromRotationMatrix(
+            new THREE.Matrix4().makeBasis(_lRight, _lUp, _lNormal)
+          );
+        });
+      }
       
       renderer.render(scene, camera); 
       
@@ -4714,17 +5044,17 @@
               state.tiles.forEach(t => {
                 if (t.label && t.count > 0 && !t.isEmpty) {
                   const canvas = document.createElement('canvas');
-                  canvas.width = 128; canvas.height = 128;
+                  canvas.width = 256; canvas.height = 256;
                   const ctx = canvas.getContext('2d');
                   ctx.fillStyle = 'rgba(0,0,0,0)';
-                  ctx.fillRect(0,0,128,128);
-                  ctx.font = '700 72px system-ui, Arial';
+                  ctx.fillRect(0,0,256,256);
+                  ctx.font = '700 60px system-ui, Arial';
                   ctx.textAlign = 'center';
                   ctx.textBaseline = 'middle';
                   ctx.fillStyle = value;
                   ctx.shadowColor = 'rgba(0,0,0,0.5)';
                   ctx.shadowBlur = 8;
-                  ctx.fillText(String(t.count), 64, 64);
+                  ctx.fillText(String(t.count), 128, 128);
                   const tex = new THREE.CanvasTexture(canvas);
                   tex.anisotropy = 4;
                   tex.needsUpdate = true;
@@ -5621,17 +5951,17 @@
         state.tiles.forEach(t => {
           if (t.label && t.count > 0 && !t.isEmpty) {
             const canvas = document.createElement('canvas');
-            canvas.width = 128; canvas.height = 128;
+            canvas.width = 256; canvas.height = 256;
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = 'rgba(0,0,0,0)';
-            ctx.fillRect(0,0,128,128);
-            ctx.font = '700 72px system-ui, Arial';
+            ctx.fillRect(0,0,256,256);
+            ctx.font = '700 60px system-ui, Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = preset.labelColor;
             ctx.shadowColor = 'rgba(0,0,0,0.5)';
             ctx.shadowBlur = 8;
-            ctx.fillText(String(t.count), 64, 64);
+            ctx.fillText(String(t.count), 128, 128);
             const tex = new THREE.CanvasTexture(canvas);
             tex.anisotropy = 4;
             tex.needsUpdate = true;
@@ -5873,6 +6203,61 @@
     
     // Initialize with default preset (original settings)
     applyGlobalPreset(1);
+
+    // === Extended Features (Themes & Power-ups) Logic ===
+
+
+
+    // Set up listeners for the extended UI
+    function initExtendedFeatures() {
+      const themeSelect = document.getElementById('themeSelect');
+      if (themeSelect) {
+        themeSelect.addEventListener('change', (e) => {
+          state.currentTheme = e.target.value;
+          
+          // Re-apply materials to all tiles based on new theme
+          state.tiles.forEach(t => {
+            if (t.isEmpty) {
+              t.mesh.material = getEmptyMaterial();
+            } else if (t.revealed) {
+              if (t.mine) {
+                t.mesh.material = matMine;
+              } else {
+                t.mesh.material = getRevealedMaterial(t);
+              }
+            } else if (t.flagged) {
+              t.mesh.material = matFlag;
+            } else {
+              t.mesh.material = getHiddenMaterial(t);
+            }
+          });
+          
+          // Volcanic wireframe logic (emissive pulsing glow)
+          if (state.currentTheme === 'volcanic') {
+            if (wireHexMaterial) wireHexMaterial.color.setHex(0xff3300);
+            if (wirePentMaterial) wirePentMaterial.color.setHex(0xff3300);
+          } else {
+            // Apply standard preset colors
+            const preset = globalPresets[currentGlobalPreset];
+            const colorPresetNum = (preset && preset.color !== undefined) ? preset.color : 65;
+            const colorPreset = colorPresets[colorPresetNum];
+            if (colorPreset) {
+              const presetWireColor = colorPreset.wireHex || colorPreset.wirePent;
+              if (presetWireColor) {
+                const color = parseInt(presetWireColor.substring(1), 16);
+                if (wireHexMaterial) wireHexMaterial.color.setHex(color);
+                if (wirePentMaterial) wirePentMaterial.color.setHex(color);
+              }
+            }
+          }
+        });
+      }
+
+
+    }
+
+    // Call after setup
+    initExtendedFeatures();
 
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
