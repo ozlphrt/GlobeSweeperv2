@@ -1099,7 +1099,7 @@
       });
     }
 
-    // Globally initialize renderRequestCount and requestRender to avoid Temporal Dead Zone ReferenceErrors
+    // Globally initialize renderRequestCount and requestRender to avoid Temporal Dead Zone ReferenceErrors (Trigger new build)
     let renderRequestCount = 180;
     function requestRender(frameCount = 30) {
       renderRequestCount = Math.max(renderRequestCount, frameCount);
