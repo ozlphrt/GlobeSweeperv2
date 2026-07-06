@@ -2520,7 +2520,7 @@
 
     // Extended game state variables
     const state = { 
-      level: parseInt(localStorage.getItem('globesweeper_level') || '5', 10),
+      level: parseInt(localStorage.getItem('globesweeper_level') || '1', 10),
       f: 15, 
       polys: [], 
       neighbors: [], 
@@ -3923,7 +3923,7 @@
       if (forceFreq !== undefined) {
         f = forceFreq;
       } else {
-        f = 3 + Math.floor(state.level / 2);
+        f = 5 + Math.floor((state.level - 1) / 2);
       }
       f = Math.max(1, Math.floor(f)); state.f = f;
       
@@ -3952,7 +3952,7 @@
       rotationVelocity.y = 0.006;
 
       // Auto-start: Place mines and do initial reveals
-      const ratio = debugSettings.mineRatio || (10 + Math.min(15, state.level * 0.5));
+      const ratio = debugSettings.mineRatio || (12.5 + Math.min(12.5, (state.level - 1) * 0.5));
       const initialReveal = debugSettings.initialRevealPercent || 0;
       const emptyRatio = debugSettings.emptyTilePercent || 0;
       
