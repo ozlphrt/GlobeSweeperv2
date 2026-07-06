@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.0.51';
+const CACHE_NAME = 'globesweeper-v1.0.52';
 const urlsToCache = [
   './',
   'index.html',
@@ -115,6 +115,13 @@ self.addEventListener('fetch', (event) => {
           return caches.match(event.request);
         })
     );
+  }
+});
+
+// Message event - skip waiting on request
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.action === 'skipWaiting') {
+    self.skipWaiting();
   }
 });
 

@@ -710,6 +710,18 @@
     </div>
   </div>
 
+  <!-- Update Notification Modal -->
+  <div id="updateModal" class="game-overlay">
+    <div class="game-overlay-content" style="max-width: 380px; padding: 28px; text-align: center; background: rgba(255, 255, 255, 0.98); color: #0c101d; border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.8);">
+      <div class="game-overlay-title" style="margin-bottom: 6px; font-size: 28px; font-weight: 900; color: #ff9900; text-shadow: none;">UPDATE AVAILABLE</div>
+      <div style="margin-bottom: 24px; font-size: 16px; font-weight: 700; color: #1a2233; line-height: 1.4;">A new version of GlobeSweeper is ready. Would you like to reload and apply the update now?</div>
+      <div style="display: flex; gap: 12px;">
+        <button class="game-overlay-button" id="updateLaterBtn" style="flex: 1; padding: 12px; font-size: 16px; font-weight: 700; background: #e2e8f0; color: #1a2233; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">Later</button>
+        <button class="game-overlay-button" id="updateNowBtn" style="flex: 1; padding: 12px; font-size: 16px; font-weight: 900; background: linear-gradient(135deg, #ffd000, #ff9900); color: #000; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(255, 208, 0, 0.3);">Update Now</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Loading Game Overlay -->
   <div id="loadingOverlay" class="game-overlay">
     <div class="game-overlay-content">
@@ -7901,18 +7913,46 @@
 
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
+      // Helper function to render and display PWA Update Modal
+      function showUpdateModal(worker) {
+        const updateModal = document.getElementById('updateModal');
+        if (updateModal) {
+          updateModal.classList.add('visible');
+        }
+        
+        const updateNowBtn = document.getElementById('updateNowBtn');
+        const updateLaterBtn = document.getElementById('updateLaterBtn');
+        
+        if (updateNowBtn) {
+          updateNowBtn.onclick = () => {
+            worker.postMessage({ action: 'skipWaiting' });
+            if (updateModal) updateModal.classList.remove('visible');
+          };
+        }
+        
+        if (updateLaterBtn) {
+          updateLaterBtn.onclick = () => {
+            if (updateModal) updateModal.classList.remove('visible');
+          };
+        }
+      }
+
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
           .then((registration) => {
             console.log('ServiceWorker registration successful:', registration.scope);
             
-            // Check for updates
+            // Check if there is already a waiting service worker
+            if (registration.waiting) {
+              showUpdateModal(registration.waiting);
+            }
+            
+            // Check for updates being installed
             registration.addEventListener('updatefound', () => {
               const newWorker = registration.installing;
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  // New service worker available, prompt user to refresh
-                  console.log('New service worker available. Please refresh the page.');
+                  showUpdateModal(newWorker);
                 }
               });
             });
