@@ -3870,6 +3870,7 @@
       if (gameOverOverlay) gameOverOverlay.classList.remove('visible');
       
       buildTiles(); state.firstClick = false; state.gameOver=false; state.safeRevealed=0; state.totalMines=0; state.flags=0; state.lives=3; state.won=false; lifeLostInCurrentReveal=false; resetTimer(); updateCounters();
+      requestRender(180);
       
       // Reset sphere rotation and apply gentle initial spin inertia
       tileGroup.quaternion.identity();
@@ -6241,7 +6242,80 @@
     let lastAnimTime = 0;
     let forceLabelUpdate = true;
 
+    // Battery-aware and performance optimization states
+    let renderRequestCount = 180; // Start with frames to render initial scene
+    let isTabActive = true;
+    let isLowPowerMode = false;
+    let lastFrameTime = 0;
+    const frameInterval = 1000 / 30; // 30 FPS target interval
+    
+    // Page visibility check to completely freeze loop in background
+    document.addEventListener('visibilitychange', () => {
+      isTabActive = !document.hidden;
+      if (isTabActive) {
+        lastAnimTime = performance.now();
+        requestRender(45); // Render a few frames on wakeup
+      }
+    });
+
+    // Check battery API for low power states
+    if ('getBattery' in navigator) {
+      navigator.getBattery().then((battery) => {
+        const checkBattery = () => {
+          isLowPowerMode = !battery.charging && battery.level < 0.20;
+        };
+        checkBattery();
+        battery.addEventListener('chargingchange', checkBattery);
+        battery.addEventListener('levelchange', checkBattery);
+      });
+    }
+
+    // Call this helper to request visual updates
+    function requestRender(frameCount = 30) {
+      renderRequestCount = Math.max(renderRequestCount, frameCount);
+    }
+
+    // Wake events listener: automatically wake up render loop on user input
+    const wakeEvents = ['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend', 'wheel', 'keydown'];
+    wakeEvents.forEach(evt => {
+      window.addEventListener(evt, () => {
+        requestRender(30);
+      }, { passive: true });
+    });
+
     renderer.setAnimationLoop((time)=>{
+      // 1. Page visibility check - freeze rendering completely when tab is hidden
+      if (!isTabActive) return;
+      
+      // 2. Battery status check - throttle rendering to 30 FPS if low battery is detected
+      const now = performance.now();
+      if (isLowPowerMode) {
+        const elapsed = now - lastFrameTime;
+        if (elapsed < frameInterval) {
+          return;
+        }
+        lastFrameTime = now - (elapsed % frameInterval);
+      } else {
+        lastFrameTime = now;
+      }
+
+      // 3. Auto-wake checks for continuous visual updates (particles, rotation, reveals)
+      const hasRotationMomentum = Math.abs(rotationVelocity.x) > 0.0001 || Math.abs(rotationVelocity.y) > 0.0001;
+      const hasParticles = activeExplosionParticles.length > 0;
+      const isRevealing = (typeof revealQueue !== 'undefined' && revealQueue.length > 0) || (typeof isInitialReveal !== 'undefined' && isInitialReveal);
+      const zoomChanged = Math.abs(camera.zoom - lastCameraZoom) > 0.001;
+
+      if (hasRotationMomentum || hasParticles || isRevealing || zoomChanged || forceLabelUpdate) {
+        requestRender(2);
+      }
+
+      // 4. On-Demand rendering guard
+      if (renderRequestCount > 0) {
+        renderRequestCount--;
+      } else {
+        return; // Sleep and save battery!
+      }
+
       const dt = lastAnimTime === 0 ? 0.016 : (time - lastAnimTime) * 0.001;
       lastAnimTime = time;
 
