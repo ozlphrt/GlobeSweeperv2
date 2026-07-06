@@ -3417,7 +3417,7 @@
       const t = state.tiles[i]; 
       if (t.revealed || state.gameOver) return; 
       t.flagged = !t.flagged; 
-      t.mesh.material = getHiddenMaterial(t); 
+      t.mesh.material = t.flagged ? matFlag : getHiddenMaterial(t); 
       // Reset scale to normal when flag state changes
       t.mesh.scale.set(1.0, 1.0, 1.0);
       
