@@ -77,31 +77,27 @@
       
       #fpsCounter {
         bottom: max(12px, env(safe-area-inset-bottom));
-        right: calc(max(12px, env(safe-area-inset-right)) + 132px) !important;
+        right: max(12px, env(safe-area-inset-right));
       }
       #bottomRestartBtn {
         bottom: max(12px, env(safe-area-inset-bottom));
         left: max(12px, env(safe-area-inset-left));
       }
-      #resetToLevelOneBtn {
-        bottom: max(12px, env(safe-area-inset-bottom));
-        right: max(12px, env(safe-area-inset-right));
-      }
     }
 
     @media (hover: hover) {
-      #bottomRestartBtn:hover, #resetToLevelOneBtn:hover {
+      #bottomRestartBtn:hover {
         background: rgba(255, 255, 255, 0.1) !important;
         border-color: rgba(255, 255, 255, 0.3) !important;
         transform: translateY(-1px);
       }
     }
-    #bottomRestartBtn:focus, #resetToLevelOneBtn:focus {
+    #bottomRestartBtn:focus {
       outline: none;
       background: rgba(15, 15, 20, 0.95) !important;
       border-color: rgba(255, 255, 255, 0.15) !important;
     }
-    #bottomRestartBtn:active, #resetToLevelOneBtn:active {
+    #bottomRestartBtn:active {
       transform: translateY(0);
     }
 
@@ -1090,15 +1086,16 @@
 
     <button id="debugLoadClipboard" style="width: 100%; margin-bottom: 8px;">📥 Load from Clipboard</button>
 
+    <button id="resetToLevelOneBtn" style="width: 100%; margin-bottom: 8px; font-weight: bold; background: #ff3b30; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; transition: background 0.2s;">⚠️ Reset Progress to Level 1</button>
+
     <button id="debugCloseBtn">Close Controls</button>
 
   </div>
 
-  <div id="fpsCounter" style="position: fixed; bottom: 12px; right: 132px; font-family: monospace; font-size: 12px; color: rgba(255, 255, 255, 0.8); z-index: 100; pointer-events: none; user-select: none;">
+  <div id="fpsCounter" style="position: fixed; bottom: 12px; right: 12px; font-family: monospace; font-size: 12px; color: rgba(255, 255, 255, 0.8); z-index: 100; pointer-events: none; user-select: none;">
     <span id="fpsValue">FPS: --</span>
   </div>
   <button id="bottomRestartBtn" style="position: fixed; bottom: 12px; left: 12px; z-index: 100; padding: 8px 14px; font-family: inherit; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #ffffff; background: rgba(15, 15, 20, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); cursor: pointer; transition: all 0.2s; letter-spacing: 0.8px;">Restart Level</button>
-  <button id="resetToLevelOneBtn" style="position: fixed; bottom: 12px; right: 12px; z-index: 100; padding: 8px 14px; font-family: inherit; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #ffffff; background: rgba(15, 15, 20, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); cursor: pointer; transition: all 0.2s; letter-spacing: 0.8px;">Reset to Lvl 1</button>
 
   <!-- Three.js (UMD) pinned to r146 so OrbitControls works without modules -->
 
