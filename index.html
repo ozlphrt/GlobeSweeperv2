@@ -1099,6 +1099,12 @@
       });
     }
 
+    // Globally initialize renderRequestCount and requestRender to avoid Temporal Dead Zone ReferenceErrors
+    let renderRequestCount = 180;
+    function requestRender(frameCount = 30) {
+      renderRequestCount = Math.max(renderRequestCount, frameCount);
+    }
+
     let flagModelTemplate = null;
     let flagAnimations = [];
     let flagScale = 1.0;
@@ -6256,7 +6262,7 @@
 
     // Battery-aware and performance optimization states
     const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    let renderRequestCount = 180; // Start with frames to render initial scene
+    renderRequestCount = 180; // Reset for initial scene rendering
     let isTabActive = true;
     let isLowPowerMode = isMobile; // Always default to low power (30 FPS cap) on mobile interfaces
     let lastFrameTime = 0;
@@ -6283,10 +6289,7 @@
       });
     }
 
-    // Call this helper to request visual updates
-    function requestRender(frameCount = 30) {
-      renderRequestCount = Math.max(renderRequestCount, frameCount);
-    }
+
 
     // Wake events listener: automatically wake up render loop on user input
     const wakeEvents = ['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend', 'wheel', 'keydown'];
