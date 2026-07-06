@@ -86,9 +86,27 @@
       }
     }
 
-    .ui { display: none !important; position: absolute; top: max(28px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left)); padding: 16px 12px 0 16px; border-radius: 16px; backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 -1px 0 rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); width: fit-content; transition: opacity 0.5s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .ui {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 18px !important;
+      position: absolute;
+      top: max(20px, env(safe-area-inset-top));
+      left: max(20px, env(safe-area-inset-left));
+      padding: 10px 18px !important;
+      border-radius: 12px;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      background: rgba(15, 15, 20, 0.95) !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      width: fit-content !important;
+      transition: opacity 0.5s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 99;
+    }
 
-    .progress-section { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 12px; transition: margin-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+    .progress-section { display: flex; gap: 16px; align-items: center; }
     
     .ui.compact .progress-section { gap: 12px; }
 
@@ -400,9 +418,9 @@
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.3s ease, visibility 0.3s ease;
-      background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(12px) saturate(150%);
-      -webkit-backdrop-filter: blur(12px) saturate(150%);
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
 
     .game-overlay.visible {
@@ -412,23 +430,22 @@
     }
 
     .game-overlay-content {
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.26) 100%);
-      backdrop-filter: blur(22px) saturate(185%);
-      -webkit-backdrop-filter: blur(22px) saturate(185%);
+      background: rgba(15, 15, 20, 0.96);
       border-radius: 20px;
-      padding: 32px 44px;
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.16), 0 2px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.55), inset 0 -1px 0 rgba(255, 255, 255, 0.18);
-      border: 1px solid rgba(255, 255, 255, 0.26);
+      padding: 36px 40px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       text-align: center;
-      max-width: 440px;
+      max-width: 400px;
       width: calc(100% - 32px);
+      color: #ffffff;
       transform: scale(0.94);
       transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     
     @media (max-width: 768px) {
       .game-overlay-content {
-        padding: 32px 44px;
+        padding: 28px 32px;
         max-width: calc(100vw - 32px);
         max-height: calc(100vh - 32px);
         overflow-y: auto;
@@ -438,7 +455,7 @@
     
     @media (max-width: 480px) {
       .game-overlay-content {
-        padding: 32px 44px;
+        padding: 28px 24px;
         max-width: calc(100vw - 32px);
         max-height: calc(100vh - 32px);
       }
@@ -457,92 +474,61 @@
     }
     #gameOverOverlay .game-overlay-content {
       pointer-events: auto;
-      position: absolute;
-      bottom: 24px;
-      margin: 0 auto;
       max-width: 380px;
       width: calc(100% - 48px);
-      padding: 20px 24px;
-      background: rgba(15, 15, 20, 0.95);
+      padding: 32px 36px;
+      background: rgba(15, 15, 20, 0.96);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-      transform: scale(0.9) translateY(20px);
-      border-radius: 18px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      transform: scale(0.94);
+      border-radius: 20px;
     }
     #gameOverOverlay.visible .game-overlay-content {
-      transform: scale(1) translateY(0) !important;
-    }
-    #gameOverOverlay .game-overlay-title {
-      font-size: 30px;
-      margin-bottom: 4px;
-      text-shadow: none;
-    }
-    #gameOverOverlay .game-overlay-subtitle {
-      font-size: 14px;
-      margin-bottom: 16px;
-      color: rgba(255, 255, 255, 0.6);
+      transform: scale(1) !important;
     }
     #gameOverOverlay .game-overlay-stats {
       font-size: 13px;
-      margin-bottom: 16px;
+      margin-bottom: 24px;
       gap: 12px 24px;
       min-width: auto;
       width: 100%;
       grid-template-columns: 1fr 1fr;
     }
-    #gameOverOverlay .game-overlay-stats .stat-value {
-      font-size: 20px;
-    }
-    #gameOverOverlay .game-overlay-button {
-      padding: 10px;
-      font-size: 16px;
-      margin-top: 4px;
-    }
+
 
     .game-overlay-title {
-      font-size: 48px;
-      font-weight: 700;
-      color: #ff4d4d;
-      margin-bottom: 12px;
-      text-shadow: 0 0 8px rgba(255, 77, 77, 0.8), 0 0 16px rgba(255, 77, 77, 0.6);
-      letter-spacing: -0.5px;
+      font-size: 32px;
+      font-weight: 900;
+      color: #ffffff;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: none;
     }
     
-    @media (max-width: 768px) {
-      .game-overlay-title {
-        font-size: 32px;
-        margin-bottom: 8px;
-      }
-    }
-
     .game-overlay-title.win {
-      color: #28a745;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 0 20px rgba(40, 167, 69, 0.3);
+      color: #28a745 !important;
+      text-shadow: none !important;
     }
 
     .game-overlay-title.loss {
-      color: #ff4d4d;
-      text-shadow: 0 0 8px rgba(255, 77, 77, 0.8), 0 0 16px rgba(255, 77, 77, 0.6);
+      color: #ff4d4d !important;
+      text-shadow: none !important;
     }
 
     .game-overlay-subtitle {
-      font-size: 20px;
-      color: #cccccc;
-      margin-bottom: 32px;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.4);
+      margin-bottom: 24px;
       line-height: 1.4;
-      font-weight: 400;
-    }
-    
-    @media (max-width: 768px) {
-      .game-overlay-subtitle {
-        font-size: 16px;
-        margin-bottom: 20px;
-      }
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
     }
 
     .game-overlay-message {
-      font-size: 18px;
-      color: rgba(26, 26, 26, 0.7);
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
       margin-bottom: 24px;
       line-height: 1.5;
       font-weight: 400;
@@ -632,32 +618,46 @@
       color: #ffffff;
     }
 
-    .game-overlay-button {
-      padding: 12px 32px;
-      background: #87ceeb;
-      color: #333333;
-      border: none;
-      border-radius: 18px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-      transition: all 0.2s;
+    .game-overlay-button,
+    .btn-primary {
+      padding: 12px 24px !important;
+      background: linear-gradient(135deg, #ffd000, #ff9900) !important;
+      color: #000000 !important;
+      border: none !important;
+      border-radius: 8px !important;
+      font-size: 16px !important;
+      font-weight: 900 !important;
+      cursor: pointer !important;
+      transition: all 0.2s !important;
       font-family: inherit;
+      text-transform: uppercase !important;
+      letter-spacing: 1px !important;
+      box-shadow: 0 4px 15px rgba(255, 208, 0, 0.3) !important;
     }
     
-    @media (max-width: 768px) {
-      .game-overlay-button {
-        padding: 10px 24px;
-        font-size: 14px;
-        border-radius: 14px;
-      }
+    .game-overlay-button:hover,
+    .btn-primary:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 6px 20px rgba(255, 208, 0, 0.4) !important;
     }
 
-    .game-overlay-button:hover {
-      background: #7ec8e3;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    .btn-secondary {
+      padding: 12px 24px !important;
+      background: rgba(255, 255, 255, 0.1) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      border-radius: 8px !important;
+      font-size: 16px !important;
+      font-weight: 800 !important;
+      cursor: pointer !important;
+      transition: all 0.2s !important;
+      font-family: inherit;
+      text-transform: uppercase !important;
+      letter-spacing: 1px !important;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.18) !important;
+      transform: translateY(-2px) !important;
     }
 
     .game-overlay-button:active {
@@ -697,27 +697,28 @@
 
   <!-- How to Play Welcome Modal -->
   <div id="howToPlayModal" class="game-overlay">
-    <div class="game-overlay-content" style="max-width: 480px; padding: 40px; text-align: center; background: rgba(255, 255, 255, 0.98); color: #0c101d; border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.8);">
-      <div class="game-overlay-title" style="margin-bottom: 2px; font-size: 42px; font-weight: 900; letter-spacing: 2px; color: #ff3b30; text-shadow: none;">GLOBESWEEPER</div>
-      <div class="game-overlay-subtitle" style="margin-bottom: 24px; font-size: 22px; font-weight: 800; color: #505c73;">How to Play</div>
-      <div style="text-align: left; margin-bottom: 30px; color: #111827; font-size: 24px; font-weight: 800; font-family: inherit; display: flex; flex-direction: column; gap: 8px;">
-        <div style="display: flex; align-items: center; line-height: 1.25;"><span style="font-size: 36px; margin-right: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));">👆</span> Tap / Click to reveal a tile</div>
-        <div style="display: flex; align-items: center; line-height: 1.25;"><span style="font-size: 36px; margin-right: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));">⚠️</span> Hold / Right-Click to flag a mine</div>
-        <div style="display: flex; align-items: center; line-height: 1.25;"><span style="font-size: 36px; margin-right: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));">🔄</span> Drag to rotate the globe</div>
-        <div style="display: flex; align-items: center; line-height: 1.25;"><span style="font-size: 36px; margin-right: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));">❤️</span> You have 3 lives. Good luck!</div>
+    <div class="game-overlay-content">
+      <div class="game-overlay-title" style="color: #ffd000;">GLOBESWEEPER</div>
+      <div class="game-overlay-subtitle">How to Play</div>
+      <div style="display: flex; flex-direction: column; gap: 12px; font-size: 18px; font-weight: 900; text-align: left; margin: 0 auto 28px; width: max-content;">
+        <div style="display: flex; align-items: center; gap: 14px;"><span>👆</span> TAP to REVEAL</div>
+        <div style="display: flex; align-items: center; gap: 14px;"><span>⚠️</span> HOLD to FLAG</div>
+        <div style="display: flex; align-items: center; gap: 14px;"><span>🔄</span> DRAG to ROTATE</div>
+        <div style="display: flex; align-items: center; gap: 14px;"><span>❤️</span> 3 LIVES to WIN</div>
       </div>
-      <button class="game-overlay-button" id="startGameButton" style="width: 100%; padding: 16px; font-size: 22px; font-weight: 900; background: linear-gradient(135deg, #ffd000, #ff9900); color: #000; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(255, 208, 0, 0.4);">Start Game</button>
+      <button class="btn-primary" id="startGameButton" style="width: 100%;">Start Game</button>
     </div>
   </div>
 
   <!-- Update Notification Modal -->
   <div id="updateModal" class="game-overlay">
-    <div class="game-overlay-content" style="max-width: 380px; padding: 28px; text-align: center; background: rgba(255, 255, 255, 0.98); color: #0c101d; border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.8);">
-      <div class="game-overlay-title" style="margin-bottom: 6px; font-size: 28px; font-weight: 900; color: #ff9900; text-shadow: none;">UPDATE AVAILABLE</div>
-      <div style="margin-bottom: 24px; font-size: 16px; font-weight: 700; color: #1a2233; line-height: 1.4;">A new version of GlobeSweeper is ready. Would you like to reload and apply the update now?</div>
-      <div style="display: flex; gap: 12px;">
-        <button class="game-overlay-button" id="updateLaterBtn" style="flex: 1; padding: 12px; font-size: 16px; font-weight: 700; background: #e2e8f0; color: #1a2233; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s;">Later</button>
-        <button class="game-overlay-button" id="updateNowBtn" style="flex: 1; padding: 12px; font-size: 16px; font-weight: 900; background: linear-gradient(135deg, #ffd000, #ff9900); color: #000; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(255, 208, 0, 0.3);">Update Now</button>
+    <div class="game-overlay-content">
+      <div class="game-overlay-title" style="color: #ff9900;">UPDATE</div>
+      <div class="game-overlay-subtitle">New version ready</div>
+      <div style="font-size: 16px; font-weight: 800; margin-bottom: 24px; text-transform: uppercase; color: rgba(255,255,255,0.7); letter-spacing: 0.5px;">Apply new update now?</div>
+      <div style="display: flex; gap: 12px; justify-content: center; width: 100%;">
+        <button class="btn-secondary" id="updateLaterBtn" style="flex: 1;">Later</button>
+        <button class="btn-primary" id="updateNowBtn" style="flex: 1;">Update</button>
       </div>
     </div>
   </div>
@@ -726,8 +727,8 @@
   <div id="loadingOverlay" class="game-overlay">
     <div class="game-overlay-content">
       <div class="loading-spinner"></div>
-      <div class="game-overlay-title">Loading Game...</div>
-      <div class="game-overlay-message" id="loadingMessage">Generating solvable puzzle...</div>
+      <div class="game-overlay-title">LOADING</div>
+      <div class="game-overlay-message" id="loadingMessage">Generating puzzle...</div>
     </div>
   </div>
 
@@ -746,107 +747,44 @@
           <span class="stat-value" id="statTimer">00:00</span>
         </div>
       </div>
-      <button class="game-overlay-button" id="restartButton">Restart</button>
+      <button class="btn-primary" id="restartButton" style="width: 100%;">Restart</button>
     </div>
   </div>
 
-  <div class="ui hidden compact">
+  <div class="ui hidden">
+    <!-- Hidden elements to satisfy JS query selectors without crashes -->
+    <div id="mineHuntCircle" style="display: none !important;"></div>
+    <div id="explorationCircle" style="display: none !important;"></div>
+    <div id="mineHuntPercent" style="display: none !important;"></div>
+    <div id="explorationPercent" style="display: none !important;"></div>
+    <select id="themeSelect" style="display: none !important;"><option value="standard"></option></select>
+    <button id="debugToggle" style="display: none !important;"></button>
+    <button id="globeBtn" style="display: none !important;"></button>
 
-    <div class="progress-section">
-
-      <div class="progress-circle-wrapper">
-
-        <div class="progress-circle mine-hunt" id="mineHuntCircle">
-
-          <div class="white-center"></div>
-
-          <div class="red-dot"></div>
-
-          <div class="progress-dot"></div>
-
-          <div class="percent" id="mineHuntPercent">0%</div>
-
-        </div>
-
-        <div class="progress-label" style="font-weight: 900;">Mine Hunt</div>
-
-        <div class="progress-value" id="mineHuntValue">0/0</div>
-
+    <!-- Sleek Horizontal Stats Row -->
+    <div style="display: flex; align-items: center; gap: 20px; font-family: inherit; font-size: 16px; font-weight: 900; color: #ffffff;">
+      <div style="display: flex; align-items: center; gap: 6px;" title="Mines Flagged">
+        <span>🚩</span>
+        <span id="mineHuntValue" style="color: #ffd000;">0/0</span>
       </div>
-
-      <div class="progress-circle-wrapper">
-
-        <div class="progress-circle exploration" id="explorationCircle">
-
-          <div class="white-center"></div>
-
-          <div class="progress-dot"></div>
-
-          <div class="percent" id="explorationPercent">0%</div>
-
-        </div>
-
-        <div class="progress-label" style="font-weight: 900;">Exploration</div>
-
-        <div class="progress-value" id="explorationValue">0/0</div>
-
+      <div style="display: flex; align-items: center; gap: 6px;" title="Safe Tiles Cleared">
+        <span>🌍</span>
+        <span id="explorationValue" style="color: #4dc2ff;">0/0</span>
       </div>
-
-      <div class="hearts-container" id="heartsContainer">
-
+      <div style="display: flex; align-items: center; gap: 6px;" title="Time Elapsed">
+        <span>🕐</span>
+        <span id="timerValue">00:00</span>
+      </div>
+      <div id="heartsContainer" style="display: flex; align-items: center; gap: 6px; color: #ff3b30; font-size: 18px; margin-left: 4px;">
         <div class="heart">♥</div>
-
         <div class="heart">♥</div>
-
         <div class="heart">♥</div>
-
       </div>
-
-    </div>
-
-    <div class="timer-section">
-
-      <span class="timer-icon">🕐</span>
-
-      <span class="timer-value" id="timerValue">00:00</span>
-
-    </div>
-
-    <div class="controls-section">
-
-      <button class="control-btn reset" id="newGame">Reset</button>
-
-      <button class="control-btn" id="soundToggle" title="Toggle Sound">🔊</button>
-
-      <button class="control-btn" id="debugToggle" title="Toggle Debug Panel (Ctrl+Shift+Alt+D)">⚙️</button>
-
-      <button class="control-btn" id="globeBtn" title="Globe">🌐</button>
-
-    </div>
-
-    <div class="ext-section">
-      <div class="ext-title">
-        <span>Visual Theme</span>
+      <div style="display: flex; align-items: center; gap: 12px; margin-left: 12px;">
+        <button class="control-btn reset" id="newGame" style="padding: 6px 12px; font-size: 12px; font-weight: 900; text-transform: uppercase; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;">Reset</button>
+        <button class="control-btn" id="soundToggle" title="Toggle Sound" style="background: none; border: none; font-size: 16px; cursor: pointer; padding: 2px;">🔊</button>
       </div>
-      <select class="theme-select" id="themeSelect">
-        <option value="standard">Standard Style</option>
-        <option value="earth">Earth Style</option>
-        <option value="volcanic">Volcanic Style</option>
-      </select>
     </div>
-
-
-    <div class="instructions-section">
-      <div class="instructions-title">How to Play</div>
-      <ul class="instructions-list">
-        <li>Tap/Click to reveal tiles</li>
-        <li>Right-click/Hold to flag mines</li>
-        <li>Numbers show nearby mine count</li>
-        <li>Rotate sphere by dragging</li>
-        <li>Find all mines to win!</li>
-      </ul>
-    </div>
-
   </div>
 
 
