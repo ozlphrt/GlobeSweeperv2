@@ -86,10 +86,17 @@
       }
     }
 
-    #bottomRestartBtn:hover {
-      background: rgba(255, 255, 255, 0.1) !important;
-      border-color: rgba(255, 255, 255, 0.3) !important;
-      transform: translateY(-1px);
+    @media (hover: hover) {
+      #bottomRestartBtn:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+        transform: translateY(-1px);
+      }
+    }
+    #bottomRestartBtn:focus {
+      outline: none;
+      background: rgba(15, 15, 20, 0.95) !important;
+      border-color: rgba(255, 255, 255, 0.15) !important;
     }
     #bottomRestartBtn:active {
       transform: translateY(0);
