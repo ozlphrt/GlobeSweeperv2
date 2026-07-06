@@ -890,6 +890,8 @@
 
         <div class="debug-control"><label>Tile Density</label><div class="control-wrapper"><input type="range" id="debugFreq" min="1" max="20" step="1" value="15" /></div><input type="number" id="debugFreqValue" value="15" readonly /></div>
 
+        <div class="debug-control"><label>Game Level</label><div class="control-wrapper"><input type="range" id="debugLevel" min="1" max="100" step="1" value="1" /></div><input type="number" id="debugLevelValue" value="1" readonly /></div>
+
         <div class="debug-control"><label>Mine %</label><div class="control-wrapper"><input type="range" id="debugMineRatio" min="5" max="30" step="1" value="7" /></div><input type="number" id="debugMineRatioValue" value="7" readonly /></div>
 
         <div class="debug-control"><label>Empty Tile %</label><div class="control-wrapper"><input type="range" id="debugEmptyRatio" min="0" max="100" step="1" value="30" /></div><input type="number" id="debugEmptyRatioValue" value="30" readonly /></div>
@@ -5448,6 +5450,17 @@
 
     }
 
+    const levelSlider = document.getElementById('debugLevel');
+    const levelValue = document.getElementById('debugLevelValue');
+    if (levelSlider) {
+      levelSlider.addEventListener('input', (e) => {
+        state.level = parseInt(e.target.value, 10);
+        if (levelValue) levelValue.value = state.level;
+        localStorage.setItem('globesweeper_level', state.level);
+        rebuildCore();
+      });
+    }
+
     const freqSlider = document.getElementById('debugFreq');
 
     const freqValue = document.getElementById('debugFreqValue');
@@ -6155,6 +6168,8 @@
 
     function updateDebugValues() {
 
+      if (levelSlider) { levelSlider.value = state.level; updateSliderFill(levelSlider); levelValue.value = state.level; }
+
       if (freqSlider) { freqSlider.value = state.f; updateSliderFill(freqSlider); freqValue.value = state.f; }
 
       if (mineRatioSlider) { mineRatioSlider.value = debugSettings.mineRatio; updateSliderFill(mineRatioSlider); mineRatioValue.value = debugSettings.mineRatio; }
@@ -6704,6 +6719,7 @@
     
     // Global Presets (20 presets) - Based on user preferences
     const debugControlMap = {
+      level: 'debugLevel',
       freq: 'debugFreq',
       mineRatio: 'debugMineRatio',
       emptyRatio: 'debugEmptyRatio',
