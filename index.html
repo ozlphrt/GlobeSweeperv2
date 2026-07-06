@@ -448,6 +448,59 @@
       transform: scale(1);
     }
 
+    /* Compact non-blocking Game Over overlay styling */
+    #gameOverOverlay {
+      background: transparent !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      pointer-events: none;
+    }
+    #gameOverOverlay.visible {
+      pointer-events: auto;
+    }
+    #gameOverOverlay .game-overlay-content {
+      position: absolute;
+      bottom: 24px;
+      margin: 0 auto;
+      max-width: 380px;
+      width: calc(100% - 48px);
+      padding: 20px 24px;
+      background: rgba(15, 15, 20, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      transform: scale(0.9) translateY(20px);
+      border-radius: 18px;
+    }
+    #gameOverOverlay.visible .game-overlay-content {
+      transform: scale(1) translateY(0) !important;
+    }
+    #gameOverOverlay .game-overlay-title {
+      font-size: 30px;
+      margin-bottom: 4px;
+      text-shadow: none;
+    }
+    #gameOverOverlay .game-overlay-subtitle {
+      font-size: 14px;
+      margin-bottom: 16px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    #gameOverOverlay .game-overlay-stats {
+      font-size: 13px;
+      margin-bottom: 16px;
+      gap: 12px 24px;
+      min-width: auto;
+      width: 100%;
+      grid-template-columns: 1fr 1fr;
+    }
+    #gameOverOverlay .game-overlay-stats .stat-value {
+      font-size: 20px;
+    }
+    #gameOverOverlay .game-overlay-button {
+      padding: 10px;
+      font-size: 16px;
+      margin-top: 4px;
+    }
+
     .game-overlay-title {
       font-size: 48px;
       font-weight: 700;
