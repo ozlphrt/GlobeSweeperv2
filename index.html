@@ -80,10 +80,57 @@
         right: max(12px, env(safe-area-inset-right));
       }
       
-      #commitHash {
+      #bottomRestartBtn {
         bottom: max(12px, env(safe-area-inset-bottom));
         left: max(12px, env(safe-area-inset-left));
       }
+    }
+
+    #bottomRestartBtn:hover {
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-color: rgba(255, 255, 255, 0.3) !important;
+      transform: translateY(-1px);
+    }
+    #bottomRestartBtn:active {
+      transform: translateY(0);
+    }
+
+    #levelDisplay {
+      position: absolute;
+      top: max(20px, env(safe-area-inset-top));
+      left: max(20px, env(safe-area-inset-left));
+      z-index: 99;
+      padding: 10px 16px;
+      border-radius: 12px;
+      background: rgba(15, 15, 20, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1px;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #levelDisplay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    
+    #levelDisplay .level-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+      letter-spacing: 1.5px;
+      line-height: 1.1;
+    }
+    
+    #levelDisplay .level-value {
+      font-size: 26px;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.1;
     }
 
     .ui {
@@ -93,7 +140,7 @@
       gap: 18px !important;
       position: absolute;
       top: max(20px, env(safe-area-inset-top));
-      left: max(20px, env(safe-area-inset-left));
+      left: calc(max(20px, env(safe-area-inset-left)) + 92px) !important;
       padding: 10px 18px !important;
       border-radius: 12px;
       backdrop-filter: blur(20px) saturate(180%);
@@ -107,15 +154,28 @@
     }
 
     @media (max-width: 600px) {
+      #levelDisplay {
+        left: max(12px, env(safe-area-inset-left)) !important;
+        top: max(12px, env(safe-area-inset-top)) !important;
+        padding: 8px 12px !important;
+        border-radius: 10px !important;
+      }
+      #levelDisplay .level-label {
+        font-size: 9px !important;
+        letter-spacing: 1px !important;
+      }
+      #levelDisplay .level-value {
+        font-size: 22px !important;
+      }
       .ui {
-        left: 50% !important;
-        transform: translateX(-50%) !important;
+        left: calc(max(12px, env(safe-area-inset-left)) + 74px) !important;
+        transform: none !important;
         top: max(12px, env(safe-area-inset-top)) !important;
         padding: 6px 12px !important;
-        border-radius: 30px !important;
+        border-radius: 12px !important;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
         width: fit-content !important;
-        max-width: calc(100vw - 24px) !important;
+        max-width: calc(100vw - 110px) !important;
         box-sizing: border-box !important;
       }
       .ui .stats-wrapper {
@@ -126,20 +186,8 @@
       .ui .stats-data {
         gap: 10px !important;
       }
-      .ui .stats-controls {
-        margin-left: 6px !important;
-        gap: 8px !important;
-      }
       .ui .heart {
         font-size: 18px !important;
-      }
-      .ui .control-btn.reset {
-        padding: 4px 8px !important;
-        font-size: 10px !important;
-        border-radius: 4px !important;
-      }
-      .ui .control-btn#soundToggle {
-        font-size: 13px !important;
       }
     }
 
@@ -788,6 +836,11 @@
     </div>
   </div>
 
+  <div id="levelDisplay" class="hidden">
+    <div class="level-label">Level</div>
+    <div class="level-value" id="levelValue">15</div>
+  </div>
+
   <div class="ui hidden">
     <!-- Hidden elements to satisfy JS query selectors without crashes -->
     <div id="mineHuntCircle" style="display: none !important;"></div>
@@ -1031,11 +1084,10 @@
 
   </div>
 
-  <div id="fpsCounter" style="position: fixed; bottom: 12px; right: 12px; font-family: monospace; font-size: 12px; color: rgba(255, 255, 255, 0.8); z-index: 100; display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none;">
+  <div id="fpsCounter" style="position: fixed; bottom: 12px; right: 12px; font-family: monospace; font-size: 12px; color: rgba(255, 255, 255, 0.8); z-index: 100; pointer-events: none; user-select: none;">
     <span id="fpsValue">FPS: --</span>
-    <span id="presetDisplay" style="padding: 2px 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.2); transition: background 0.2s;">0. Default</span>
   </div>
-  <div id="commitHash" style="position: fixed; bottom: 12px; left: 12px; font-family: monospace; font-size: 10px; color: rgba(255, 255, 255, 0.7); z-index: 100;">5a1119f</div>
+  <button id="bottomRestartBtn" style="position: fixed; bottom: 12px; left: 12px; z-index: 100; padding: 8px 14px; font-family: inherit; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #ffffff; background: rgba(15, 15, 20, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); cursor: pointer; transition: all 0.2s; letter-spacing: 0.8px;">Restart Level</button>
 
   <!-- Three.js (UMD) pinned to r146 so OrbitControls works without modules -->
 
@@ -3012,6 +3064,8 @@
             if (howToPlayModal) howToPlayModal.classList.remove('visible');
             const ui = document.querySelector('.ui');
             if (ui) ui.classList.remove('hidden');
+            const lvlDisp = document.getElementById('levelDisplay');
+            if (lvlDisp) lvlDisp.classList.remove('hidden');
             firstLaunch = false;
             localStorage.setItem('globesweeper_welcome_done', 'true');
             // Give the sphere a gorgeous intro spin
@@ -3024,6 +3078,8 @@
         // Subsequent restarts show UI and start timer instantly
         const ui = document.querySelector('.ui');
         if (ui) ui.classList.remove('hidden');
+        const lvlDisp = document.getElementById('levelDisplay');
+        if (lvlDisp) lvlDisp.classList.remove('hidden');
         startTimer();
       }
     }
@@ -3846,6 +3902,10 @@
     function rebuildCore(f){
 
       f = Math.max(1, Math.floor(f)); state.f = f;
+      const lvlVal = document.getElementById('levelValue');
+      if (lvlVal) {
+        lvlVal.textContent = state.f;
+      }
 
       const base = icosahedron(1); const geo  = geodesicSubdivide(base, f, 1);
 
@@ -4926,6 +4986,18 @@
       }
       rebuildCore(state.f); 
     });
+
+    const bottomRestartBtn = document.getElementById('bottomRestartBtn');
+    if (bottomRestartBtn) {
+      bottomRestartBtn.addEventListener('click', () => {
+        initAudioContext();
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
+        if (gameOverOverlay) {
+          gameOverOverlay.classList.remove('visible');
+        }
+        rebuildCore(state.f);
+      });
+    }
 
     document.getElementById('soundToggle').addEventListener('click', (e)=>{
       initAudioContext();
