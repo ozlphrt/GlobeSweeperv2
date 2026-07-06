@@ -916,7 +916,7 @@
 
         <div class="debug-control"><label>Revealed</label><div class="color-display" id="debugTileRevealedDisplay" style="background: #4a5565; position: relative;"><input type="color" id="debugTileRevealed" value="#4a5565" /></div><span class="color-hex" id="debugTileRevealedHex">#4a5565</span></div>
 
-        <div class="debug-control"><label>Flag</label><div class="color-display" id="debugTileFlagDisplay" style="background: #9e6b6b; position: relative;"><input type="color" id="debugTileFlag" value="#9e6b6b" /></div><span class="color-hex" id="debugTileFlagHex">#9e6b6b</span></div>
+        <div class="debug-control"><label>Flag</label><div class="color-display" id="debugTileFlagDisplay" style="background: #ffdd00; position: relative;"><input type="color" id="debugTileFlag" value="#ffdd00" /></div><span class="color-hex" id="debugTileFlagHex">#ffdd00</span></div>
 
         <div class="debug-control"><label>Mine</label><div class="color-display" id="debugTileMineDisplay" style="background: #ff4444; position: relative;"><input type="color" id="debugTileMine" value="#ff4444" /></div><span class="color-hex" id="debugTileMineHex">#ff4444</span></div>
 
@@ -2482,7 +2482,7 @@
     });
     
     let matFlag = new THREE.MeshStandardMaterial({ 
-      color: 0x9e6b6b, // Less saturated desaturated dusty red
+      color: 0xffdd00, // Bright yellow
       side: THREE.DoubleSide,
       roughness: 1.0,
       metalness: 0.0,
@@ -6781,9 +6781,10 @@
             break;
           case 'tileFlag':
             if (tileFlagInput) {
-              tileFlagInput.value = value;
+              const flagVal = (value === '#9e6b6b') ? '#ffdd00' : value;
+              tileFlagInput.value = flagVal;
               updateColorDisplay(tileFlagInput, tileFlagDisplay, tileFlagHex);
-              matFlag.color.setHex(parseInt(value.substring(1), 16));
+              matFlag.color.setHex(parseInt(flagVal.substring(1), 16));
               state.tiles.forEach(t => { if (t.flagged) t.mesh.material.color.copy(matFlag.color); });
             }
             break;
@@ -7690,9 +7691,10 @@
         state.tiles.forEach(t => { if (t.revealed && !t.mine) t.mesh.material.color.copy(matRevealed.color); });
       }
       if (tileFlagInput && preset.tileFlag) {
-        tileFlagInput.value = preset.tileFlag;
+        const flagVal = (preset.tileFlag === '#9e6b6b') ? '#ffdd00' : preset.tileFlag;
+        tileFlagInput.value = flagVal;
         updateColorDisplay(tileFlagInput, tileFlagDisplay, tileFlagHex);
-        matFlag.color.setHex(parseInt(preset.tileFlag.substring(1), 16));
+        matFlag.color.setHex(parseInt(flagVal.substring(1), 16));
         state.tiles.forEach(t => { if (t.flagged) t.mesh.material.color.copy(matFlag.color); });
       }
       if (tileMineInput && preset.tileMine) {
