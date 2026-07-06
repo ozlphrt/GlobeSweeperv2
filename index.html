@@ -6967,7 +6967,15 @@
       }
       
       if (preset.debug) {
-        applyDebugOverrides(preset.debug);
+        const filteredDebug = { ...preset.debug };
+        delete filteredDebug.camFOV;
+        delete filteredDebug.camX;
+        delete filteredDebug.camY;
+        delete filteredDebug.camZ;
+        delete filteredDebug.camNear;
+        delete filteredDebug.camFar;
+        delete filteredDebug.camFog;
+        applyDebugOverrides(filteredDebug);
       }
       
       // Update display
