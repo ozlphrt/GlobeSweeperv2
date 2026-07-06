@@ -111,25 +111,42 @@
         left: 50% !important;
         transform: translateX(-50%) !important;
         top: max(12px, env(safe-area-inset-top)) !important;
-        gap: 12px !important;
-        padding: 8px 14px !important;
-        border-radius: 30px !important;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
+        padding: 10px 16px !important;
+        border-radius: 16px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6) !important;
+        width: calc(100vw - 32px) !important;
+        max-width: 360px !important;
+        box-sizing: border-box !important;
       }
-      .ui > div {
-        gap: 12px !important;
+      .ui .stats-wrapper {
+        flex-direction: column !important;
+        gap: 10px !important;
+        width: 100% !important;
         font-size: 13px !important;
+      }
+      .ui .stats-data {
+        width: 100% !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+      }
+      .ui .stats-controls {
+        margin-left: 0 !important;
+        gap: 16px !important;
+        justify-content: center !important;
+        width: 100% !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 8px !important;
       }
       .ui .heart {
         font-size: 13px !important;
       }
       .ui .control-btn.reset {
-        padding: 4px 8px !important;
-        font-size: 10px !important;
-        border-radius: 4px !important;
+        padding: 4px 10px !important;
+        font-size: 11px !important;
+        border-radius: 6px !important;
       }
       .ui .control-btn#soundToggle {
-        font-size: 13px !important;
+        font-size: 14px !important;
       }
     }
 
@@ -788,26 +805,30 @@
     <button id="debugToggle" style="display: none !important;"></button>
     <button id="globeBtn" style="display: none !important;"></button>
 
-    <!-- Sleek Horizontal Stats Row -->
-    <div style="display: flex; align-items: center; gap: 20px; font-family: inherit; font-size: 16px; font-weight: 900; color: #ffffff;">
-      <div style="display: flex; align-items: center; gap: 6px;" title="Mines Flagged">
-        <span>🚩</span>
-        <span id="mineHuntValue" style="color: #ffd000;">0/0</span>
+    <!-- Sleek Stats Row / Column Layout -->
+    <div class="stats-wrapper" style="display: flex; align-items: center; gap: 20px; font-family: inherit; font-size: 16px; font-weight: 900; color: #ffffff;">
+      <!-- Stats Container -->
+      <div class="stats-data" style="display: flex; align-items: center; gap: 18px;">
+        <div style="display: flex; align-items: center; gap: 6px;" title="Mines Flagged">
+          <span>🚩</span>
+          <span id="mineHuntValue" style="color: #ffd000;">0/0</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;" title="Safe Tiles Cleared">
+          <span>🌍</span>
+          <span id="explorationValue" style="color: #4dc2ff;">0/0</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;" title="Time Elapsed">
+          <span>🕐</span>
+          <span id="timerValue">00:00</span>
+        </div>
+        <div id="heartsContainer" style="display: flex; align-items: center; gap: 6px; color: #ff3b30; font-size: 18px; margin-left: 4px;">
+          <div class="heart">♥</div>
+          <div class="heart">♥</div>
+          <div class="heart">♥</div>
+        </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px;" title="Safe Tiles Cleared">
-        <span>🌍</span>
-        <span id="explorationValue" style="color: #4dc2ff;">0/0</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 6px;" title="Time Elapsed">
-        <span>🕐</span>
-        <span id="timerValue">00:00</span>
-      </div>
-      <div id="heartsContainer" style="display: flex; align-items: center; gap: 6px; color: #ff3b30; font-size: 18px; margin-left: 4px;">
-        <div class="heart">♥</div>
-        <div class="heart">♥</div>
-        <div class="heart">♥</div>
-      </div>
-      <div style="display: flex; align-items: center; gap: 12px; margin-left: 12px;">
+      <!-- Controls Container -->
+      <div class="stats-controls" style="display: flex; align-items: center; gap: 12px; margin-left: 8px;">
         <button class="control-btn reset" id="newGame" style="padding: 6px 12px; font-size: 12px; font-weight: 900; text-transform: uppercase; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 6px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px;">Reset</button>
         <button class="control-btn" id="soundToggle" title="Toggle Sound" style="background: none; border: none; font-size: 16px; cursor: pointer; padding: 2px;">🔊</button>
       </div>
