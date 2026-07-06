@@ -2508,6 +2508,7 @@
 
     // Extended game state variables
     const state = { 
+      level: parseInt(localStorage.getItem('globesweeper_level') || '1', 10),
       f: 15, 
       polys: [], 
       neighbors: [], 
@@ -3686,7 +3687,10 @@
             gameOverTimer.textContent = document.getElementById('timerValue')?.textContent || '00:00';
             gameOverTimer.className = 'stat-value';
           }
-          
+          const rstBtn = document.getElementById('restartButton');
+          if (rstBtn) {
+            rstBtn.textContent = 'Restart';
+          }
           gameOverOverlay.classList.add('visible');
         }
       }
@@ -3748,7 +3752,10 @@
             gameOverTimer.textContent = document.getElementById('timerValue')?.textContent || '00:00';
             gameOverTimer.className = 'stat-value';
           }
-          
+          const rstBtn = document.getElementById('restartButton');
+          if (rstBtn) {
+            rstBtn.textContent = 'Next Level';
+          }
           gameOverOverlay.classList.add('visible');
         }
         
@@ -3899,12 +3906,18 @@
 
     }
 
-    function rebuildCore(f){
-
+    function rebuildCore(forceFreq){
+      let f;
+      if (forceFreq !== undefined) {
+        f = forceFreq;
+      } else {
+        f = 3 + Math.floor(state.level / 2);
+      }
       f = Math.max(1, Math.floor(f)); state.f = f;
+      
       const lvlVal = document.getElementById('levelValue');
       if (lvlVal) {
-        lvlVal.textContent = state.f;
+        lvlVal.textContent = state.level;
       }
 
       const base = icosahedron(1); const geo  = geodesicSubdivide(base, f, 1);
@@ -3927,7 +3940,7 @@
       rotationVelocity.y = 0.006;
 
       // Auto-start: Place mines and do initial reveals
-      const ratio = debugSettings.mineRatio || 15;
+      const ratio = debugSettings.mineRatio || (10 + Math.min(15, state.level * 0.5));
       const initialReveal = debugSettings.initialRevealPercent || 0;
       const emptyRatio = debugSettings.emptyTilePercent || 0;
       
@@ -4979,12 +4992,17 @@
     // Restart button in game over overlay
     document.getElementById('restartButton').addEventListener('click', ()=>{ 
       initAudioContext();
-      // Hide game over overlay
       const gameOverOverlay = document.getElementById('gameOverOverlay');
       if (gameOverOverlay) {
         gameOverOverlay.classList.remove('visible');
       }
-      rebuildCore(state.f); 
+      if (state.won) {
+        state.level++;
+        localStorage.setItem('globesweeper_level', state.level);
+        rebuildCore();
+      } else {
+        rebuildCore(state.f); 
+      }
     });
 
     const bottomRestartBtn = document.getElementById('bottomRestartBtn');
@@ -6251,7 +6269,7 @@
 
     }
 
-    rebuildCore(15); runTests();
+    rebuildCore(); runTests();
 
     alignTimerWidth();
 
