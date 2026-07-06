@@ -3392,7 +3392,7 @@
       if (!tile || !tile.center) return;
       const position = tile.center;
       const normal = position.clone().normalize();
-      const numParticles = 140; // Increased particle count
+      const numParticles = 280; // Doubled particle count (2X)
       
       // Determine the base color of the exploding tile
       const baseColor = (tile.mesh.material && tile.mesh.material.color) 
