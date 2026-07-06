@@ -77,28 +77,31 @@
       
       #fpsCounter {
         bottom: max(12px, env(safe-area-inset-bottom));
-        right: max(12px, env(safe-area-inset-right));
+        right: calc(max(12px, env(safe-area-inset-right)) + 132px) !important;
       }
-      
       #bottomRestartBtn {
         bottom: max(12px, env(safe-area-inset-bottom));
         left: max(12px, env(safe-area-inset-left));
       }
+      #resetToLevelOneBtn {
+        bottom: max(12px, env(safe-area-inset-bottom));
+        right: max(12px, env(safe-area-inset-right));
+      }
     }
 
     @media (hover: hover) {
-      #bottomRestartBtn:hover {
+      #bottomRestartBtn:hover, #resetToLevelOneBtn:hover {
         background: rgba(255, 255, 255, 0.1) !important;
         border-color: rgba(255, 255, 255, 0.3) !important;
         transform: translateY(-1px);
       }
     }
-    #bottomRestartBtn:focus {
+    #bottomRestartBtn:focus, #resetToLevelOneBtn:focus {
       outline: none;
       background: rgba(15, 15, 20, 0.95) !important;
       border-color: rgba(255, 255, 255, 0.15) !important;
     }
-    #bottomRestartBtn:active {
+    #bottomRestartBtn:active, #resetToLevelOneBtn:active {
       transform: translateY(0);
     }
 
@@ -1091,10 +1094,11 @@
 
   </div>
 
-  <div id="fpsCounter" style="position: fixed; bottom: 12px; right: 12px; font-family: monospace; font-size: 12px; color: rgba(255, 255, 255, 0.8); z-index: 100; pointer-events: none; user-select: none;">
+  <div id="fpsCounter" style="position: fixed; bottom: 12px; right: 132px; font-family: monospace; font-size: 12px; color: rgba(255, 255, 255, 0.8); z-index: 100; pointer-events: none; user-select: none;">
     <span id="fpsValue">FPS: --</span>
   </div>
   <button id="bottomRestartBtn" style="position: fixed; bottom: 12px; left: 12px; z-index: 100; padding: 8px 14px; font-family: inherit; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #ffffff; background: rgba(15, 15, 20, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); cursor: pointer; transition: all 0.2s; letter-spacing: 0.8px;">Restart Level</button>
+  <button id="resetToLevelOneBtn" style="position: fixed; bottom: 12px; right: 12px; z-index: 100; padding: 8px 14px; font-family: inherit; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #ffffff; background: rgba(15, 15, 20, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); cursor: pointer; transition: all 0.2s; letter-spacing: 0.8px;">Reset to Lvl 1</button>
 
   <!-- Three.js (UMD) pinned to r146 so OrbitControls works without modules -->
 
@@ -2516,7 +2520,7 @@
 
     // Extended game state variables
     const state = { 
-      level: Math.max(5, parseInt(localStorage.getItem('globesweeper_level') || '5', 10)),
+      level: parseInt(localStorage.getItem('globesweeper_level') || '5', 10),
       f: 15, 
       polys: [], 
       neighbors: [], 
@@ -5035,6 +5039,22 @@
           gameOverOverlay.classList.remove('visible');
         }
         rebuildCore(state.f);
+      });
+    }
+
+    const resetToLevelOneBtn = document.getElementById('resetToLevelOneBtn');
+    if (resetToLevelOneBtn) {
+      resetToLevelOneBtn.addEventListener('click', () => {
+        initAudioContext();
+        if (confirm('Are you sure you want to reset all progress to Level 1?')) {
+          const gameOverOverlay = document.getElementById('gameOverOverlay');
+          if (gameOverOverlay) {
+            gameOverOverlay.classList.remove('visible');
+          }
+          state.level = 1;
+          localStorage.setItem('globesweeper_level', state.level);
+          rebuildCore();
+        }
       });
     }
 
