@@ -6255,9 +6255,10 @@
     let forceLabelUpdate = true;
 
     // Battery-aware and performance optimization states
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     let renderRequestCount = 180; // Start with frames to render initial scene
     let isTabActive = true;
-    let isLowPowerMode = false;
+    let isLowPowerMode = isMobile; // Always default to low power (30 FPS cap) on mobile interfaces
     let lastFrameTime = 0;
     const frameInterval = 1000 / 30; // 30 FPS target interval
     
@@ -6274,7 +6275,7 @@
     if ('getBattery' in navigator) {
       navigator.getBattery().then((battery) => {
         const checkBattery = () => {
-          isLowPowerMode = !battery.charging && battery.level < 0.20;
+          isLowPowerMode = (!battery.charging && battery.level < 0.20) || isMobile;
         };
         checkBattery();
         battery.addEventListener('chargingchange', checkBattery);
