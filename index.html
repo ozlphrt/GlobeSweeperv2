@@ -2516,7 +2516,7 @@
 
     // Extended game state variables
     const state = { 
-      level: parseInt(localStorage.getItem('globesweeper_level') || '1', 10),
+      level: Math.max(5, parseInt(localStorage.getItem('globesweeper_level') || '5', 10)),
       f: 15, 
       polys: [], 
       neighbors: [], 
