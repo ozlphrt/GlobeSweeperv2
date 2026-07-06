@@ -1,11 +1,14 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.0.48';
+const CACHE_NAME = 'globesweeper-v1.0.51';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  './',
+  'index.html',
+  'manifest.json',
+  'public/192.png',
+  'public/512.png',
+  'low_poly_golf_flag_animated/scene.gltf',
+  'low_poly_golf_flag_animated/scene.bin',
+  'low_poly_golf_flag_animated/license.txt',
 ];
 
 // Install event - cache resources
@@ -85,7 +88,7 @@ self.addEventListener('fetch', (event) => {
           }).catch(() => {
             // If fetch fails and it's a navigation request, return cached index.html
             if (event.request.mode === 'navigate') {
-              return caches.match('/index.html');
+              return caches.match('index.html');
             }
             // For other requests, return a basic error response
             return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });

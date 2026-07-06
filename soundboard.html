@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GlobeSweeper v2 - Soundboard</title>
+  <style>
+    body {
+      background-color: #242528;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+    p {
+      color: #a0a5b0;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+    .button-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    button {
+      background: linear-gradient(135deg, #ff5500 0%, #ff2200 100%);
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 15px rgba(255, 34, 0, 0.2);
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 34, 0, 0.3);
+    }
+    button:active {
+      transform: translateY(1px);
+    }
+    .btn-2 { background: linear-gradient(135deg, #00d2ff 0%, #0066ff 100%); box-shadow: 0 4px 15px rgba(0, 102, 255, 0.2); }
+    .btn-2:hover { box-shadow: 0 6px 20px rgba(0, 102, 255, 0.3); }
+    .btn-3 { background: linear-gradient(135deg, #a8ff78 0%, #78ffd6 100%); color: #1a3a2a; box-shadow: 0 4px 15px rgba(120, 255, 214, 0.2); }
+    .btn-3:hover { box-shadow: 0 6px 20px rgba(120, 255, 214, 0.3); }
+    .btn-4 { background: linear-gradient(135deg, #f12711 0%, #f5af19 100%); box-shadow: 0 4px 15px rgba(245, 175, 25, 0.2); }
+    .btn-4:hover { box-shadow: 0 6px 20px rgba(245, 175, 25, 0.3); }
+    .btn-5 { background: linear-gradient(135deg, #b3c5d7 0%, #738290 100%); box-shadow: 0 4px 15px rgba(115, 130, 144, 0.2); }
+    .btn-5:hover { box-shadow: 0 6px 20px rgba(115, 130, 144, 0.3); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Explosion Sound Testboard</h1>
+    <p>Click any button below to test the procedural synthesis audio styles directly in your browser without launching a server.</p>
+    <div class="button-list">
+      <button onclick="playStyle(1)">Style 1: Cinematic Deep Impact</button>
+      <button class="btn-2" onclick="playStyle(2)">Style 2: Shockwave Shatter</button>
+      <button class="btn-3" onclick="playStyle(3)">Style 3: Plasma Detonation</button>
+      <button class="btn-4" onclick="playStyle(4)">Style 4: Dynamite Blast</button>
+      <button class="btn-5" onclick="playStyle(5)">Style 5: Heavy Grenade Pop</button>
+    </div>
+  </div>
+
+  <script>
+    let audioContext = null;
+
+    function initAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }
+
+    function createBrownNoiseBuffer(sampleRate, duration) {
+      if (!audioContext) return null;
+      const bufferSize = sampleRate * duration;
+      const buffer = audioContext.createBuffer(1, bufferSize, sampleRate);
+      const data = buffer.getChannelData(0);
+      let lastOut = 0.0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        data[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = data[i];
+        data[i] *= 3.5;
+      }
+      return buffer;
+    }
+
+    function playStyle(style) {
+      initAudio();
+      const sampleRate = audioContext.sampleRate;
+      const now = audioContext.currentTime;
+
+      switch (style) {
+        case 1: // Cinematic Soft Bass Boom (Rumble with Brown Noise)
+          {
+            const osc = audioContext.createOscillator();
+            const oscGain = audioContext.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(65, now);
+            osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
+            oscGain.gain.setValueAtTime(0.3, now);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.connect(oscGain);
+            oscGain.connect(audioContext.destination);
+            
+            const noiseBuffer = createBrownNoiseBuffer(sampleRate, 1.4);
+            const source = audioContext.createBufferSource();
+            source.buffer = noiseBuffer;
+            
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(250, now);
+            filter.frequency.exponentialRampToValueAtTime(15, now + 1.2);
+            
+            const noiseGain = audioContext.createGain();
+            noiseGain.gain.setValueAtTime(0.35, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.005, now + 1.4);
+            
+            source.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(audioContext.destination);
+            
+            osc.start(now);
+            osc.stop(now + 0.55);
+            source.start(now);
+            source.stop(now + 1.4);
+          }
+          break;
+
+        case 2: // Distant Echoing Thud (Soft boom + echo delay)
+          {
+            const osc = audioContext.createOscillator();
+            const oscGain = audioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(55, now);
+            osc.frequency.exponentialRampToValueAtTime(10, now + 0.3);
+            oscGain.gain.setValueAtTime(0.25, now);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.connect(oscGain);
+            oscGain.connect(audioContext.destination);
+            
+            const noiseBuffer = createBrownNoiseBuffer(sampleRate, 1.6);
+            const source = audioContext.createBufferSource();
+            source.buffer = noiseBuffer;
+            
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(180, now);
+            filter.frequency.exponentialRampToValueAtTime(10, now + 1.5);
+            
+            const noiseGain = audioContext.createGain();
+            noiseGain.gain.setValueAtTime(0.2, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.005, now + 1.6);
+            
+            source.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(audioContext.destination);
+            
+            osc.start(now);
+            osc.stop(now + 0.35);
+            source.start(now);
+            source.stop(now + 1.6);
+          }
+          break;
+
+        case 3: // Charred Crackle & Pop (Detonation + crumbling earth)
+          {
+            const osc = audioContext.createOscillator();
+            const oscGain = audioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(160, now);
+            osc.frequency.linearRampToValueAtTime(40, now + 0.08);
+            oscGain.gain.setValueAtTime(0.2, now);
+            oscGain.gain.linearRampToValueAtTime(0.001, now + 0.08);
+            osc.connect(oscGain);
+            oscGain.connect(audioContext.destination);
+            
+            const duration = 1.0;
+            const bufferSize = sampleRate * duration;
+            const crackleBuffer = audioContext.createBuffer(1, bufferSize, sampleRate);
+            const crackleData = crackleBuffer.getChannelData(0);
+            let lastOut = 0.0;
+            for (let i = 0; i < bufferSize; i++) {
+              const white = Math.random() * 2 - 1;
+              const brown = (lastOut + (0.02 * white)) / 1.02;
+              lastOut = brown;
+              const crackle = Math.random() > 0.992 ? (Math.random() * 2 - 1) * 0.4 : 0;
+              crackleData[i] = (brown * 3.5 + crackle) * 0.2;
+            }
+            const source = audioContext.createBufferSource();
+            source.buffer = crackleBuffer;
+            
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(300, now);
+            filter.frequency.exponentialRampToValueAtTime(30, now + 0.9);
+            
+            const noiseGain = audioContext.createGain();
+            noiseGain.gain.setValueAtTime(0.35, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.005, now + 1.0);
+            
+            source.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(audioContext.destination);
+            
+            osc.start(now);
+            osc.stop(now + 0.1);
+            source.start(now);
+            source.stop(now + 1.0);
+          }
+          break;
+
+        case 4: // Sub-Bass Thump (Pure pressure wave, no hiss)
+          {
+            const osc = audioContext.createOscillator();
+            const oscGain = audioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(50, now);
+            osc.frequency.exponentialRampToValueAtTime(10, now + 0.45);
+            oscGain.gain.setValueAtTime(0.35, now);
+            oscGain.gain.exponentialRampToValueAtTime(0.005, now + 0.45);
+            osc.connect(oscGain);
+            oscGain.connect(audioContext.destination);
+            
+            const noiseBuffer = createBrownNoiseBuffer(sampleRate, 1.2);
+            const source = audioContext.createBufferSource();
+            source.buffer = noiseBuffer;
+            
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(80, now);
+            filter.frequency.setValueAtTime(40, now + 0.8);
+            
+            const noiseGain = audioContext.createGain();
+            noiseGain.gain.setValueAtTime(0.25, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.005, now + 1.2);
+            
+            source.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(audioContext.destination);
+            
+            osc.start(now);
+            osc.stop(now + 0.5);
+            source.start(now);
+            source.stop(now + 1.2);
+          }
+          break;
+
+        case 5: // Soft Dust Dispersion (Sandy debris, low pressure)
+          {
+            const duration = 0.8;
+            const osc = audioContext.createOscillator();
+            const oscGain = audioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(100, now);
+            osc.frequency.linearRampToValueAtTime(30, now + 0.15);
+            oscGain.gain.setValueAtTime(0.15, now);
+            oscGain.gain.linearRampToValueAtTime(0.001, now + 0.15);
+            osc.connect(oscGain);
+            oscGain.connect(audioContext.destination);
+            
+            const noiseBuffer = createBrownNoiseBuffer(sampleRate, duration);
+            const source = audioContext.createBufferSource();
+            source.buffer = noiseBuffer;
+            
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.Q.setValueAtTime(2.0, now);
+            filter.frequency.setValueAtTime(400, now);
+            filter.frequency.exponentialRampToValueAtTime(150, now + 0.75);
+            
+            const noiseGain = audioContext.createGain();
+            noiseGain.gain.setValueAtTime(0.18, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+            
+            source.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(audioContext.destination);
+            
+            osc.start(now);
+            osc.stop(now + 0.16);
+            source.start(now);
+            source.stop(now + 0.85);
+          }
+          break;
+      }
+    }
+  </script>
+</body>
+</html>

@@ -14,12 +14,12 @@
   <meta name="apple-mobile-web-app-title" content="GlobeSweeper" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="msapplication-TileColor" content="#242528" />
-  <meta name="msapplication-config" content="/browserconfig.xml" />
+  <meta name="msapplication-config" content="browserconfig.xml" />
 
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="apple-touch-icon" href="/icon-192.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="public/192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="public/192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="public/512.png" />
 
   <title>GlobeSweeper - Spherical Minesweeper</title>
 
@@ -296,13 +296,13 @@
 
     .bad { color: #ff8080; }
 
-    #debugPanel { position: fixed; top: 12px; right: 12px; width: 340px; max-height: 90vh; overflow-y: auto; overflow-x: hidden; background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); display: none; z-index: 1000; font-family: 'Lucida Grande', sans-serif; font-size: 11px; font-weight: 600; color: #1a1a1a; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 -1px 0 rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 16px; box-sizing: border-box; -webkit-user-select: text; user-select: text; }
+    #debugPanel { position: fixed; top: 12px; right: 12px; width: 440px; max-height: 90vh; overflow-y: auto; overflow-x: hidden; background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.2) 100%); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); display: none; z-index: 1000; font-family: 'Lucida Grande', sans-serif; font-size: 13px; font-weight: 600; color: #1a1a1a; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 -1px 0 rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 16px; box-sizing: border-box; -webkit-user-select: text; user-select: text; }
 
     #debugPanel.visible { display: block; }
 
     .debug-section { border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
 
-    .debug-section-header { display: flex; align-items: center; padding: 4px 8px; cursor: pointer; user-select: none; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: #1a1a1a; font-weight: 600; margin: 0; border-radius: 8px; transition: background 0.2s; }
+    .debug-section-header { display: flex; align-items: center; padding: 8px 12px; cursor: pointer; user-select: none; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); color: #1a1a1a; font-size: 14px; font-weight: 700; margin: 0; border-radius: 8px; transition: background 0.2s; }
 
     .debug-section-header:hover { background: rgba(255, 255, 255, 0.3); }
 
@@ -315,15 +315,15 @@
     .debug-section.collapsed .debug-section-content { display: none; }
     .debug-subsection { padding: 4px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.15); }
     .debug-subsection:last-child { border-bottom: none; }
-    .debug-subsection-header { padding: 6px 8px; font-size: 10px; font-weight: 700; color: rgba(26, 26, 26, 0.7); text-transform: uppercase; letter-spacing: 0.5px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin: 0 -8px 4px -8px; border-radius: 6px; }
+    .debug-subsection-header { padding: 6px 8px; font-size: 11px; font-weight: 700; color: rgba(26, 26, 26, 0.7); text-transform: uppercase; letter-spacing: 0.5px; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); margin: 0 -8px 4px -8px; border-radius: 6px; }
 
-    .debug-control { display: flex; align-items: center; height: 24px; padding: 0 8px; box-sizing: border-box; min-width: 0; }
+    .debug-control { display: flex; align-items: center; height: 32px; padding: 0 8px; box-sizing: border-box; min-width: 0; }
 
     .debug-control:hover { background: rgba(255, 255, 255, 0.2); border-radius: 6px; }
 
-    .debug-control label { flex: 0 0 auto; min-width: 110px; max-width: 110px; font-size: 11px; font-weight: 600; color: #1a1a1a; margin-right: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; -webkit-user-select: text; user-select: text; cursor: text; }
+    .debug-control label { flex: 0 0 auto; min-width: 140px; max-width: 140px; font-size: 12px; font-weight: 600; color: #1a1a1a; margin-right: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; -webkit-user-select: text; user-select: text; cursor: text; }
 
-    .debug-control .control-wrapper { flex: 1; display: flex; align-items: center; height: 20px; position: relative; margin-right: 8px; min-width: 0; }
+    .debug-control .control-wrapper { flex: 1; display: flex; align-items: center; height: 24px; position: relative; margin-right: 8px; min-width: 0; }
 
     .debug-control input[type=range] { flex: 1; height: 20px; min-width: 0; max-width: 100%; width: 100%; -webkit-appearance: none; appearance: none; background: transparent; margin: 0; }
 
@@ -385,6 +385,8 @@
     #debugCloseBtn { width: 100%; padding: 8px; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: none; border-top: 1px solid rgba(255, 255, 255, 0.2); color: #1a1a1a; cursor: pointer; font-size: 11px; font-family: inherit; border-radius: 0 0 16px 16px; transition: background 0.2s; }
 
     #debugCloseBtn:hover { background: rgba(255, 255, 255, 0.3); }
+
+    .hidden { display: none !important; }
 
     /* Loading and Game Over Overlays */
     .game-overlay {
@@ -634,6 +636,29 @@
 
   <div id="app"></div>
 
+  <!-- Touch Long Press Progress Dial -->
+  <div id="touchDial" style="position: absolute; display: none; pointer-events: none; width: 140px; height: 140px; transform: translate(-50%, -50%); z-index: 10000;">
+    <svg width="140" height="140">
+      <circle cx="70" cy="70" r="55" fill="rgba(15,15,20,0.55)" stroke="rgba(255,255,255,0.12)" stroke-width="14" />
+      <circle id="touchDialProgress" cx="70" cy="70" r="55" fill="none" stroke="#ffd000" stroke-width="14" stroke-dasharray="345.6" stroke-dashoffset="345.6" stroke-linecap="round" transform="rotate(-90 70 70)" style="transition: stroke 0.1s ease;" />
+    </svg>
+  </div>
+
+  <!-- How to Play Welcome Modal -->
+  <div id="howToPlayModal" class="game-overlay">
+    <div class="game-overlay-content" style="max-width: 480px; padding: 40px; text-align: center; background: rgba(255, 255, 255, 0.98); color: #0c101d; border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.8);">
+      <div class="game-overlay-title" style="margin-bottom: 2px; font-size: 42px; font-weight: 900; letter-spacing: 2px; color: #ff3b30; text-shadow: none;">GLOBESWEEPER</div>
+      <div class="game-overlay-subtitle" style="margin-bottom: 24px; font-size: 22px; font-weight: 800; color: #505c73;">How to Play</div>
+      <div style="text-align: left; margin-bottom: 30px; color: #111827; font-size: 24px; font-weight: 800; font-family: inherit; display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; line-height: 1.25;"><span style="font-size: 36px; margin-right: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));">👆</span> Tap / Click to reveal a tile</div>
+        <div style="display: flex; align-items: center; line-height: 1.25;"><span style="font-size: 36px; margin-right: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));">⚠️</span> Hold / Right-Click to flag a mine</div>
+        <div style="display: flex; align-items: center; line-height: 1.25;"><span style="font-size: 36px; margin-right: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));">🔄</span> Drag to rotate the globe</div>
+        <div style="display: flex; align-items: center; line-height: 1.25;"><span style="font-size: 36px; margin-right: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));">❤️</span> You have 3 lives. Good luck!</div>
+      </div>
+      <button class="game-overlay-button" id="startGameButton" style="width: 100%; padding: 16px; font-size: 22px; font-weight: 900; background: linear-gradient(135deg, #ffd000, #ff9900); color: #000; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(255, 208, 0, 0.4);">Start Game</button>
+    </div>
+  </div>
+
   <!-- Loading Game Overlay -->
   <div id="loadingOverlay" class="game-overlay">
     <div class="game-overlay-content">
@@ -674,7 +699,7 @@
     </div>
   </div>
 
-  <div class="ui">
+  <div class="ui hidden compact">
 
     <div class="progress-section">
 
@@ -807,7 +832,7 @@
 
         <div class="debug-control"><label>Revealed</label><div class="color-display" id="debugTileRevealedDisplay" style="background: #4a5565; position: relative;"><input type="color" id="debugTileRevealed" value="#4a5565" /></div><span class="color-hex" id="debugTileRevealedHex">#4a5565</span></div>
 
-        <div class="debug-control"><label>Flag</label><div class="color-display" id="debugTileFlagDisplay" style="background: #cc5555; position: relative;"><input type="color" id="debugTileFlag" value="#cc5555" /></div><span class="color-hex" id="debugTileFlagHex">#cc5555</span></div>
+        <div class="debug-control"><label>Flag</label><div class="color-display" id="debugTileFlagDisplay" style="background: #9e6b6b; position: relative;"><input type="color" id="debugTileFlag" value="#9e6b6b" /></div><span class="color-hex" id="debugTileFlagHex">#9e6b6b</span></div>
 
         <div class="debug-control"><label>Mine</label><div class="color-display" id="debugTileMineDisplay" style="background: #ff4444; position: relative;"><input type="color" id="debugTileMine" value="#ff4444" /></div><span class="color-hex" id="debugTileMineHex">#ff4444</span></div>
 
@@ -902,7 +927,17 @@
       <div class="debug-section-header collapsed"><span class="triangle"></span>Sound</div>
       <div class="debug-section-content">
         <div class="debug-control"><label>Click Sound</label><div class="control-wrapper"><input type="range" id="debugClickSound" min="1" max="5" step="1" value="5" /></div><input type="number" id="debugClickSoundValue" value="5" readonly /></div>
-        <div class="debug-control"><label>Game Over Sound</label><div class="control-wrapper"><input type="range" id="debugGameOverSound" min="1" max="5" step="1" value="1" /></div><input type="number" id="debugGameOverSoundValue" value="1" readonly /></div>
+        <div class="debug-control"><label>Game Over Sound</label><div class="control-wrapper"><input type="range" id="debugGameOverSound" min="1" max="5" step="1" value="3" /></div><input type="number" id="debugGameOverSoundValue" value="3" readonly /></div>
+      </div>
+    </div>
+
+    <div class="debug-section collapsed">
+      <div class="debug-section-header collapsed"><span class="triangle"></span>Flag Position</div>
+      <div class="debug-section-content">
+        <div class="debug-control"><label>Flag Scale</label><div class="control-wrapper"><input type="range" id="debugFlagScale" min="0.1" max="4.0" step="0.05" value="1.0" /></div><input type="number" id="debugFlagScaleValue" value="1.0" step="0.05" readonly /></div>
+        <div class="debug-control"><label>Offset X</label><div class="control-wrapper"><input type="range" id="debugFlagOffsetX" min="-0.1" max="0.1" step="0.001" value="0.0" /></div><input type="number" id="debugFlagOffsetXValue" value="0.000" step="0.001" readonly /></div>
+        <div class="debug-control"><label>Offset Y</label><div class="control-wrapper"><input type="range" id="debugFlagOffsetY" min="-0.1" max="0.1" step="0.001" value="0.0" /></div><input type="number" id="debugFlagOffsetYValue" value="0.000" step="0.001" readonly /></div>
+        <div class="debug-control"><label>Offset Z</label><div class="control-wrapper"><input type="range" id="debugFlagOffsetZ" min="-0.1" max="0.1" step="0.001" value="0.0" /></div><input type="number" id="debugFlagOffsetZValue" value="0.000" step="0.001" readonly /></div>
       </div>
     </div>
 
@@ -1015,6 +1050,13 @@
 
     let flagModelTemplate = null;
     let flagAnimations = [];
+    let flagScale = 1.0;
+    let flagOffsetX = 0.0;
+    let flagOffsetY = 0.0;
+    let flagOffsetZ = 0.0;
+    let defaultFlagX = 0;
+    let defaultFlagY = 0;
+    let defaultFlagZ = 0;
     
     // Load 3D golf flag model
     const gltfLoader = new THREE.GLTFLoader();
@@ -1027,15 +1069,26 @@
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
       if (maxDim > 0) {
-        const targetHeight = 0.026;
+        const targetHeight = 0.05; // Smaller default height
         const scaleFactor = targetHeight / maxDim;
         flagModelTemplate.scale.set(scaleFactor, scaleFactor, scaleFactor);
         
-        // Offset so base of flagpole sits exactly at tile surface (0.0)
-        // Find local bottom bounding point
+        // Offset so base of flagpole sits exactly at tile surface (0.0) and centered in X/Z
         const localMinY = box.min.y;
+        const centerX = (box.min.x + box.max.x) / 2;
+        const centerZ = (box.min.z + box.max.z) / 2;
         
-        // Apply vertical offset directly to child elements so parent group origin is base-pinned
+        defaultFlagX = -centerX * scaleFactor;
+        defaultFlagY = -localMinY * scaleFactor;
+        defaultFlagZ = -centerZ * scaleFactor;
+        
+        flagModelTemplate.position.set(
+          defaultFlagX,
+          defaultFlagY,
+          defaultFlagZ
+        );
+        
+        // Apply shadow casting to child elements
         flagModelTemplate.traverse(child => {
           if (child.isMesh) {
             child.castShadow = true;
@@ -1504,46 +1557,227 @@
       return mesh;
     }
 
+    function createBurntShape(baseRadius) {
+      const shape = new THREE.Shape();
+      const numPoints = 8;
+      const startAngle = Math.random() * Math.PI * 2;
+      for (let i = 0; i < numPoints; i++) {
+        // Jitter the angle step itself to destroy pentagonal symmetry
+        const baseAngle = startAngle + (i / numPoints) * Math.PI * 2;
+        const angleJitter = (Math.random() - 0.5) * 0.45 * (Math.PI * 2 / numPoints);
+        const angle = baseAngle + angleJitter;
+        
+        // Highly asymmetric, wider radial offsets
+        const jitter = (Math.random() - 0.5) * 0.9 * baseRadius;
+        const r = baseRadius + jitter;
+        
+        const x = Math.cos(angle) * r;
+        const y = Math.sin(angle) * r;
+        if (i === 0) {
+          shape.moveTo(x, y);
+        } else {
+          shape.lineTo(x, y);
+        }
+      }
+      shape.closePath();
+      return shape;
+    }
+
+    function createBurntDecal(tile) {
+      if (tile.burntDecal) return;
+      const burntGroup = new THREE.Group();
+      
+      // Outer soft irregular ring for gradient blend
+      const shapeOuter = createBurntShape(0.038);
+      const boardGeoOuter = new THREE.ExtrudeGeometry(shapeOuter, { depth: 0.0002, bevelEnabled: false });
+      boardGeoOuter.center();
+      const circleMatOuter = new THREE.MeshStandardMaterial({
+        color: 0x0a0a0c,
+        transparent: true,
+        opacity: 0.55,
+        roughness: 1.0,
+        depthWrite: false
+      });
+      const spotOuter = new THREE.Mesh(boardGeoOuter, circleMatOuter);
+      spotOuter.position.set(0, 0, 0.0005);
+      spotOuter.renderOrder = 3; // Ensure it renders on top of the tile mesh
+      burntGroup.add(spotOuter);
+
+      // Inner glowing orange/purple/red plasma spot
+      const shapeInner = createBurntShape(0.024);
+      const boardGeoInner = new THREE.ExtrudeGeometry(shapeInner, { depth: 0.0004, bevelEnabled: false });
+      boardGeoInner.center();
+      
+      const plasmaMat = new THREE.ShaderMaterial({
+        uniforms: {
+          time: { value: 0 }
+        },
+        vertexShader: `
+          varying vec3 vPosition;
+          void main() {
+            vPosition = position;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vPosition;
+          uniform float time;
+          void main() {
+            // Local coordinates on the face of the geometry (centered at origin)
+            vec2 localCoord = vPosition.xy;
+            
+            float t = time * 0.0035;
+            float angle = atan(localCoord.y, localCoord.x);
+            
+            // Calculate a chaotic, organic wave boundary (no symmetric star shapes)
+            float wave = sin(angle * 4.3 + t * 0.7) * 0.16 
+                       + cos(angle * 2.7 - t * 1.1) * 0.12 
+                       + sin(angle * 9.0 + t * 2.1) * 0.05;
+            float maxRadius = 0.024 * (1.0 + wave);
+            float dist = length(localCoord) / maxRadius; // Irregular normalized distance
+            
+            // Scale frequencies relative to local geometry scale
+            float w1 = sin(localCoord.x * 1200.0 + t) * 0.5 + 0.5;
+            float w2 = sin(localCoord.y * 1200.0 - t * 1.5) * 0.5 + 0.5;
+            float w = (w1 + w2) * 0.5;
+            
+            vec3 colorOrange = vec3(1.0, 0.40, 0.0);
+            vec3 colorPurple = vec3(0.50, 0.0, 1.0);
+            vec3 colorRed = vec3(1.0, 0.02, 0.10);
+            
+            // Mix red and orange as the primary colors
+            vec3 col = mix(colorRed, colorOrange, w);
+            // Apply purple only as rare, high-threshold highlight ripples
+            float purpleWeight = smoothstep(0.65, 1.0, sin(dist * 14.0 - t));
+            col = mix(col, colorPurple, purpleWeight * 0.35);
+            
+            // Soft edge mask relative to the irregular shape boundary
+            float alpha = smoothstep(1.0, 0.5, dist) * 0.95;
+            gl_FragColor = vec4(col, alpha);
+          }
+        `,
+        transparent: true,
+        depthWrite: false
+      });
+
+      const spotInner = new THREE.Mesh(boardGeoInner, plasmaMat);
+      spotInner.position.set(0, 0, 0.001);
+      spotInner.renderOrder = 4; // Ensure it renders on top of the black spot and tile
+      burntGroup.add(spotInner);
+
+      // Position flat on tile surface
+      burntGroup.position.copy(tile.center).normalize().multiplyScalar(1.0);
+      burntGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tile.center.clone().normalize());
+      
+      tileGroup.add(burntGroup);
+      tile.burntDecal = burntGroup;
+      burntGroup.userData = { plasmaMat: plasmaMat };
+    }
+
     function createNavalMineMesh() {
       const mineGroup = new THREE.Group();
       
       const style = 1;
 
-      // Style 1: GOLF FLAG (GLTF LOADED OR PROCEDURAL FALLBACK)
+      // Style 1: Attention Warning Sign
       if (style === 1) {
-        if (flagModelTemplate) {
-          const flagClone = flagModelTemplate.clone();
-          mineGroup.add(flagClone);
-          
-          let mixer = null;
-          if (flagAnimations && flagAnimations.length > 0) {
-            mixer = new THREE.AnimationMixer(flagClone);
-            const action = mixer.clipAction(flagAnimations[0]);
-            action.play();
-          }
-          
-          mineGroup.userData = {
-            style: 1,
-            mixer: mixer,
-            clone: flagClone
-          };
-        } else {
-          // Procedural fallback flag
-          const stickGeo = new THREE.CylinderGeometry(0.0008, 0.0008, 0.024, 8);
-          const stickMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 });
-          const stick = new THREE.Mesh(stickGeo, stickMat);
-          stick.position.y = 0.012;
-          mineGroup.add(stick);
+        // Build the procedural 3D Attention Warning Sign (rounded corners, glossy red border, tapered exclamation)!
+        const signGroup = new THREE.Group();
 
-          const flagGeo = new THREE.ConeGeometry(0.006, 0.008, 3);
-          flagGeo.rotateZ(-Math.PI/2);
-          const flagMat = new THREE.MeshStandardMaterial({ color: 0xff0000, roughness: 0.5 });
-          const flag = new THREE.Mesh(flagGeo, flagMat);
-          flag.position.set(0.003, 0.018, 0);
-          mineGroup.add(flag);
+        // 1. Red Rounded Triangle Board (Outer border)
+        const shapeBack = new THREE.Shape();
+        shapeBack.moveTo(-0.018, -0.016);
+        shapeBack.lineTo(0.018, -0.016);
+        shapeBack.quadraticCurveTo(0.022, -0.016, 0.021, -0.012);
+        shapeBack.lineTo(0.003, 0.021);
+        shapeBack.quadraticCurveTo(0, 0.026, -0.003, 0.021);
+        shapeBack.lineTo(-0.021, -0.012);
+        shapeBack.quadraticCurveTo(-0.022, -0.016, -0.018, -0.016);
+        
+        const extrudeSettingsBack = { 
+          depth: 0.0025, 
+          bevelEnabled: true,
+          bevelThickness: 0.0008,
+          bevelSize: 0.0008,
+          bevelSegments: 3
+        };
+        const boardGeoBack = new THREE.ExtrudeGeometry(shapeBack, extrudeSettingsBack);
+        boardGeoBack.center();
+        const boardMatBack = new THREE.MeshStandardMaterial({ 
+          color: 0xff3b30, 
+          emissive: 0x880000, 
+          emissiveIntensity: 0.4, 
+          roughness: 0.15,
+          metalness: 0.1
+        });
+        const boardBack = new THREE.Mesh(boardGeoBack, boardMatBack);
+        boardBack.position.set(0, 0, 0.0005);
+        signGroup.add(boardBack);
 
-          mineGroup.userData = { style: 1 };
-        }
+        // 2. Yellow Inner Triangle Board (Self-emissive, rounded)
+        const shapeInner = new THREE.Shape();
+        shapeInner.moveTo(-0.014, -0.012);
+        shapeInner.lineTo(0.014, -0.012);
+        shapeInner.quadraticCurveTo(0.017, -0.012, 0.016, -0.009);
+        shapeInner.lineTo(0.0025, 0.017);
+        shapeInner.quadraticCurveTo(0, 0.021, -0.0025, 0.017);
+        shapeInner.lineTo(-0.016, -0.009);
+        shapeInner.quadraticCurveTo(-0.017, -0.012, -0.014, -0.012);
+        
+        const extrudeSettingsInner = { 
+          depth: 0.0015, 
+          bevelEnabled: true,
+          bevelThickness: 0.0005,
+          bevelSize: 0.0005,
+          bevelSegments: 3
+        };
+        const boardGeoInner = new THREE.ExtrudeGeometry(shapeInner, extrudeSettingsInner);
+        boardGeoInner.center();
+        const boardMatInner = new THREE.MeshStandardMaterial({ 
+          color: 0xffd000, 
+          emissive: 0xff9900, 
+          emissiveIntensity: 0.7, 
+          roughness: 0.25 
+        });
+        const boardInner = new THREE.Mesh(boardGeoInner, boardMatInner);
+        boardInner.position.set(0, -0.001, 0.002);
+        signGroup.add(boardInner);
+
+        // 3. Black Tapered Exclamation Point (Upper line and dot)
+        const markMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1c, roughness: 0.6 });
+        
+        // Bolder tapered rounded line
+        const lineShape = new THREE.Shape();
+        lineShape.absarc(0, 0.005, 0.0028, 0, Math.PI, false);
+        lineShape.lineTo(-0.0016, -0.003);
+        lineShape.absarc(0, -0.003, 0.0017, Math.PI, 0, false);
+        lineShape.lineTo(0.0028, 0.005);
+        
+        const lineGeo = new THREE.ExtrudeGeometry(lineShape, { depth: 0.0006, bevelEnabled: false });
+        lineGeo.center();
+        const lineMeshF = new THREE.Mesh(lineGeo, markMat);
+        lineMeshF.position.set(0, 0.001, 0.0035);
+        signGroup.add(lineMeshF);
+
+        // Bolder Dot
+        const dotShape = new THREE.Shape();
+        dotShape.absarc(0, -0.0075, 0.0024, 0, Math.PI * 2, false);
+        const dotGeo = new THREE.ExtrudeGeometry(dotShape, { depth: 0.0006, bevelEnabled: false });
+        dotGeo.center();
+        const dotMeshF = new THREE.Mesh(dotGeo, markMat);
+        dotMeshF.position.set(0, -0.0095, 0.0035);
+        signGroup.add(dotMeshF);
+
+        // Apply current scale and position to the sign group immediately on creation
+        signGroup.scale.set(flagScale, flagScale, flagScale);
+        signGroup.position.set(flagOffsetX, flagOffsetY, flagOffsetZ);
+        
+        mineGroup.add(signGroup);
+        mineGroup.userData = {
+          style: 1,
+          clone: signGroup,
+          emissiveMat: boardMatInner
+        };
       }
       
       // Style 2: GIMBAL PLASMA ORB
@@ -2157,7 +2391,7 @@
     });
     
     let matFlag = new THREE.MeshStandardMaterial({ 
-      color: 0xcc5555, // Darker red to reduce brightness when seen through empty tiles
+      color: 0x9e6b6b, // Less saturated desaturated dusty red
       side: THREE.DoubleSide,
       roughness: 1.0,
       metalness: 0.0,
@@ -2170,6 +2404,13 @@
       side: THREE.DoubleSide,
       roughness: 1.0,
       metalness: 0.0
+    });
+
+    let matBurnt = new THREE.MeshStandardMaterial({ 
+      color: 0x111111, // Charcoal black
+      side: THREE.DoubleSide,
+      roughness: 0.95,
+      metalness: 0.05
     });
     
     // Simple glass material for empty tiles
@@ -2532,6 +2773,70 @@
         loadingOverlay.classList.add('visible');
       }
 
+      // 1. Perform expensive 3D cleanup exactly ONCE at the start of placement
+      state.totalMines = mineTarget; 
+      state.flags = 0; 
+      state.safeRevealed = 0; 
+      state.gameOver = false; 
+      state.won = false; 
+      state.lives = 3; 
+      lifeLostInCurrentReveal = false; 
+      updateCounters();
+      
+      state.tiles.forEach((t, idx)=>{ 
+        t.mine = false; 
+        t.count = 0; 
+        t.flagged = false; 
+        t.revealed = false; 
+        t.isEmpty = false; 
+        if (t.label) { 
+          tileGroup.remove(t.label); 
+          t.label.material.map.dispose(); 
+          t.label.material.dispose(); 
+          t.label = null; 
+        } 
+        if (t.flagMesh) { 
+          tileGroup.remove(t.flagMesh); 
+          if (t.flagMesh.userData) { 
+            if (t.flagMesh.userData.glowTexture) t.flagMesh.userData.glowTexture.dispose(); 
+            if (t.flagMesh.userData.sparkTexture) t.flagMesh.userData.sparkTexture.dispose(); 
+          } 
+          t.flagMesh.traverse(child => { 
+            if (child.isMesh || child.isSprite || child.isPoints) { 
+              if (child.geometry) child.geometry.dispose(); 
+              if (child.material) { 
+                if (child.material.map) child.material.map.dispose(); 
+                if (Array.isArray(child.material)) { 
+                  child.material.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); 
+                } else { 
+                  child.material.dispose(); 
+                } 
+              } 
+            } 
+          }); 
+          t.flagMesh = null; 
+        } 
+        t.mesh.geometry.dispose(); 
+        t.mesh.geometry = createPrismGeometry(idx, 0.97, 1.0); 
+        t.mesh.material = getHiddenMaterial(t); 
+        if (t.burntDecal) { 
+          tileGroup.remove(t.burntDecal); 
+          t.burntDecal.traverse(child => { 
+            if (child.geometry) child.geometry.dispose(); 
+            if (child.material) child.material.dispose(); 
+          }); 
+          t.burntDecal = null; 
+        } 
+      });
+
+      // Dispose and clear landed explosion particles
+      activeExplosionParticles.forEach(p => {
+        tileGroup.remove(p.mesh);
+        if (p.mesh.geometry) p.mesh.geometry.dispose();
+        if (p.mesh.material) p.mesh.material.dispose();
+      });
+      activeExplosionParticles.length = 0;
+
       // Use setTimeout to allow UI to update
       setTimeout(() => {
         // Try to generate a solvable board (max 10 attempts for better solvability)
@@ -2541,7 +2846,7 @@
 
         const tryGenerateBoard = () => {
           if (boardIsSolvable || attempts >= maxAttempts) {
-            continueBoardSetup(initialRevealPercent);
+            continueBoardSetup(initialRevealPercent, emptyTilePercent);
             return;
           }
 
@@ -2553,96 +2858,97 @@
             loadingMessage.textContent = attempts === 1 ? 'Generating solvable puzzle...' : `Attempt ${attempts} of ${maxAttempts}...`;
           }
 
-          setTimeout(() => {
-            state.totalMines = mineTarget; state.flags = 0; state.safeRevealed = 0; state.gameOver=false; state.won = false; state.lives = 3; lifeLostInCurrentReveal = false; updateCounters();
-            state.tiles.forEach((t, idx)=>{ t.mine=false; t.count=0; t.flagged=false; t.revealed=false; t.isEmpty=false; if (t.label){ tileGroup.remove(t.label); t.label.material.map.dispose(); t.label.material.dispose(); t.label=null; } if (t.flagMesh){ tileGroup.remove(t.flagMesh); if (t.flagMesh.userData) { if (t.flagMesh.userData.glowTexture) t.flagMesh.userData.glowTexture.dispose(); if (t.flagMesh.userData.sparkTexture) t.flagMesh.userData.sparkTexture.dispose(); } t.flagMesh.traverse(child => { if (child.isMesh || child.isSprite || child.isPoints) { if (child.geometry) child.geometry.dispose(); if (child.material) { if (child.material.map) child.material.map.dispose(); if (Array.isArray(child.material)) { child.material.forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); } else { child.material.dispose(); } } } }); t.flagMesh = null; } t.mesh.geometry.dispose(); t.mesh.geometry = createPrismGeometry(idx, 0.97, 1.0); t.mesh.material = getHiddenMaterial(t); });
-
-             const forbidden = excludeIndex >= 0 ? new Set([excludeIndex, ...state.neighbors[excludeIndex]]) : new Set();
-
-             let placed = 0; const indices = [...state.tiles.keys()].filter(i=>!forbidden.has(i) && !state.tiles[i].isEmpty);
-
-             // Handle empty tiles
-             if (emptyTilePercent > 0) {
-               const emptyCount = Math.floor(indices.length * emptyTilePercent / 100);
-               for (let i = indices.length - 1; i > 0 && emptyCount > 0; i--) {
-                 const j = (Math.random() * (i + 1)) | 0;
-                 [indices[i], indices[j]] = [indices[j], indices[i]];
-               }
-               for (let i = 0; i < emptyCount; i++) {
-                 const idx = indices[i];
-                 state.tiles[idx].count = 0;
-                 state.tiles[idx].isEmpty = true;
-               }
-               for (let i = 0; i < emptyCount; i++) {
-                 const idx = indices[i];
-                 state.tiles[idx].mesh.geometry.dispose();
-                 state.tiles[idx].mesh.geometry = createPrismGeometry(idx, 0.93, 0.96);
-                 state.tiles[idx].mesh.material = getEmptyMaterial();
-               }
-               indices.splice(0, emptyCount);
-              }
-              
-              // Rebuild wireframe to hide edges between empty tiles
-              rebuildWireframe();
-
-            // Simple random mine placement
-            for (let i=indices.length-1;i>0;i--){ const j=(Math.random()* (i+1))|0; [indices[i],indices[j]]=[indices[j],indices[i]]; }
-
-            for (let i = 0; i < mineTarget && i < indices.length; i++) {
-              state.tiles[indices[i]].mine = true;
-              placed++;
-            }
-
-            state.tiles.forEach((t,i)=>{ if (t.mine) return; let c=0; for (const nb of state.neighbors[i]) if (state.tiles[nb].mine) c++; t.count=c; });
-
-            // Reveal initial percentage of safe tiles at the start
-            const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
-            const revealCount = Math.max(1, Math.floor(safeIndices.length * initialRevealPercent / 100));
-
-            // Shuffle safe indices
-            for (let i = safeIndices.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1));
-              [safeIndices[i], safeIndices[j]] = [safeIndices[j], safeIndices[i]];
-            }
-
-            // Reveal initial tiles for solvability check
-            const initialRevealed = new Set();
-            for (let i = 0; i < revealCount && i < safeIndices.length; i++) {
-              initialRevealed.add(safeIndices[i]);
-            }
-
-            setTimeout(() => {
-              // Check if board is solvable from this initial state
-              const originalRevealed = state.tiles.map(t => t.revealed);
-              initialRevealed.forEach(idx => { state.tiles[idx].revealed = true; });
-              
-              boardIsSolvable = isBoardSolvable();
-              
-              // Restore original revealed state
-              state.tiles.forEach((t, i) => { t.revealed = originalRevealed[i]; });
-              
-              if (!boardIsSolvable && attempts < maxAttempts) {
-                // Use requestAnimationFrame for next attempt to avoid blocking
-                requestAnimationFrame(() => {
-                  tryGenerateBoard();
-                });
-              } else {
-                continueBoardSetup(initialRevealPercent);
-              }
-            });
+          // Reset logical state only (pure memory operation, super fast!)
+          state.tiles.forEach(t => { 
+            t.mine = false; 
+            t.count = 0; 
+            t.isEmpty = false; 
+            t.revealed = false; 
+            t.flagged = false; 
           });
+
+          const forbidden = excludeIndex >= 0 ? new Set([excludeIndex, ...state.neighbors[excludeIndex]]) : new Set();
+          const indices = [...state.tiles.keys()].filter(i=>!forbidden.has(i));
+
+          // Handle empty tiles logically
+          if (emptyTilePercent > 0) {
+            const emptyCount = Math.floor(indices.length * emptyTilePercent / 100);
+            for (let i = indices.length - 1; i > 0 && emptyCount > 0; i--) {
+              const j = (Math.random() * (i + 1)) | 0;
+              [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            for (let i = 0; i < emptyCount; i++) {
+              const idx = indices[i];
+              state.tiles[idx].count = 0;
+              state.tiles[idx].isEmpty = true;
+            }
+            indices.splice(0, emptyCount);
+          }
+
+          // Simple random mine placement
+          for (let i=indices.length-1;i>0;i--){ const j=(Math.random()* (i+1))|0; [indices[i],indices[j]]=[indices[j],indices[i]]; }
+
+          for (let i = 0; i < mineTarget && i < indices.length; i++) {
+            state.tiles[indices[i]].mine = true;
+          }
+
+          state.tiles.forEach((t,i)=>{ if (t.mine) return; let c=0; for (const nb of state.neighbors[i]) if (state.tiles[nb].mine) c++; t.count=c; });
+
+          // Reveal initial percentage of safe tiles at the start
+          const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
+          const revealCount = Math.max(1, Math.floor(safeIndices.length * initialRevealPercent / 100));
+
+          // Shuffle safe indices
+          for (let i = safeIndices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [safeIndices[i], safeIndices[j]] = [safeIndices[j], safeIndices[i]];
+          }
+
+          // Reveal initial tiles for solvability check
+          const initialRevealed = new Set();
+          for (let i = 0; i < revealCount && i < safeIndices.length; i++) {
+            initialRevealed.add(safeIndices[i]);
+          }
+
+          // Check if board is solvable from this initial state
+          const originalRevealed = state.tiles.map(t => t.revealed);
+          initialRevealed.forEach(idx => { state.tiles[idx].revealed = true; });
+          
+          boardIsSolvable = isBoardSolvable();
+          
+          // Restore original revealed state
+          state.tiles.forEach((t, i) => { t.revealed = originalRevealed[i]; });
+          
+          if (!boardIsSolvable && attempts < maxAttempts) {
+            // Immediate next attempt on the event loop (avoiding layout/repaint frames)
+            setTimeout(tryGenerateBoard, 0);
+          } else {
+            continueBoardSetup(initialRevealPercent, emptyTilePercent);
+          }
         };
 
         tryGenerateBoard();
       }, 0);
     }
 
-    function continueBoardSetup(initialRevealPercent) {
+    let firstLaunch = !localStorage.getItem('globesweeper_welcome_done');
+
+    function continueBoardSetup(initialRevealPercent, emptyTilePercent) {
       // Hide loading overlay
       const loadingOverlay = document.getElementById('loadingOverlay');
       if (loadingOverlay) {
         loadingOverlay.classList.remove('visible');
       }
+
+      // Now apply the 3D geometries and materials for empty tiles (exactly once)
+      state.tiles.forEach((t, idx) => {
+        if (t.isEmpty) {
+          t.mesh.geometry.dispose();
+          t.mesh.geometry = createPrismGeometry(idx, 0.93, 0.96);
+          t.mesh.material = getEmptyMaterial();
+        }
+      });
+      rebuildWireframe();
 
       // Add initial tiles to reveal queue for one-by-one processing
       const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
@@ -2666,11 +2972,34 @@
       isInitialReveal = true;
       processRevealQueue();
       
-      // Start timer when game begins
-      startTimer();
+      // Conditional welcome flow: show simple how-to-play welcome modal first time
+      if (firstLaunch) {
+        const howToPlayModal = document.getElementById('howToPlayModal');
+        if (howToPlayModal) {
+          howToPlayModal.classList.add('visible');
+        }
+        
+        const startBtn = document.getElementById('startGameButton');
+        if (startBtn) {
+          startBtn.onclick = () => {
+            if (howToPlayModal) howToPlayModal.classList.remove('visible');
+            const ui = document.querySelector('.ui');
+            if (ui) ui.classList.remove('hidden');
+            firstLaunch = false;
+            localStorage.setItem('globesweeper_welcome_done', 'true');
+            // Give the sphere a gorgeous intro spin
+            rotationVelocity.x = 0.025;
+            rotationVelocity.y = 0.006;
+            startTimer();
+          };
+        }
+      } else {
+        // Subsequent restarts show UI and start timer instantly
+        const ui = document.querySelector('.ui');
+        if (ui) ui.classList.remove('hidden');
+        startTimer();
+      }
     }
-
-
 
     function revealSingle(i){
       const t = state.tiles[i]; 
@@ -2992,7 +3321,7 @@
       const t = state.tiles[i]; 
       if (t.revealed || state.gameOver) return; 
       t.flagged = !t.flagged; 
-      t.mesh.material = t.flagged ? matFlag : getHiddenMaterial(t); 
+      t.mesh.material = getHiddenMaterial(t); 
       // Reset scale to normal when flag state changes
       t.mesh.scale.set(1.0, 1.0, 1.0);
       
@@ -3004,10 +3333,15 @@
         mineMesh.position.copy(t.center).normalize().multiplyScalar(1.0);
         
         // Orient it to align with the tile normal
-        mineMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), t.center.clone().normalize());
+        if (mineMesh.userData && mineMesh.userData.style === 1) {
+          mineMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), t.center.clone().normalize());
+        } else {
+          mineMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), t.center.clone().normalize());
+        }
         
         tileGroup.add(mineMesh);
         t.flagMesh = mineMesh;
+        forceLabelUpdate = true;
       } else {
         // Remove and dispose of 3D naval mine mesh
         if (t.flagMesh) {
@@ -3052,8 +3386,145 @@
 
 
 
+    const activeExplosionParticles = [];
+
+    function triggerExplosionVFX(tile) {
+      if (!tile || !tile.center) return;
+      const position = tile.center;
+      const normal = position.clone().normalize();
+      const numParticles = 140; // Increased particle count
+      
+      // Determine the base color of the exploding tile
+      const baseColor = (tile.mesh.material && tile.mesh.material.color) 
+        ? tile.mesh.material.color 
+        : new THREE.Color(0x2d3643);
+      
+      for (let i = 0; i < numParticles; i++) {
+        const size = 0.003 + Math.random() * 0.008;
+        const geom = Math.random() > 0.4 
+          ? new THREE.BoxGeometry(size, size, size) 
+          : new THREE.IcosahedronGeometry(size, 0);
+          
+        // Jitter the color slightly so particles look like realistic shattered pieces of the tile
+        const particleColor = baseColor.clone();
+        const jitter = (Math.random() - 0.5) * 0.15;
+        particleColor.r = Math.max(0.05, Math.min(1.0, particleColor.r + jitter));
+        particleColor.g = Math.max(0.05, Math.min(1.0, particleColor.g + jitter));
+        particleColor.b = Math.max(0.05, Math.min(1.0, particleColor.b + jitter));
+
+        const mat = new THREE.MeshStandardMaterial({
+          color: particleColor,
+          roughness: 0.8,
+          metalness: 0.1,
+          transparent: true,
+          opacity: 0.95
+        });
+        
+        const mesh = new THREE.Mesh(geom, mat);
+        mesh.position.copy(position).addScaledVector(normal, 0.002);
+        
+        // Push particles outward horizontally as well so they spread to neighboring tiles
+        const speed = 0.015 + Math.random() * 0.035;
+        const velocity = normal.clone()
+          .add(new THREE.Vector3(
+            (Math.random() - 0.5) * 1.5,
+            (Math.random() - 0.5) * 1.5,
+            (Math.random() - 0.5) * 1.5
+          ))
+          .normalize()
+          .multiplyScalar(speed);
+          
+        const drag = 0.95;
+        const gravity = 0.08 + Math.random() * 0.12; // Positive gravity pulls back down to the sphere
+        const maxLife = 0.8 + Math.random() * 1.2;
+        
+        tileGroup.add(mesh);
+        
+        activeExplosionParticles.push({
+          mesh: mesh,
+          velocity: velocity,
+          drag: drag,
+          gravity: gravity,
+          life: 0,
+          maxLife: maxLife,
+          spin: new THREE.Vector3(
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10,
+            (Math.random() - 0.5) * 10
+          ),
+          landed: false,
+          baseColor: particleColor
+        });
+      }
+    }
+
+    function updateExplosionParticles(dt) {
+      for (let i = activeExplosionParticles.length - 1; i >= 0; i--) {
+        const p = activeExplosionParticles[i];
+        
+        if (p.landed) {
+          continue; // Keep landed particle stains permanently on neighboring tiles
+        }
+        
+        p.life += dt;
+        
+        if (p.life >= p.maxLife) {
+          tileGroup.remove(p.mesh);
+          p.mesh.geometry.dispose();
+          p.mesh.material.dispose();
+          activeExplosionParticles.splice(i, 1);
+        } else {
+          // Check for landing on the spherical globe surface (radius = 1.0)
+          const currentRadius = p.mesh.position.length();
+          if (p.life > 0.08 && currentRadius <= 1.002 && !p.landed) {
+            p.landed = true;
+            p.mesh.position.normalize().multiplyScalar(1.002);
+            p.velocity.set(0, 0, 0);
+            p.gravity = 0;
+            p.spin.set(0, 0, 0);
+            
+            // Darken slightly on landing to look like charred fragments of the original tile color
+            const charredColor = p.baseColor.clone().multiplyScalar(0.7);
+            p.mesh.material.color.copy(charredColor);
+          }
+          
+          if (!p.landed) {
+            p.mesh.position.add(p.velocity);
+            p.velocity.multiplyScalar(p.drag);
+            
+            const pullDir = p.mesh.position.clone().normalize().negate();
+            p.velocity.addScaledVector(pullDir, p.gravity * dt);
+            
+            p.mesh.rotation.x += p.spin.x * dt;
+            p.mesh.rotation.y += p.spin.y * dt;
+            p.mesh.rotation.z += p.spin.z * dt;
+          }
+          
+          // Shrink and dissolve only in the last 20% of their life for a stable landing effect
+          const lifeRatio = p.life / p.maxLife;
+          let scaleFactor = 1.0;
+          let opacityFactor = 0.95;
+          if (lifeRatio > 0.8) {
+            const fadeRatio = (1.0 - lifeRatio) / 0.2;
+            scaleFactor = Math.max(0.001, fadeRatio);
+            opacityFactor = fadeRatio * 0.95;
+          }
+          
+          p.mesh.scale.set(scaleFactor, scaleFactor, scaleFactor);
+          p.mesh.material.opacity = opacityFactor;
+        }
+      }
+    }
+
     function gameLost(mineIndex){
       if (document.getElementById('debugImmortal')?.checked) return;
+      
+      const t = state.tiles[mineIndex];
+      if (t) {
+        t.mesh.material = getHiddenMaterial(t); // Keep original tile material
+        createBurntDecal(t); // Spawn burnt spot decal on top
+        triggerExplosionVFX(t);
+      }
       
       // Only lose one life per reveal sequence (click)
       if (lifeLostInCurrentReveal) return;
@@ -3073,7 +3544,18 @@
       if (state.lives <= 0) {
         state.gameOver = true;
         stopTimer();
-        state.tiles.forEach((t)=>{ if (t.mine){ t.mesh.material = matMine; t.mesh.scale.set(1.0, 1.0, 1.0); if (!t.revealed) { t.revealed = true; } } });
+        state.tiles.forEach((t, idx)=>{ 
+          if (t.mine){ 
+            if (idx === mineIndex) {
+              t.mesh.material = getHiddenMaterial(t); // Keep original tile material
+              createBurntDecal(t); // Spawn burnt spot decal on top
+            } else {
+              t.mesh.material = matMine; 
+            }
+            t.mesh.scale.set(1.0, 1.0, 1.0); 
+            if (!t.revealed) { t.revealed = true; } 
+          } 
+        });
         
         // Show game over overlay with stats
         const gameOverOverlay = document.getElementById('gameOverOverlay');
@@ -3285,7 +3767,8 @@
 
       gameStartTime = Date.now();
 
-      scheduleCompactMode();
+      const ui = document.querySelector('.ui');
+      if (ui) ui.classList.add('compact');
 
       timerInterval = setInterval(() => {
 
@@ -3349,11 +3832,11 @@
       
       buildTiles(); state.firstClick = false; state.gameOver=false; state.safeRevealed=0; state.totalMines=0; state.flags=0; state.lives=3; state.won=false; lifeLostInCurrentReveal=false; resetTimer(); updateCounters();
       
-      // Reset sphere rotation
+      // Reset sphere rotation and apply gentle initial spin inertia
       tileGroup.quaternion.identity();
       wireGroup.quaternion.identity();
-      rotationVelocity.x = 0;
-      rotationVelocity.y = 0;
+      rotationVelocity.x = 0.025;
+      rotationVelocity.y = 0.006;
 
       // Auto-start: Place mines and do initial reveals
       const ratio = debugSettings.mineRatio || 15;
@@ -3390,8 +3873,8 @@
     const rotationFriction = 0.88; // Friction for momentum decay (0.88 = 12% decay per frame - faster stop)
     const rotationAcceleration = 0.08; // How quickly velocity builds up (0-1) - slower easing in
     const rotationSpeed = 0.0025; // Base rotation speed multiplier - less responsive
-    const touchRotationSpeed = 0.0035; // Touch rotation speed multiplier - more responsive for touch
-    const touchRotationAcceleration = 0.12; // Touch acceleration - faster response for touch
+    const touchRotationSpeed = 0.002; // Touch rotation speed base multiplier
+    const touchRotationAcceleration = 0.10; // Touch acceleration ease-in rate
 
 
     function pickTile(event){
@@ -3600,6 +4083,8 @@
       lastMoveTime: 0
     };
 
+    let dialAnimationFrame = null;
+
     renderer.domElement.addEventListener('touchstart', (e) => {
       e.preventDefault();
 
@@ -3617,6 +4102,48 @@
         touchState.startTile = idx;
         touchState.startTime = performance.now();
         touchState.lastMoveTime = performance.now();
+
+        // Display and animate the long press progress dial (only on unrevealed, valid interactive tiles)
+        if (idx >= 0 && !state.tiles[idx].revealed && !state.tiles[idx].isEmpty) {
+          const touchDial = document.getElementById('touchDial');
+          const touchDialProgress = document.getElementById('touchDialProgress');
+          if (touchDial) {
+            touchDial.style.left = touch.clientX + 'px';
+            touchDial.style.top = touch.clientY + 'px';
+            touchDial.style.display = 'block';
+          }
+          if (touchDialProgress) {
+            touchDialProgress.style.strokeDashoffset = '345.6';
+            touchDialProgress.style.stroke = '#ffd000';
+          }
+
+          cancelAnimationFrame(dialAnimationFrame);
+          const TAP_THRESHOLD = 200;
+          const animateDial = () => {
+            if (!touchState.isActive || touchState.isDragging) {
+              if (touchDial) touchDial.style.display = 'none';
+              return;
+            }
+            const elapsed = performance.now() - touchState.startTime;
+            const ratio = Math.min(1.0, elapsed / TAP_THRESHOLD);
+            const circumference = 345.6;
+            const offset = circumference * (1.0 - ratio);
+
+            if (touchDialProgress) {
+              touchDialProgress.style.strokeDashoffset = offset;
+              if (ratio >= 1.0) {
+                touchDialProgress.style.stroke = '#2ecc71'; // Green when complete
+              } else {
+                touchDialProgress.style.stroke = '#ffd000'; // Gold/yellow progress
+              }
+            }
+
+            if (elapsed < TAP_THRESHOLD) {
+              dialAnimationFrame = requestAnimationFrame(animateDial);
+            }
+          };
+          dialAnimationFrame = requestAnimationFrame(animateDial);
+        }
       }
     });
 
@@ -3637,20 +4164,35 @@
         const dragDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         const isMoving = Math.abs(deltaX) > 0.1 || Math.abs(deltaY) > 0.1;
         
-        if (totalDrag > 5 && isMoving) {
+        if (totalDrag > 18 && isMoving) {
           touchState.isDragging = true;
           touchState.isRotating = true;
           touchState.lastMoveTime = performance.now();
           
-          // Use enhanced rotation system for touch with higher sensitivity
-          const targetVelocityX = deltaX * touchRotationSpeed;
-          const targetVelocityY = deltaY * touchRotationSpeed;
+          // Hide the dial if the touch turns into a drag/rotate gesture
+          const touchDial = document.getElementById('touchDial');
+          if (touchDial) touchDial.style.display = 'none';
+          cancelAnimationFrame(dialAnimationFrame);
+          
+          // Non-linear speed scaling for an organic ease-in/ease-out response
+          const swipeVelocity = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          const dynamicMultiplier = 1.0 + (swipeVelocity * 0.18);
+          
+          const targetVelocityX = deltaX * touchRotationSpeed * dynamicMultiplier;
+          const targetVelocityY = deltaY * touchRotationSpeed * dynamicMultiplier;
           
           rotationVelocity.x += (targetVelocityX - rotationVelocity.x) * touchRotationAcceleration;
           rotationVelocity.y += (targetVelocityY - rotationVelocity.y) * touchRotationAcceleration;
         } else {
           // If not actively dragging, stop rotation immediately
           touchState.isRotating = false;
+          
+          // Follow the finger for the dial
+          const touchDial = document.getElementById('touchDial');
+          if (touchDial && touchDial.style.display !== 'none') {
+            touchDial.style.left = touch.clientX + 'px';
+            touchDial.style.top = touch.clientY + 'px';
+          }
         }
 
         touchState.lastX = touch.clientX;
@@ -3660,6 +4202,11 @@
 
     renderer.domElement.addEventListener('touchend', (e) => {
       e.preventDefault();
+
+      // Hide and stop the dial animation immediately
+      const touchDial = document.getElementById('touchDial');
+      if (touchDial) touchDial.style.display = 'none';
+      cancelAnimationFrame(dialAnimationFrame);
 
       if (touchState.isActive && touchState.startTile >= 0 && e.changedTouches.length > 0) {
         const touch = e.changedTouches[0];
@@ -3678,8 +4225,8 @@
         // Stop rotation
         touchState.isRotating = false;
         
-        // Only process tile click if we didn't drag much (less than 10 pixels)
-        if (totalDrag < 10 && !touchState.isDragging) {
+        // Only process tile click if we didn't drag much (less than 18 pixels)
+        if (totalDrag < 18 && !touchState.isDragging) {
           const idx = pickTile({ clientX: finalX, clientY: finalY });
 
           if (idx === touchState.startTile && idx >= 0) {
@@ -3752,7 +4299,7 @@
     let soundEnabled = true;
     let audioContext = null;
     let clickSoundStyle = 5; // 1-5: Gentle Tap, Deep Thud, Glass Tinkle, Metallic Tick, Soft Chime (default 5)
-    let gameOverSoundStyle = 1; // 1-5: Deep Explosion, Electric Buzz, Bass Drop, Metallic Crash, Quick Pop
+    let gameOverSoundStyle = 3; // 1-5: Deep Explosion, Electric Buzz, Bass Drop, Metallic Crash, Quick Pop
     let clickBuffers = new Map(); // Cache for click sound buffers
 
     // Initialize audio context (requires user interaction)
@@ -3818,6 +4365,21 @@
           clickBuffers.set(i, buffer);
         }
       }
+    }
+
+    function createBrownNoiseBuffer(sampleRate, duration) {
+      if (!audioContext) return null;
+      const bufferSize = sampleRate * duration;
+      const buffer = audioContext.createBuffer(1, bufferSize, sampleRate);
+      const data = buffer.getChannelData(0);
+      let lastOut = 0.0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        data[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = data[i];
+        data[i] *= 3.5; // Compensate for volume loss in integration
+      }
+      return buffer;
     }
 
     // Create a click sound buffer (exact HexaSweeper algorithm)
@@ -4001,91 +4563,216 @@
         let buffer, data;
         
         switch (style) {
-          case 1: // Deep Explosion
-            buffer = audioContext.createBuffer(1, sampleRate * 0.8, sampleRate);
-            data = buffer.getChannelData(0);
-            for (let i = 0; i < data.length; i++) {
-              const t = i / sampleRate;
-              const envelope = t < 0.1 ? t / 0.1 : Math.exp(-(t - 0.1) * 8);
-              const wave1 = Math.sin(2 * Math.PI * 60 * t) * 0.4;
-              const wave2 = Math.sin(2 * Math.PI * 200 * t * (1 + t * 2)) * 0.3;
-              const noise = (Math.random() * 2 - 1) * 0.3;
-              const pop = t < 0.2 ? Math.sin(2 * Math.PI * 800 * t) * (1 - t * 5) * 0.2 : 0;
-              data[i] = (wave1 + wave2 + noise * (1 - t * 1.2) + pop) * envelope * 0.1; // Further decreased from 0.15
+          case 1: // Cinematic Soft Bass Boom (Rumble with Brown Noise)
+            {
+              const now = audioContext.currentTime;
+              const osc = audioContext.createOscillator();
+              const oscGain = audioContext.createGain();
+              osc.type = 'triangle'; // triangle is much softer than sawtooth
+              osc.frequency.setValueAtTime(65, now);
+              osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
+              oscGain.gain.setValueAtTime(0.3, now); // Quiet!
+              oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+              osc.connect(oscGain);
+              oscGain.connect(audioContext.destination);
+              
+              const noiseBuffer = createBrownNoiseBuffer(sampleRate, 1.4);
+              const source = audioContext.createBufferSource();
+              source.buffer = noiseBuffer;
+              
+              const filter = audioContext.createBiquadFilter();
+              filter.type = 'lowpass';
+              filter.frequency.setValueAtTime(250, now); // Dark lowpass sweep!
+              filter.frequency.exponentialRampToValueAtTime(15, now + 1.2);
+              
+              const noiseGain = audioContext.createGain();
+              noiseGain.gain.setValueAtTime(0.35, now); // Quiet!
+              noiseGain.gain.exponentialRampToValueAtTime(0.005, now + 1.4);
+              
+              source.connect(filter);
+              filter.connect(noiseGain);
+              noiseGain.connect(audioContext.destination);
+              
+              osc.start(now);
+              osc.stop(now + 0.55);
+              source.start(now);
+              source.stop(now + 1.4);
+              return;
             }
-            break;
             
-          case 2: // Electric Buzz
-            buffer = audioContext.createBuffer(1, sampleRate * 0.5, sampleRate);
-            data = buffer.getChannelData(0);
-            for (let i = 0; i < data.length; i++) {
-              const t = i / sampleRate;
-              const envelope = Math.exp(-t * 15);
-              const wave1 = Math.sin(2 * Math.PI * 400 * t) * Math.exp(-t * 30) * 0.6;
-              const wave2 = Math.sin(2 * Math.PI * 1200 * t * (1 + t * 4)) * 0.4;
-              const noise = (Math.random() * 2 - 1) * Math.exp(-t * 20) * 0.5;
-              const wave3 = Math.sin(2 * Math.PI * 3000 * t) * Math.exp(-t * 40) * 0.3;
-              data[i] = (wave1 + wave2 + noise * (1 - t * 2) + wave3) * envelope * 0.12; // Further decreased from 0.18
+          case 2: // Distant Echoing Thud (Soft boom + echo delay)
+            {
+              const now = audioContext.currentTime;
+              const osc = audioContext.createOscillator();
+              const oscGain = audioContext.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(55, now);
+              osc.frequency.exponentialRampToValueAtTime(10, now + 0.3);
+              oscGain.gain.setValueAtTime(0.25, now);
+              oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+              osc.connect(oscGain);
+              oscGain.connect(audioContext.destination);
+              
+              const noiseBuffer = createBrownNoiseBuffer(sampleRate, 1.6);
+              const source = audioContext.createBufferSource();
+              source.buffer = noiseBuffer;
+              
+              const filter = audioContext.createBiquadFilter();
+              filter.type = 'lowpass';
+              filter.frequency.setValueAtTime(180, now);
+              filter.frequency.exponentialRampToValueAtTime(10, now + 1.5);
+              
+              const noiseGain = audioContext.createGain();
+              noiseGain.gain.setValueAtTime(0.2, now);
+              noiseGain.gain.exponentialRampToValueAtTime(0.005, now + 1.6);
+              
+              source.connect(filter);
+              filter.connect(noiseGain);
+              noiseGain.connect(audioContext.destination);
+              
+              osc.start(now);
+              osc.stop(now + 0.35);
+              source.start(now);
+              source.stop(now + 1.6);
+              return;
             }
-            break;
             
-          case 3: // Bass Drop
-            buffer = audioContext.createBuffer(1, sampleRate * 1.0, sampleRate);
-            data = buffer.getChannelData(0);
-            for (let i = 0; i < data.length; i++) {
-              const t = i / sampleRate;
-              const envelope = Math.exp(-t * 4);
-              const freq = 90 - t * 50;
-              const wave1 = Math.sin(2 * Math.PI * freq * t) * 0.7;
-              const wave2 = Math.sin(2 * Math.PI * 45 * t) * 0.4;
-              const wave3 = Math.sin(2 * Math.PI * 180 * t) * Math.exp(-t * 12) * 0.4;
-              const wave4 = t < 0.3 ? Math.sin(2 * Math.PI * 500 * t) * Math.exp(-t * 25) * 0.3 : 0;
-              data[i] = (wave1 + wave2 + wave3 + wave4) * envelope * 0.12; // Further decreased from 0.18
+          case 3: // Charred Crackle & Pop (Detonation + crumbling earth)
+            {
+              const now = audioContext.currentTime;
+              
+              // Pop
+              const osc = audioContext.createOscillator();
+              const oscGain = audioContext.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(160, now);
+              osc.frequency.linearRampToValueAtTime(40, now + 0.08);
+              oscGain.gain.setValueAtTime(0.2, now);
+              oscGain.gain.linearRampToValueAtTime(0.001, now + 0.08);
+              osc.connect(oscGain);
+              oscGain.connect(audioContext.destination);
+              
+              // Rumble + Crackle
+              const duration = 1.0;
+              const bufferSize = sampleRate * duration;
+              const crackleBuffer = audioContext.createBuffer(1, bufferSize, sampleRate);
+              const crackleData = crackleBuffer.getChannelData(0);
+              let lastOut = 0.0;
+              for (let i = 0; i < bufferSize; i++) {
+                const white = Math.random() * 2 - 1;
+                // Brown noise base
+                const brown = (lastOut + (0.02 * white)) / 1.02;
+                lastOut = brown;
+                // Add sparse static crackles (tiny pops)
+                const crackle = Math.random() > 0.992 ? (Math.random() * 2 - 1) * 0.4 : 0;
+                crackleData[i] = (brown * 3.5 + crackle) * 0.2;
+              }
+              const source = audioContext.createBufferSource();
+              source.buffer = crackleBuffer;
+              
+              const filter = audioContext.createBiquadFilter();
+              filter.type = 'lowpass';
+              filter.frequency.setValueAtTime(300, now);
+              filter.frequency.exponentialRampToValueAtTime(30, now + 0.9);
+              
+              const noiseGain = audioContext.createGain();
+              noiseGain.gain.setValueAtTime(0.35, now);
+              noiseGain.gain.exponentialRampToValueAtTime(0.005, now + 1.0);
+              
+              source.connect(filter);
+              filter.connect(noiseGain);
+              noiseGain.connect(audioContext.destination);
+              
+              osc.start(now);
+              osc.stop(now + 0.1);
+              source.start(now);
+              source.stop(now + 1.0);
+              return;
             }
-            break;
             
-          case 4: // Metallic Crash
-            buffer = audioContext.createBuffer(1, sampleRate * 0.9, sampleRate);
-            data = buffer.getChannelData(0);
-            for (let i = 0; i < data.length; i++) {
-              const t = i / sampleRate;
-              const envelope = t < 0.03 ? t / 0.03 : Math.exp(-(t - 0.03) * 8);
-              const wave1 = Math.sin(2 * Math.PI * 600 * t) * Math.exp(-t * 35) * 0.6;
-              const wave2 = Math.sin(2 * Math.PI * 350 * t) * Math.exp(-t * 4) * 0.5;
-              const wave3 = Math.sin(2 * Math.PI * 700 * t) * Math.exp(-t * 7) * 0.4;
-              const wave4 = Math.sin(2 * Math.PI * 1400 * t) * Math.exp(-t * 10) * 0.3;
-              const wave5 = t > 0.2 ? Math.sin(2 * Math.PI * 400 * (t - 0.2)) * Math.exp(-(t - 0.2) * 8) * 0.2 : 0;
-              const noise = (Math.random() * 2 - 1) * Math.exp(-t * 25) * 0.25;
-              data[i] = (wave1 + wave2 + wave3 + wave4 + wave5 + noise * (1 - t * 1.5)) * envelope * 0.1; // Further decreased from 0.15
+          case 4: // Sub-Bass Thump (Pure pressure wave, no hiss)
+            {
+              const now = audioContext.currentTime;
+              const osc = audioContext.createOscillator();
+              const oscGain = audioContext.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(50, now);
+              osc.frequency.exponentialRampToValueAtTime(10, now + 0.45);
+              oscGain.gain.setValueAtTime(0.35, now);
+              oscGain.gain.exponentialRampToValueAtTime(0.005, now + 0.45);
+              osc.connect(oscGain);
+              oscGain.connect(audioContext.destination);
+              
+              const noiseBuffer = createBrownNoiseBuffer(sampleRate, 1.2);
+              const source = audioContext.createBufferSource();
+              source.buffer = noiseBuffer;
+              
+              const filter = audioContext.createBiquadFilter();
+              filter.type = 'lowpass';
+              filter.frequency.setValueAtTime(80, now); // Extremely dark!
+              filter.frequency.setValueAtTime(40, now + 0.8);
+              
+              const noiseGain = audioContext.createGain();
+              noiseGain.gain.setValueAtTime(0.25, now);
+              noiseGain.gain.exponentialRampToValueAtTime(0.005, now + 1.2);
+              
+              source.connect(filter);
+              filter.connect(noiseGain);
+              noiseGain.connect(audioContext.destination);
+              
+              osc.start(now);
+              osc.stop(now + 0.5);
+              source.start(now);
+              source.stop(now + 1.2);
+              return;
             }
-            break;
             
-          case 5: // Quick Pop
-            buffer = audioContext.createBuffer(1, sampleRate * 0.4, sampleRate);
-            data = buffer.getChannelData(0);
-            for (let i = 0; i < data.length; i++) {
-              const t = i / sampleRate;
-              const envelope = t < 0.05 ? t / 0.05 : Math.exp(-t * 20);
-              const wave1 = Math.sin(2 * Math.PI * 250 * t) * Math.exp(-t * 45) * 0.7;
-              const wave2 = Math.sin(2 * Math.PI * 1200 * t) * Math.exp(-t * 60) * 0.5;
-              const noise = (Math.random() * 2 - 1) * Math.exp(-t * 35) * 0.4;
-              const wave3 = t > 0.1 ? Math.sin(2 * Math.PI * 300 * (t - 0.1)) * Math.exp(-(t - 0.1) * 15) * 0.2 : 0;
-              data[i] = (wave1 + wave2 + noise * (1 - t * 3) + wave3) * envelope * 0.13; // Further decreased from 0.2
+          case 5: // Soft Dust Dispersion (Sandy debris, low pressure)
+            {
+              const now = audioContext.currentTime;
+              const duration = 0.8;
+              
+              // Gentle soft pop
+              const osc = audioContext.createOscillator();
+              const oscGain = audioContext.createGain();
+              osc.type = 'sine';
+              osc.frequency.setValueAtTime(100, now);
+              osc.frequency.linearRampToValueAtTime(30, now + 0.15);
+              oscGain.gain.setValueAtTime(0.15, now);
+              oscGain.gain.linearRampToValueAtTime(0.001, now + 0.15);
+              osc.connect(oscGain);
+              oscGain.connect(audioContext.destination);
+              
+              // Debris noise
+              const noiseBuffer = createBrownNoiseBuffer(sampleRate, duration);
+              const source = audioContext.createBufferSource();
+              source.buffer = noiseBuffer;
+              
+              const filter = audioContext.createBiquadFilter();
+              filter.type = 'bandpass';
+              filter.Q.setValueAtTime(2.0, now);
+              filter.frequency.setValueAtTime(400, now);
+              filter.frequency.exponentialRampToValueAtTime(150, now + 0.75);
+              
+              const noiseGain = audioContext.createGain();
+              noiseGain.gain.setValueAtTime(0.18, now);
+              noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+              
+              source.connect(filter);
+              filter.connect(noiseGain);
+              noiseGain.connect(audioContext.destination);
+              
+              osc.start(now);
+              osc.stop(now + 0.16);
+              source.start(now);
+              source.stop(now + 0.85);
+              return;
             }
-            break;
             
           default:
-            // Fallback to style 1
-            buffer = audioContext.createBuffer(1, sampleRate * 0.8, sampleRate);
-            data = buffer.getChannelData(0);
-            for (let i = 0; i < data.length; i++) {
-              const t = i / sampleRate;
-              const envelope = t < 0.1 ? t / 0.1 : Math.exp(-(t - 0.1) * 8);
-              const wave1 = Math.sin(2 * Math.PI * 60 * t) * 0.4;
-              const wave2 = Math.sin(2 * Math.PI * 200 * t * (1 + t * 2)) * 0.3;
-              const noise = (Math.random() * 2 - 1) * 0.3;
-              data[i] = (wave1 + wave2 + noise * (1 - t * 1.2)) * envelope * 0.1; // Further decreased from 0.15
-            }
+            // Fallback: Trigger Style 1
+            playGameOverProceduralInternalWithStyle(1);
+            return;
         }
         
         playBuffer(buffer);
@@ -4247,7 +4934,11 @@
           
           const mineMesh = createNavalMineMesh();
           mineMesh.position.copy(t.center).normalize().multiplyScalar(1.0);
-          mineMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), t.center.clone().normalize());
+          if (mineMesh.userData && mineMesh.userData.style === 1) {
+            mineMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), t.center.clone().normalize());
+          } else {
+            mineMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), t.center.clone().normalize());
+          }
           tileGroup.add(mineMesh);
           t.flagMesh = mineMesh;
         }
@@ -4315,7 +5006,7 @@
 
     addEventListener('keydown', (e) => {
 
-      if (e.ctrlKey && e.shiftKey && e.altKey && e.key === 'd') {
+      if (e.ctrlKey && e.shiftKey && e.altKey && e.key.toLowerCase() === 'd') {
 
         e.preventDefault();
 
@@ -5359,6 +6050,59 @@
       });
     }
 
+    // Flag Position debug controls
+    const flagScaleSlider = document.getElementById('debugFlagScale');
+    const flagScaleValue = document.getElementById('debugFlagScaleValue');
+    const flagOffsetXSlider = document.getElementById('debugFlagOffsetX');
+    const flagOffsetXValue = document.getElementById('debugFlagOffsetXValue');
+    const flagOffsetYSlider = document.getElementById('debugFlagOffsetY');
+    const flagOffsetYValue = document.getElementById('debugFlagOffsetYValue');
+    const flagOffsetZSlider = document.getElementById('debugFlagOffsetZ');
+    const flagOffsetZValue = document.getElementById('debugFlagOffsetZValue');
+
+    function updateAllActiveFlags() {
+      state.tiles.forEach(t => {
+        if (t.flagMesh && t.flagMesh.userData && t.flagMesh.userData.clone) {
+          const clone = t.flagMesh.userData.clone;
+          clone.scale.set(flagScale, flagScale, flagScale);
+          if (flagModelTemplate) {
+            clone.position.set(defaultFlagX + flagOffsetX, defaultFlagY + flagOffsetY, defaultFlagZ + flagOffsetZ);
+          } else {
+            clone.position.set(flagOffsetX, flagOffsetY, flagOffsetZ);
+          }
+        }
+      });
+    }
+
+    if (flagScaleSlider) {
+      flagScaleSlider.addEventListener('input', (e) => {
+        flagScale = parseFloat(e.target.value);
+        if (flagScaleValue) flagScaleValue.value = flagScale.toFixed(2);
+        updateAllActiveFlags();
+      });
+    }
+    if (flagOffsetXSlider) {
+      flagOffsetXSlider.addEventListener('input', (e) => {
+        flagOffsetX = parseFloat(e.target.value);
+        if (flagOffsetXValue) flagOffsetXValue.value = flagOffsetX.toFixed(3);
+        updateAllActiveFlags();
+      });
+    }
+    if (flagOffsetYSlider) {
+      flagOffsetYSlider.addEventListener('input', (e) => {
+        flagOffsetY = parseFloat(e.target.value);
+        if (flagOffsetYValue) flagOffsetYValue.value = flagOffsetY.toFixed(3);
+        updateAllActiveFlags();
+      });
+    }
+    if (flagOffsetZSlider) {
+      flagOffsetZSlider.addEventListener('input', (e) => {
+        flagOffsetZ = parseFloat(e.target.value);
+        if (flagOffsetZValue) flagOffsetZValue.value = flagOffsetZ.toFixed(3);
+        updateAllActiveFlags();
+      });
+    }
+
     document.getElementById('debugCamFog').addEventListener('change', (e) => {
 
       if (e.target.checked) {
@@ -5461,6 +6205,8 @@
     renderer.setAnimationLoop((time)=>{
       const dt = lastAnimTime === 0 ? 0.016 : (time - lastAnimTime) * 0.001;
       lastAnimTime = time;
+
+      updateExplosionParticles(dt);
 
       // Only update controls if camera zoom changed (for damping)
       // Since rotation is disabled, controls.update() is mainly for zoom damping
@@ -5615,6 +6361,10 @@
             const tileEmissive = 2.0 + Math.sin(time * 0.008 + t.index * 0.5) * 1.2;
             const tileGlowAlpha = 0.35 + Math.sin(time * 0.008 + t.index * 0.5) * 0.15;
             
+            if (ud.emissiveMat) {
+              ud.emissiveMat.emissiveIntensity = 0.5 + Math.sin(time * 0.006 + t.index * 0.5) * 0.3;
+            }
+            
             if (ud.ring1) {
               ud.ring1.rotateX(0.02);
               ud.ring1.rotateY(0.005);
@@ -5662,24 +6412,36 @@
             t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0 + hoverOffset);
           }
 
+          // Update animated plasma inside burnt holes (only if visible)
+          if (t.burntDecal && t.burntDecal.userData && t.burntDecal.userData.plasmaMat && isVisible) {
+            t.burntDecal.userData.plasmaMat.uniforms.time.value = time;
+          }
+
           const needsLabelUpdate = shouldRotate || hasVelocity || (Math.abs(camera.zoom - lastCameraZoom) > 0.001) || forceLabelUpdate;
           if (needsLabelUpdate && isVisible) {
-            if (!t.label || !t.label.isMesh) return;
             // tile.center is the local position in tileGroup – normalize for the local outward normal
             _lNormal.copy(t.center).normalize();
 
             // Project camera-up (local) onto this tile's tangent plane
             _lUp.copy(camUpLocal).addScaledVector(_lNormal, -camUpLocal.dot(_lNormal));
-            if (_lUp.lengthSq() < 1e-6) return;
-            _lUp.normalize();
+            if (_lUp.lengthSq() > 1e-6) {
+              _lUp.normalize();
 
-            // right-hand rule in local space: right = up × normal
-            _lRight.crossVectors(_lUp, _lNormal).normalize();
+              // right-hand rule in local space: right = up × normal
+              _lRight.crossVectors(_lUp, _lNormal).normalize();
 
-            // Set label's LOCAL quaternion: X→right, Y→up, Z→normal
-            t.label.quaternion.setFromRotationMatrix(
-              staticMatrix.makeBasis(_lRight, _lUp, _lNormal)
-            );
+              const rotMatrix = staticMatrix.makeBasis(_lRight, _lUp, _lNormal);
+
+              if (t.label && t.label.isMesh) {
+                // Set label's LOCAL quaternion: X→right, Y→up, Z→normal
+                t.label.quaternion.setFromRotationMatrix(rotMatrix);
+              }
+
+              if (t.flagMesh && t.flagMesh.userData && t.flagMesh.userData.style === 1) {
+                // Set warning sign's LOCAL quaternion flat and upright
+                t.flagMesh.quaternion.setFromRotationMatrix(rotMatrix);
+              }
+            }
           }
         });
         forceLabelUpdate = false;
@@ -5740,7 +6502,11 @@
       camNear: 'debugCamNear',
       camFar: 'debugCamFar',
       immortal: 'debugImmortal',
-      camFog: 'debugCamFog'
+      camFog: 'debugCamFog',
+      flagScale: 'debugFlagScale',
+      flagOffsetX: 'debugFlagOffsetX',
+      flagOffsetY: 'debugFlagOffsetY',
+      flagOffsetZ: 'debugFlagOffsetZ'
     };
 
     function setDebugControlValue(controlId, value) {
@@ -5962,257 +6728,257 @@
     // Color Presets (10 presets) - Contrasting color palettes with varied tile and light colors
     const colorPresets = {
       0: { // Default - Original default colors
-        tileHidden: '#2d3643', tileRevealed: '#4a5565', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2d3643', tileRevealed: '#4a5565', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#787e87', wireHex: '#0f0f10', wirePent: '#1e2129', camBg: '#242528',
         centerLightColor: '#ff0000'
       },
       1: { // Lighter - Brighter tiles
-        tileHidden: '#3d4a5a', tileRevealed: '#5a6a7d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d4a5a', tileRevealed: '#5a6a7d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9aa5b5', wireHex: '#1a1f25', wirePent: '#2a323d', camBg: '#2d3540',
         centerLightColor: '#ff0000'
       },
       2: { // Darker - Noticeably deeper shadows
-        tileHidden: '#1f252d', tileRevealed: '#3a4450', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1f252d', tileRevealed: '#3a4450', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#6a7079', wireHex: '#08090a', wirePent: '#15181d', camBg: '#242528',
         centerLightColor: '#ff0000'
       },
       3: { // Cool Blue - Clear blue-gray shift
-        tileHidden: '#2a3445', tileRevealed: '#4a5a75', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2a3445', tileRevealed: '#4a5a75', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#7a8595', wireHex: '#0f1215', wirePent: '#1e2430', camBg: '#1e2330',
         centerLightColor: '#ff0000'
       },
       4: { // Warm Brown - Warm brown tiles (for Balanced preset)
-        tileHidden: '#3d3528', tileRevealed: '#5a4f3d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d3528', tileRevealed: '#5a4f3d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a8f7a', wireHex: '#1a150f', wirePent: '#2a251a', camBg: '#2a2218',
         centerLightColor: '#ff0000'
       },
       5: { // Neutral Gray - Pure grays
-        tileHidden: '#2d2d2d', tileRevealed: '#4a4a4a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2d2d2d', tileRevealed: '#4a4a4a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#787878', wireHex: '#0f0f0f', wirePent: '#1e1e1e', camBg: '#242424',
         centerLightColor: '#ff0000'
       },
       6: { // Warm Beige - Warm beige tiles
-        tileHidden: '#3d3a32', tileRevealed: '#5a554a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d3a32', tileRevealed: '#5a554a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a958a', wireHex: '#1a1815', wirePent: '#2a2822', camBg: '#2a2720',
         centerLightColor: '#ffaa88'
       },
       7: { // Warm Cream - Warm cream tiles
-        tileHidden: '#3d3d32', tileRevealed: '#5a5a4a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d3d32', tileRevealed: '#5a5a4a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a9a8a', wireHex: '#1a1a15', wirePent: '#2a2a22', camBg: '#2a2a20',
         centerLightColor: '#ffcc99'
       },
       8: { // Warm Sand - Warm sand tiles
-        tileHidden: '#3d3832', tileRevealed: '#5a524a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d3832', tileRevealed: '#5a524a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a928a', wireHex: '#1a1815', wirePent: '#2a2522', camBg: '#2a221f',
         centerLightColor: '#ffd4aa'
       },
       9: { // Warm Terracotta - Warm terracotta tiles
-        tileHidden: '#3d2d28', tileRevealed: '#5a423d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d2d28', tileRevealed: '#5a423d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a7a7a', wireHex: '#1a120f', wirePent: '#2a1f1a', camBg: '#2a1a18',
         centerLightColor: '#ff8866'
       },
       10: { // Cool Blue Smooth - Cool blue tiles for smooth preset
-        tileHidden: '#2a3445', tileRevealed: '#4a5a75', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2a3445', tileRevealed: '#4a5a75', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#7a8595', wireHex: '#0f1215', wirePent: '#1e2430', camBg: '#1e2330',
         centerLightColor: '#ff0000'
       },
       11: { // Pastel Mint - Soft mint green tiles
-        tileHidden: '#2a3d35', tileRevealed: '#4a6d5a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2a3d35', tileRevealed: '#4a6d5a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8aa595', wireHex: '#0f1a15', wirePent: '#1e2a22', camBg: '#1e2a22',
         centerLightColor: '#a8e6cf'
       },
       12: { // Modern Monochrome - Charcoal gray tiles
-        tileHidden: '#1a1a1a', tileRevealed: '#3d3d3d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1a1a1a', tileRevealed: '#3d3d3d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8a8a8a', wireHex: '#0a0a0a', wirePent: '#151515', camBg: '#151515',
         centerLightColor: '#e0e0e0'
       },
       13: { // Sage Green - Sage green tiles
-        tileHidden: '#2a3d2a', tileRevealed: '#4a6d4a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2a3d2a', tileRevealed: '#4a6d4a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8aa58a', wireHex: '#0f1a0f', wirePent: '#1e2a1e', camBg: '#1e2a1e',
         centerLightColor: '#b8c5a8'
       },
       14: { // Gummy Pink - Dusty pink tiles
-        tileHidden: '#3d2a3a', tileRevealed: '#5a4a5a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d2a3a', tileRevealed: '#5a4a5a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a8a9a', wireHex: '#1a0f15', wirePent: '#2a1e22', camBg: '#2a1e25',
         centerLightColor: '#ffb6c1'
       },
       15: { // Moss Green - Dark olive green tiles
-        tileHidden: '#1a2a1a', tileRevealed: '#3d5a3d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1a2a1a', tileRevealed: '#3d5a3d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#7a9a7a', wireHex: '#0a150a', wirePent: '#152a15', camBg: '#152a15',
         centerLightColor: '#9acd32'
       },
       16: { // Mocha Brown - Deep caramel tiles
-        tileHidden: '#2d1f1a', tileRevealed: '#4a352d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2d1f1a', tileRevealed: '#4a352d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8a7a6a', wireHex: '#0f0a08', wirePent: '#1e1510', camBg: '#1e1510',
         centerLightColor: '#d2b48c'
       },
       17: { // Sunny Yellow - Bright yellow tiles
-        tileHidden: '#3d3d1a', tileRevealed: '#5a5a2d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d3d1a', tileRevealed: '#5a5a2d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a9a6a', wireHex: '#1a1a0a', wirePent: '#2a2a15', camBg: '#2a2a15',
         centerLightColor: '#ffd700'
       },
       18: { // Sunset Spice - Warm orange tiles
-        tileHidden: '#3d281a', tileRevealed: '#5a3d2d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d281a', tileRevealed: '#5a3d2d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a7a6a', wireHex: '#1a1008', wirePent: '#2a1f15', camBg: '#2a1a10',
         centerLightColor: '#fa4a05'
       },
       19: { // Blue Ray - Calming blue tiles
-        tileHidden: '#1a2a3d', tileRevealed: '#3d4a6d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1a2a3d', tileRevealed: '#3d4a6d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#7a8aa5', wireHex: '#0a151a', wirePent: '#15222a', camBg: '#15222a',
         centerLightColor: '#87ceeb'
       },
       20: { // Wet Asphalt - Dark gray-blue tiles
-        tileHidden: '#1a1f2a', tileRevealed: '#3d4255', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1a1f2a', tileRevealed: '#3d4255', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#7a7f8a', wireHex: '#0a0f15', wirePent: '#151f2a', camBg: '#151f2a',
         centerLightColor: '#708090'
       },
       21: { // Pink Dream - Soft pink tiles
-        tileHidden: '#3d2d3a', tileRevealed: '#5a4a6a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d2d3a', tileRevealed: '#5a4a6a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a8aa5', wireHex: '#1a1215', wirePent: '#2a1e25', camBg: '#2a1e25',
         centerLightColor: '#ffc0cb'
       },
       22: { // Magic Red - Deep red tiles
-        tileHidden: '#3d1a1a', tileRevealed: '#5a2d2d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d1a1a', tileRevealed: '#5a2d2d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a6a6a', wireHex: '#1a0a0a', wirePent: '#2a1515', camBg: '#2a1515',
         centerLightColor: '#dc143c'
       },
       23: { // Pastel Ice Cream - Soft pastel tiles
-        tileHidden: '#3a3d42', tileRevealed: '#5a5d6a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3a3d42', tileRevealed: '#5a5d6a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a9da5', wireHex: '#151a1f', wirePent: '#252a32', camBg: '#252a32',
         centerLightColor: '#ffe4e1'
       },
       24: { // Dark Forest - Deep green tiles
-        tileHidden: '#0f1a0f', tileRevealed: '#1f3d1f', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#0f1a0f', tileRevealed: '#1f3d1f', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#5a7a5a', wireHex: '#050a05', wirePent: '#0f1a0f', camBg: '#0a150a',
         centerLightColor: '#556b2f'
       },
       25: { // Leafy Fairy - Light green tiles
-        tileHidden: '#2a3d28', tileRevealed: '#4a6d45', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2a3d28', tileRevealed: '#4a6d45', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8aa585', wireHex: '#0f1a0e', wirePent: '#1e2a1c', camBg: '#1e2a1c',
         centerLightColor: '#90ee90'
       },
       26: { // Golden Star - Rich gold tiles
-        tileHidden: '#3d3520', tileRevealed: '#5a4d35', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d3520', tileRevealed: '#5a4d35', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a8d6a', wireHex: '#1a150d', wirePent: '#2a251a', camBg: '#2a251a',
         centerLightColor: '#ffd700'
       },
       27: { // Lavender - Soft purple tiles
-        tileHidden: '#3a2d3d', tileRevealed: '#5a4a6a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3a2d3d', tileRevealed: '#5a4a6a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a8aa5', wireHex: '#15121a', wirePent: '#251e2a', camBg: '#251e2a',
         centerLightColor: '#e6e6fa'
       },
       28: { // Ocean Blue - Deep ocean blue tiles
-        tileHidden: '#1a2a3d', tileRevealed: '#3d4a6d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1a2a3d', tileRevealed: '#3d4a6d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#7a8aa5', wireHex: '#0a151a', wirePent: '#15222a', camBg: '#15222a',
         centerLightColor: '#4682b4'
       },
       29: { // Rose Gold - Rose gold tiles
-        tileHidden: '#3d2828', tileRevealed: '#5a3d3d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d2828', tileRevealed: '#5a3d3d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a7a7a', wireHex: '#1a1010', wirePent: '#2a1f1f', camBg: '#2a1f1f',
         centerLightColor: '#e8b4b8'
       },
       30: { // Midnight Blue - Deep midnight blue tiles
-        tileHidden: '#0f1a2a', tileRevealed: '#1f2d3d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#0f1a2a', tileRevealed: '#1f2d3d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#5a6a7a', wireHex: '#050a15', wirePent: '#0f1520', camBg: '#0f1520',
         centerLightColor: '#191970'
       },
       31: { // Indigo - Deep indigo tiles
-        tileHidden: '#1a1f3d', tileRevealed: '#3d4275', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1a1f3d', tileRevealed: '#3d4275', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#7a7fa5', wireHex: '#0a0f1a', wirePent: '#151f2a', camBg: '#151f2a',
         centerLightColor: '#4b0082'
       },
       32: { // Turquoise - Bright turquoise tiles
-        tileHidden: '#1a3d3a', tileRevealed: '#3d6d6a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1a3d3a', tileRevealed: '#3d6d6a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#7a9a9a', wireHex: '#0a1a18', wirePent: '#152a28', camBg: '#152a28',
         centerLightColor: '#40e0d0'
       },
       33: { // Peach - Soft peach tiles
-        tileHidden: '#3d352a', tileRevealed: '#5a4d3d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d352a', tileRevealed: '#5a4d3d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a8d7a', wireHex: '#1a1510', wirePent: '#2a251a', camBg: '#2a251a',
         centerLightColor: '#ffdab9'
       },
       34: { // Violet - Rich violet tiles
-        tileHidden: '#2d1a3d', tileRevealed: '#4d2d6d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2d1a3d', tileRevealed: '#4d2d6d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8a6aa5', wireHex: '#120a1a', wirePent: '#22152a', camBg: '#22152a',
         centerLightColor: '#8a2be2'
       },
       35: { // Coral - Vibrant coral tiles
-        tileHidden: '#3d281f', tileRevealed: '#5a3d35', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d281f', tileRevealed: '#5a3d35', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a7a6a', wireHex: '#1a100f', wirePent: '#2a1f1a', camBg: '#2a1f1a',
         centerLightColor: '#ff7f50'
       },
       36: { // Lime - Bright lime tiles
-        tileHidden: '#2d3d1a', tileRevealed: '#4d6d2d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2d3d1a', tileRevealed: '#4d6d2d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8a9a6a', wireHex: '#121a0a', wirePent: '#222a15', camBg: '#222a15',
         centerLightColor: '#32cd32'
       },
       37: { // Amber - Rich amber tiles
-        tileHidden: '#3d2d1a', tileRevealed: '#5a452d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d2d1a', tileRevealed: '#5a452d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a856a', wireHex: '#1a120a', wirePent: '#2a2215', camBg: '#2a2215',
         centerLightColor: '#ffbf00'
       },
       38: { // Magenta - Deep magenta tiles
-        tileHidden: '#3d1a3d', tileRevealed: '#5a2d5a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d1a3d', tileRevealed: '#5a2d5a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a6a9a', wireHex: '#1a0a1a', wirePent: '#2a152a', camBg: '#2a152a',
         centerLightColor: '#ff00ff'
       },
       39: { // Cyan - Bright cyan tiles
-        tileHidden: '#1a3d3d', tileRevealed: '#3d6d6d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1a3d3d', tileRevealed: '#3d6d6d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#7a9a9a', wireHex: '#0a1a1a', wirePent: '#152a2a', camBg: '#152a2a',
         centerLightColor: '#00ffff'
       },
       40: { // Chocolate - Deep brown tiles
-        tileHidden: '#1f1a15', tileRevealed: '#3d352d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1f1a15', tileRevealed: '#3d352d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#7a6a5a', wireHex: '#0a0805', wirePent: '#15100f', camBg: '#15100f',
         centerLightColor: '#d2691e'
       },
       41: { // Sky Blue - Light sky blue tiles
-        tileHidden: '#2a3d4a', tileRevealed: '#4a6d7d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2a3d4a', tileRevealed: '#4a6d7d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8aa5b5', wireHex: '#0f1a22', wirePent: '#1e2a35', camBg: '#1e2a35',
         centerLightColor: '#87ceeb'
       },
       42: { // Olive - Olive green tiles
-        tileHidden: '#2a2d1a', tileRevealed: '#4a4d2d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2a2d1a', tileRevealed: '#4a4d2d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8a8d6a', wireHex: '#0f120a', wirePent: '#1e2215', camBg: '#1e2215',
         centerLightColor: '#808000'
       },
       43: { // Plum - Deep plum tiles
-        tileHidden: '#2a1a2a', tileRevealed: '#4a2d4a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2a1a2a', tileRevealed: '#4a2d4a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8a6a8a', wireHex: '#0f0a0f', wirePent: '#1e151e', camBg: '#1e151e',
         centerLightColor: '#dda0dd'
       },
       44: { // Teal - Deep teal tiles
-        tileHidden: '#1a2a2a', tileRevealed: '#3d4a4a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1a2a2a', tileRevealed: '#3d4a4a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#6a8a8a', wireHex: '#0a1515', wirePent: '#152222', camBg: '#152222',
         centerLightColor: '#008080'
       },
       45: { // Salmon - Soft salmon tiles
-        tileHidden: '#3d2d28', tileRevealed: '#5a423d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d2d28', tileRevealed: '#5a423d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a7a75', wireHex: '#1a1210', wirePent: '#2a1f1d', camBg: '#2a1f1d',
         centerLightColor: '#fa8072'
       },
       46: { // Emerald - Bright emerald tiles
-        tileHidden: '#1a3d2a', tileRevealed: '#3d6d4a', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#1a3d2a', tileRevealed: '#3d6d4a', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#7a9a8a', wireHex: '#0a1a15', wirePent: '#152a22', camBg: '#152a22',
         centerLightColor: '#50c878'
       },
       47: { // Rust - Rusty orange tiles
-        tileHidden: '#3d1f15', tileRevealed: '#5a3528', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d1f15', tileRevealed: '#5a3528', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a6a5a', wireHex: '#1a0f08', wirePent: '#2a1f15', camBg: '#2a1f15',
         centerLightColor: '#b7410e'
       },
       48: { // Periwinkle - Soft periwinkle tiles
-        tileHidden: '#2a2d3d', tileRevealed: '#4a4d6d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2a2d3d', tileRevealed: '#4a4d6d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8a8da5', wireHex: '#0f121a', wirePent: '#1e222a', camBg: '#1e222a',
         centerLightColor: '#cc99ff'
       },
       49: { // Khaki - Khaki green tiles
-        tileHidden: '#3d3d2a', tileRevealed: '#5a5a3d', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#3d3d2a', tileRevealed: '#5a5a3d', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#9a9a7a', wireHex: '#1a1a15', wirePent: '#2a2a22', camBg: '#2a2a22',
         centerLightColor: '#c3b091'
       },
       50: { // Crimson - Deep crimson tiles
-        tileHidden: '#2d0f0f', tileRevealed: '#4d1f1f', tileFlag: '#cc5555', tileMine: '#ff4444',
+        tileHidden: '#2d0f0f', tileRevealed: '#4d1f1f', tileFlag: '#9e6b6b', tileMine: '#ff4444',
         labelColor: '#8a5a5a', wireHex: '#120505', wirePent: '#220f0f', camBg: '#220f0f',
         centerLightColor: '#dc143c'
       },
@@ -6917,7 +7683,7 @@
           } else if (t.mine && t.revealed) {
             t.mesh.material = matMine;
           } else if (t.flagged) {
-            t.mesh.material = matFlag;
+            t.mesh.material = getHiddenMaterial(t);
           } else if (t.revealed) {
             t.mesh.material = matRevealed;
           } else {
@@ -6987,7 +7753,7 @@
                 t.mesh.material = getRevealedMaterial(t);
               }
             } else if (t.flagged) {
-              t.mesh.material = matFlag;
+              t.mesh.material = getHiddenMaterial(t);
             } else {
               t.mesh.material = getHiddenMaterial(t);
             }
@@ -7023,7 +7789,7 @@
     // Register Service Worker for PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('sw.js')
           .then((registration) => {
             console.log('ServiceWorker registration successful:', registration.scope);
             
