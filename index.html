@@ -3924,6 +3924,14 @@
       }
       f = Math.max(1, Math.floor(f)); state.f = f;
       
+      const baseDirection = new THREE.Vector3(3.6, 0.7, 1.6).normalize();
+      const baseDistance = 4.0;
+      const zoomFactor = 1.0 + Math.max(0, (15 - f) * 0.05);
+      if (typeof camera !== 'undefined' && camera) {
+        camera.position.copy(baseDirection).multiplyScalar(baseDistance * zoomFactor);
+        if (typeof controls !== 'undefined' && controls) controls.update();
+      }
+
       const lvlVal = document.getElementById('levelValue');
       if (lvlVal) {
         lvlVal.textContent = state.level;
