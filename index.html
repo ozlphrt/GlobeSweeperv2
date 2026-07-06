@@ -1854,8 +1854,9 @@
         dotMeshF.position.set(0, -0.0095, 0.0035);
         signGroup.add(dotMeshF);
 
-        // Apply current scale and position to the sign group immediately on creation
-        signGroup.scale.set(flagScale, flagScale, flagScale);
+        // Apply current scale and position to the sign group immediately on creation (auto-adjusted by tile size / grid frequency f)
+        const autoScale = flagScale * (15.0 / (state.f || 15));
+        signGroup.scale.set(autoScale, autoScale, autoScale);
         signGroup.position.set(flagOffsetX, flagOffsetY, flagOffsetZ);
         
         mineGroup.add(signGroup);
@@ -6186,10 +6187,11 @@
     const flagOffsetZValue = document.getElementById('debugFlagOffsetZValue');
 
     function updateAllActiveFlags() {
+      const autoScale = flagScale * (15.0 / (state.f || 15));
       state.tiles.forEach(t => {
         if (t.flagMesh && t.flagMesh.userData && t.flagMesh.userData.clone) {
           const clone = t.flagMesh.userData.clone;
-          clone.scale.set(flagScale, flagScale, flagScale);
+          clone.scale.set(autoScale, autoScale, autoScale);
           if (flagModelTemplate) {
             clone.position.set(defaultFlagX + flagOffsetX, defaultFlagY + flagOffsetY, defaultFlagZ + flagOffsetZ);
           } else {
