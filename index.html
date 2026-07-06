@@ -3927,8 +3927,16 @@
       f = Math.max(1, Math.floor(f)); state.f = f;
       
       const baseDirection = new THREE.Vector3(3.6, 0.7, 1.6).normalize();
-      const targetDistance = 4.2; // Optimized for FOV=45 to barely display top and bottom of the sphere
+      const width = window.innerWidth || document.documentElement.clientWidth || 360;
+      const height = window.innerHeight || document.documentElement.clientHeight || 640;
+      const aspect = width / height;
+      let targetDistance = 4.2;
+      if (aspect < 1.0) {
+        targetDistance = 4.2 * (0.8 + 0.2 / aspect);
+      }
       if (typeof camera !== 'undefined' && camera) {
+        camera.aspect = aspect;
+        camera.updateProjectionMatrix();
         camera.position.copy(baseDirection).multiplyScalar(targetDistance);
         if (typeof controls !== 'undefined' && controls) controls.update();
       }
