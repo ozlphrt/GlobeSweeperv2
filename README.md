@@ -33,7 +33,14 @@ Visit the [live demo](https://ozlphrt.github.io/GlobeSweeper/) to play the game.
 
 ## Version History
 
-### v2.0.0 (Current Stable)
+### v2.1.0 (Current Stable)
+- Enabled high-performance, premium soft shadows (`THREE.PCFSoftShadowMap`)
+- Added dynamic shadow frustum clipping plane calculations based on light position coordinates to prevent rendering artifacts
+- Configured 3D warning markers/mines to cast shadows recursively on the globe
+- Enabled dynamic self-shadowing for revealed extruding tiles casting onto neighboring shorter tiles
+- Kept unrevealed tiles shadow-casting disabled to optimize rendering pipelines
+
+### v2.0.0
 - Fixed cascade reveal bug preventing disconnected tiles from being revealed
 - Improved UI with reduced condensed scoreboard size
 - Added iPhone safe area support to prevent status bar overlap
@@ -41,8 +48,8 @@ Visit the [live demo](https://ozlphrt.github.io/GlobeSweeper/) to play the game.
 - Full PWA support with manifest and service worker
 
 **Standalone URLs:**
-- [Tree](https://github.com/ozlphrt/GlobeSweeper/tree/v2.0.0)
-- [Release](https://github.com/ozlphrt/GlobeSweeper/releases/tag/v2.0.0)
+- [Tree](https://github.com/ozlphrt/GlobeSweeper/tree/v2.1.0)
+- [Release](https://github.com/ozlphrt/GlobeSweeper/releases/tag/v2.1.0)
 - [Live Demo](https://ozlphrt.github.io/GlobeSweeper/)
 
 ## License

@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.0.53';
+const CACHE_NAME = 'globesweeper-v1.0.55';
 const urlsToCache = [
   './',
   'index.html',
@@ -80,7 +80,9 @@ self.addEventListener('fetch', (event) => {
               return cachedResponse;
             }
             if (event.request.mode === 'navigate') {
-              return caches.match('index.html');
+              return caches.match('index.html').then((indexResponse) => {
+                return indexResponse || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+              });
             }
             return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
           });
@@ -102,8 +104,10 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // If network fails, try cache
-          return caches.match(event.request);
+          // If network fails, try cache, or fallback to Service Unavailable
+          return caches.match(event.request).then((cachedResponse) => {
+            return cachedResponse || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+          });
         })
     );
   }
