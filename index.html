@@ -968,7 +968,7 @@
 
         <div class="debug-control"><label>Revealed</label><div class="color-display" id="debugTileRevealedDisplay" style="background: #4a5565; position: relative;"><input type="color" id="debugTileRevealed" value="#4a5565" /></div><span class="color-hex" id="debugTileRevealedHex">#4a5565</span></div>
 
-        <div class="debug-control"><label>Flag</label><div class="color-display" id="debugTileFlagDisplay" style="background: #ffdd00; position: relative;"><input type="color" id="debugTileFlag" value="#ffdd00" /></div><span class="color-hex" id="debugTileFlagHex">#ffdd00</span></div>
+        <div class="debug-control"><label>Flag</label><div class="color-display" id="debugTileFlagDisplay" style="background: #2ecc71; position: relative;"><input type="color" id="debugTileFlag" value="#2ecc71" /></div><span class="color-hex" id="debugTileFlagHex">#2ecc71</span></div>
 
         <div class="debug-control"><label>Mine</label><div class="color-display" id="debugTileMineDisplay" style="background: #ff4444; position: relative;"><input type="color" id="debugTileMine" value="#ff4444" /></div><span class="color-hex" id="debugTileMineHex">#ff4444</span></div>
 
@@ -1826,8 +1826,8 @@
       if (style === 1) {
         const signGroup = new THREE.Group();
 
-        // 1. Sleek metallic base pedestal sitting on the tile surface
-        const baseGeo = new THREE.CylinderGeometry(0.009, 0.012, 0.0035, 16);
+        // 1. Sleek metallic base pedestal sitting on the tile surface (Enlarged)
+        const baseGeo = new THREE.CylinderGeometry(0.013, 0.017, 0.005, 16);
         baseGeo.rotateX(Math.PI / 2); // Orient to align with the tile normal (Z-axis)
         const baseMat = new THREE.MeshStandardMaterial({ 
           color: 0x1c1e22, 
@@ -1835,26 +1835,54 @@
           roughness: 0.15 
         });
         const baseMesh = new THREE.Mesh(baseGeo, baseMat);
-        baseMesh.position.set(0, 0, 0.00175);
+        baseMesh.position.set(0, 0, 0.0025);
         signGroup.add(baseMesh);
 
-        // 2. High-intensity glowing red LED dome sitting on the base
-        const ledGeo = new THREE.SphereGeometry(0.0065, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        // 2. High-intensity glowing red LED dome sitting on the base (Enlarged & Brighter)
+        const ledGeo = new THREE.SphereGeometry(0.0095, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
         ledGeo.rotateX(Math.PI / 2); // Orient outward along Z-axis normal
         const ledMat = new THREE.MeshStandardMaterial({ 
-          color: 0xff0800, 
-          emissive: 0xff0800, 
-          emissiveIntensity: 2.2, 
+          color: 0xff3333, 
+          emissive: 0xff0000, 
+          emissiveIntensity: 5.5, 
           roughness: 0.1,
           metalness: 0.1
         });
         const ledMesh = new THREE.Mesh(ledGeo, ledMat);
-        ledMesh.position.set(0, 0, 0.0035);
+        ledMesh.position.set(0, 0, 0.005);
         signGroup.add(ledMesh);
 
-        // 3. PointLight to cast a dynamic red glow onto the surrounding tile surface
-        const glowLight = new THREE.PointLight(0xff0800, 0.7, 0.07, 1.5);
-        glowLight.position.set(0, 0, 0.007);
+        // 3. Volumetric Glow Haze Sprite
+        function createHazeTexture() {
+          const canvas = document.createElement('canvas');
+          canvas.width = 64;
+          canvas.height = 64;
+          const ctx = canvas.getContext('2d');
+          const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+          grad.addColorStop(0, 'rgba(255, 60, 60, 1.0)');
+          grad.addColorStop(0.2, 'rgba(255, 0, 0, 0.6)');
+          grad.addColorStop(0.5, 'rgba(255, 0, 0, 0.2)');
+          grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, 64, 64);
+          return new THREE.CanvasTexture(canvas);
+        }
+        const hazeTex = createHazeTexture();
+        const hazeMat = new THREE.SpriteMaterial({
+          map: hazeTex,
+          color: 0xff0000,
+          transparent: true,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false
+        });
+        const hazeSprite = new THREE.Sprite(hazeMat);
+        hazeSprite.scale.set(0.05, 0.05, 1.0); // Large soft volumetric glow haze
+        hazeSprite.position.set(0, 0, 0.008);
+        signGroup.add(hazeSprite);
+
+        // 4. PointLight to cast a dynamic red glow onto the surrounding tile surface
+        const glowLight = new THREE.PointLight(0xff0000, 1.8, 0.12, 1.2);
+        glowLight.position.set(0, 0, 0.010);
         signGroup.add(glowLight);
 
         // Apply scale & positioning
@@ -2512,12 +2540,12 @@
     });
     
     let matFlag = new THREE.MeshStandardMaterial({ 
-      color: 0xffdd00, // Bright yellow
+      color: 0x2ecc71, // Emerald green
       side: THREE.DoubleSide,
-      roughness: 1.0,
-      metalness: 0.0,
-      emissive: 0x000000, // No emissive glow
-      emissiveIntensity: 0.0
+      roughness: 0.8,
+      metalness: 0.1,
+      emissive: 0x0a2f18, // Subtle dark green emissive base
+      emissiveIntensity: 0.5
     });
     
     let matFlagIncorrect = new THREE.MeshStandardMaterial({ 
@@ -6769,9 +6797,13 @@
               }
             }
             
-            // Hover/bobbing animation along normal axis
-            const hoverOffset = Math.sin(time * 0.0035 + t.index * 0.4) * 0.0025;
-            t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0 + hoverOffset);
+            // Hover/bobbing animation along normal axis (Disabled for Style 1 LED to keep it static and flush)
+            if (t.flagMesh.userData && t.flagMesh.userData.style === 1) {
+              t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0);
+            } else {
+              const hoverOffset = Math.sin(time * 0.0035 + t.index * 0.4) * 0.0025;
+              t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0 + hoverOffset);
+            }
           }
 
           // Update animated plasma inside burnt holes (only if visible)
@@ -6913,7 +6945,7 @@
             break;
           case 'tileFlag':
             if (tileFlagInput) {
-              const flagVal = (value === '#9e6b6b') ? '#ffdd00' : value;
+              const flagVal = (value === '#9e6b6b') ? '#2ecc71' : value;
               tileFlagInput.value = flagVal;
               updateColorDisplay(tileFlagInput, tileFlagDisplay, tileFlagHex);
               matFlag.color.setHex(parseInt(flagVal.substring(1), 16));
@@ -7831,7 +7863,7 @@
         state.tiles.forEach(t => { if (t.revealed && !t.mine) t.mesh.material.color.copy(matRevealed.color); });
       }
       if (tileFlagInput && preset.tileFlag) {
-        const flagVal = (preset.tileFlag === '#9e6b6b') ? '#ffdd00' : preset.tileFlag;
+        const flagVal = (preset.tileFlag === '#9e6b6b') ? '#2ecc71' : preset.tileFlag;
         tileFlagInput.value = flagVal;
         updateColorDisplay(tileFlagInput, tileFlagDisplay, tileFlagHex);
         matFlag.color.setHex(parseInt(flagVal.substring(1), 16));
