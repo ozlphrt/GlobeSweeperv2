@@ -1822,96 +1822,42 @@
       
       const style = 1;
 
-      // Style 1: Attention Warning Sign
+      // Style 1: Glowing Red LED Flag Marker
       if (style === 1) {
-        // Build the procedural 3D Attention Warning Sign (rounded corners, glossy red border, tapered exclamation)!
         const signGroup = new THREE.Group();
 
-        // 1. Red Rounded Triangle Board (Outer border)
-        const shapeBack = new THREE.Shape();
-        shapeBack.moveTo(-0.018, -0.016);
-        shapeBack.lineTo(0.018, -0.016);
-        shapeBack.quadraticCurveTo(0.022, -0.016, 0.021, -0.012);
-        shapeBack.lineTo(0.003, 0.021);
-        shapeBack.quadraticCurveTo(0, 0.026, -0.003, 0.021);
-        shapeBack.lineTo(-0.021, -0.012);
-        shapeBack.quadraticCurveTo(-0.022, -0.016, -0.018, -0.016);
-        
-        const extrudeSettingsBack = { 
-          depth: 0.0025, 
-          bevelEnabled: true,
-          bevelThickness: 0.0008,
-          bevelSize: 0.0008,
-          bevelSegments: 3
-        };
-        const boardGeoBack = new THREE.ExtrudeGeometry(shapeBack, extrudeSettingsBack);
-        boardGeoBack.center();
-        const boardMatBack = new THREE.MeshStandardMaterial({ 
-          color: 0xff3b30, 
-          emissive: 0x880000, 
-          emissiveIntensity: 0.4, 
-          roughness: 0.15,
+        // 1. Sleek metallic base pedestal sitting on the tile surface
+        const baseGeo = new THREE.CylinderGeometry(0.009, 0.012, 0.0035, 16);
+        baseGeo.rotateX(Math.PI / 2); // Orient to align with the tile normal (Z-axis)
+        const baseMat = new THREE.MeshStandardMaterial({ 
+          color: 0x1c1e22, 
+          metalness: 0.9, 
+          roughness: 0.15 
+        });
+        const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+        baseMesh.position.set(0, 0, 0.00175);
+        signGroup.add(baseMesh);
+
+        // 2. High-intensity glowing red LED dome sitting on the base
+        const ledGeo = new THREE.SphereGeometry(0.0065, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        ledGeo.rotateX(Math.PI / 2); // Orient outward along Z-axis normal
+        const ledMat = new THREE.MeshStandardMaterial({ 
+          color: 0xff0800, 
+          emissive: 0xff0800, 
+          emissiveIntensity: 2.2, 
+          roughness: 0.1,
           metalness: 0.1
         });
-        const boardBack = new THREE.Mesh(boardGeoBack, boardMatBack);
-        boardBack.position.set(0, 0, 0.0005);
-        signGroup.add(boardBack);
+        const ledMesh = new THREE.Mesh(ledGeo, ledMat);
+        ledMesh.position.set(0, 0, 0.0035);
+        signGroup.add(ledMesh);
 
-        // 2. Yellow Inner Triangle Board (Self-emissive, rounded)
-        const shapeInner = new THREE.Shape();
-        shapeInner.moveTo(-0.014, -0.012);
-        shapeInner.lineTo(0.014, -0.012);
-        shapeInner.quadraticCurveTo(0.017, -0.012, 0.016, -0.009);
-        shapeInner.lineTo(0.0025, 0.017);
-        shapeInner.quadraticCurveTo(0, 0.021, -0.0025, 0.017);
-        shapeInner.lineTo(-0.016, -0.009);
-        shapeInner.quadraticCurveTo(-0.017, -0.012, -0.014, -0.012);
-        
-        const extrudeSettingsInner = { 
-          depth: 0.0015, 
-          bevelEnabled: true,
-          bevelThickness: 0.0005,
-          bevelSize: 0.0005,
-          bevelSegments: 3
-        };
-        const boardGeoInner = new THREE.ExtrudeGeometry(shapeInner, extrudeSettingsInner);
-        boardGeoInner.center();
-        const boardMatInner = new THREE.MeshStandardMaterial({ 
-          color: 0xffd000, 
-          emissive: 0xff9900, 
-          emissiveIntensity: 0.7, 
-          roughness: 0.25 
-        });
-        const boardInner = new THREE.Mesh(boardGeoInner, boardMatInner);
-        boardInner.position.set(0, -0.001, 0.002);
-        signGroup.add(boardInner);
+        // 3. PointLight to cast a dynamic red glow onto the surrounding tile surface
+        const glowLight = new THREE.PointLight(0xff0800, 0.7, 0.07, 1.5);
+        glowLight.position.set(0, 0, 0.007);
+        signGroup.add(glowLight);
 
-        // 3. Black Tapered Exclamation Point (Upper line and dot)
-        const markMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1c, roughness: 0.6 });
-        
-        // Bolder tapered rounded line
-        const lineShape = new THREE.Shape();
-        lineShape.absarc(0, 0.005, 0.0028, 0, Math.PI, false);
-        lineShape.lineTo(-0.0016, -0.003);
-        lineShape.absarc(0, -0.003, 0.0017, Math.PI, 0, false);
-        lineShape.lineTo(0.0028, 0.005);
-        
-        const lineGeo = new THREE.ExtrudeGeometry(lineShape, { depth: 0.0006, bevelEnabled: false });
-        lineGeo.center();
-        const lineMeshF = new THREE.Mesh(lineGeo, markMat);
-        lineMeshF.position.set(0, 0.001, 0.0035);
-        signGroup.add(lineMeshF);
-
-        // Bolder Dot
-        const dotShape = new THREE.Shape();
-        dotShape.absarc(0, -0.0075, 0.0024, 0, Math.PI * 2, false);
-        const dotGeo = new THREE.ExtrudeGeometry(dotShape, { depth: 0.0006, bevelEnabled: false });
-        dotGeo.center();
-        const dotMeshF = new THREE.Mesh(dotGeo, markMat);
-        dotMeshF.position.set(0, -0.0095, 0.0035);
-        signGroup.add(dotMeshF);
-
-        // Apply current scale and position to the sign group immediately on creation (auto-adjusted by tile size / grid frequency f)
+        // Apply scale & positioning
         const autoScale = flagScale * (15.0 / (state.f || 15));
         signGroup.scale.set(autoScale, autoScale, autoScale);
         signGroup.position.set(flagOffsetX, flagOffsetY, flagOffsetZ);
@@ -1920,7 +1866,7 @@
         mineGroup.userData = {
           style: 1,
           clone: signGroup,
-          emissiveMat: boardMatInner
+          emissiveMat: ledMat
         };
       }
       
