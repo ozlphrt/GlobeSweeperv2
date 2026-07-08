@@ -1852,8 +1852,8 @@
         ledMesh.position.set(0, 0, 0.005);
         signGroup.add(ledMesh);
 
-        // 3. Volumetric Glow Haze Sprite
-        function createHazeTexture() {
+        // 3. Volumetric Glow Haze Sprite (Using cached texture to avoid memory leak / CPU lag)
+        if (!window._cachedHazeTex) {
           const canvas = document.createElement('canvas');
           canvas.width = 64;
           canvas.height = 64;
@@ -1865,9 +1865,9 @@
           grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = grad;
           ctx.fillRect(0, 0, 64, 64);
-          return new THREE.CanvasTexture(canvas);
+          window._cachedHazeTex = new THREE.CanvasTexture(canvas);
         }
-        const hazeTex = createHazeTexture();
+        const hazeTex = window._cachedHazeTex;
         const hazeMat = new THREE.SpriteMaterial({
           map: hazeTex,
           color: 0xff0000,
