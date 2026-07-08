@@ -8098,10 +8098,10 @@
           if (t.isEmpty) {
             // Keep empty material as is
             t.mesh.material = matEmpty;
-          } else if (t.mine && t.revealed) {
-            t.mesh.material = matMine;
           } else if (t.flagged) {
             t.mesh.material = getHiddenMaterial(t);
+          } else if (t.mine && t.revealed) {
+            t.mesh.material = matMine;
           } else if (t.revealed) {
             t.mesh.material = matRevealed;
           } else {
@@ -8164,14 +8164,14 @@
           state.tiles.forEach(t => {
             if (t.isEmpty) {
               t.mesh.material = getEmptyMaterial();
+            } else if (t.flagged) {
+              t.mesh.material = getHiddenMaterial(t);
             } else if (t.revealed) {
               if (t.mine) {
                 t.mesh.material = matMine;
               } else {
                 t.mesh.material = getRevealedMaterial(t);
               }
-            } else if (t.flagged) {
-              t.mesh.material = getHiddenMaterial(t);
             } else {
               t.mesh.material = getHiddenMaterial(t);
             }
