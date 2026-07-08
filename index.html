@@ -1883,14 +1883,14 @@
             map: window._cachedHazeTex,
             color: 0xff0000,
             transparent: true,
-            opacity: 1.0, // Maximum opacity for stronger glow
+            opacity: 0.85, // Slightly lower opacity
             blending: THREE.AdditiveBlending,
             depthWrite: false
           });
         }
         const hazeMat = window._cachedHazeMat;
         const hazeSprite = new THREE.Sprite(hazeMat);
-        hazeSprite.scale.set(0.075, 0.075, 1.0); // Enlarge scale size from 0.05 to 0.075
+        hazeSprite.scale.set(0.065, 0.065, 1.0); // Slightly toned down scale from 0.075 to 0.065
         hazeSprite.position.set(0, 0, 0.008);
         signGroup.add(hazeSprite);
 
@@ -6820,9 +6820,9 @@
                if (ud.emissiveMat) {
                  ud.emissiveMat.emissiveIntensity = blinkWave * 5.5;
                }
-               // Modulate Haze Sprite Scale (Scale up to 0.075 max for stronger glow)
+               // Modulate Haze Sprite Scale (Scale up to 0.065 max for toned down glow)
                if (ud.hazeSprite) {
-                 const scaleSize = blinkWave * 0.075;
+                 const scaleSize = blinkWave * 0.065;
                  ud.hazeSprite.scale.set(scaleSize, scaleSize, 1.0);
                }
              } else {
