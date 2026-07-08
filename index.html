@@ -6803,10 +6803,10 @@
              if (t.flagMesh.userData && t.flagMesh.userData.style === 1) {
                t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0);
                
-               // Blink on/off every second (1Hz frequency).
+               // Blink on/off every second (1Hz frequency), staggered out of sync using the tile index.
                // Math.PI * 2 * (time / 1000) oscillates exactly once per second (1000ms).
-               // We clamp/smooth step it or use a sharp wave. Let's use a smooth sine wave.
-               const blinkWave = 0.5 + 0.5 * Math.sin(Math.PI * 2 * (time / 1000));
+               // Adding t.index * 0.5 breaks synchronization.
+               const blinkWave = 0.5 + 0.5 * Math.sin(Math.PI * 2 * (time / 1000) + t.index * 0.5);
                
                // Modulate LED Emissive Intensity
                if (ud.emissiveMat) {
