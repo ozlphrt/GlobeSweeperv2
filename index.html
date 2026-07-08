@@ -6803,25 +6803,23 @@
              if (t.flagMesh.userData && t.flagMesh.userData.style === 1) {
                t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0);
                
-               // Walking ants/chasing light animation across flagged LEDs
-               const speed = 0.005;
-               // Stagger the phase using the tile index (using modulo/multiplier)
-               const phase = t.index * 1.5;
-               // Calculate wave intensity between 0.15 (dim/less bright) and 1.0 (brightest)
-               const wave = 0.15 + 0.85 * Math.max(0, Math.sin(time * speed - phase));
+               // Blink on/off every second (1Hz frequency).
+               // Math.PI * 2 * (time / 1000) oscillates exactly once per second (1000ms).
+               // We clamp/smooth step it or use a sharp wave. Let's use a smooth sine wave.
+               const blinkWave = 0.5 + 0.5 * Math.sin(Math.PI * 2 * (time / 1000));
                
                // Modulate LED Emissive Intensity
                if (ud.emissiveMat) {
-                 ud.emissiveMat.emissiveIntensity = wave * 5.5;
+                 ud.emissiveMat.emissiveIntensity = blinkWave * 5.5;
                }
                // Modulate PointLight Intensity and Range
                if (ud.pointLight) {
-                 ud.pointLight.intensity = wave * 1.8;
-                 ud.pointLight.distance = wave * 0.12;
+                 ud.pointLight.intensity = blinkWave * 1.8;
+                 ud.pointLight.distance = blinkWave * 0.12;
                }
                // Modulate Haze Sprite Scale
                if (ud.hazeSprite) {
-                 const scaleSize = wave * 0.05;
+                 const scaleSize = blinkWave * 0.05;
                  ud.hazeSprite.scale.set(scaleSize, scaleSize, 1.0);
                }
              } else {
