@@ -1880,9 +1880,9 @@
         hazeSprite.position.set(0, 0, 0.008);
         signGroup.add(hazeSprite);
 
-        // 4. PointLight to cast a dynamic red glow onto the surrounding tile surface
-        const glowLight = new THREE.PointLight(0xff0000, 1.8, 0.12, 1.2);
-        glowLight.position.set(0, 0, 0.010);
+        // 4. Subtle PointLight (very low intensity to avoid coloring the tile below)
+        const glowLight = new THREE.PointLight(0xff0000, 0.15, 0.04, 2.0);
+        glowLight.position.set(0, 0, 0.012);
         signGroup.add(glowLight);
 
         // Apply scale & positioning
