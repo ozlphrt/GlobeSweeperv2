@@ -1827,32 +1827,43 @@
         const signGroup = new THREE.Group();
 
         // 1. Sleek metallic base pedestal sitting on the tile surface (Enlarged)
-        const baseGeo = new THREE.CylinderGeometry(0.013, 0.017, 0.005, 16);
-        baseGeo.rotateX(Math.PI / 2); // Orient to align with the tile normal (Z-axis)
-        const baseMat = new THREE.MeshStandardMaterial({ 
-          color: 0x1c1e22, 
-          metalness: 0.9, 
-          roughness: 0.15 
-        });
+        // Cache geometries and materials globally to prevent GPU garbage collection / compile delays
+        if (!window._cacheStyle1) {
+          window._cacheStyle1 = {
+            baseGeo: new THREE.CylinderGeometry(0.013, 0.017, 0.005, 16),
+            baseMat: new THREE.MeshStandardMaterial({ 
+              color: 0x1c1e22, 
+              metalness: 0.9, 
+              roughness: 0.15 
+            }),
+            ledGeo: new THREE.SphereGeometry(0.0095, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+            ledMat: new THREE.MeshStandardMaterial({ 
+              color: 0xff2222, 
+              emissive: 0xff0000, 
+              emissiveIntensity: 5.5, 
+              roughness: 0.1,
+              metalness: 0.1
+            })
+          };
+          window._cacheStyle1.baseGeo.rotateX(Math.PI / 2);
+          window._cacheStyle1.ledGeo.rotateX(Math.PI / 2);
+        }
+
+        const baseGeo = window._cacheStyle1.baseGeo;
+        const baseMat = window._cacheStyle1.baseMat;
         const baseMesh = new THREE.Mesh(baseGeo, baseMat);
         baseMesh.position.set(0, 0, 0.0025);
         signGroup.add(baseMesh);
 
-        // 2. High-intensity glowing red LED dome sitting on the base (Enlarged & Brighter)
-        const ledGeo = new THREE.SphereGeometry(0.0095, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-        ledGeo.rotateX(Math.PI / 2); // Orient outward along Z-axis normal
-        const ledMat = new THREE.MeshStandardMaterial({ 
-          color: 0xff2222, 
-          emissive: 0xff0000, 
-          emissiveIntensity: 5.5, 
-          roughness: 0.1,
-          metalness: 0.1
-        });
+        // 2. High-intensity glowing red LED dome sitting on the base
+        const ledGeo = window._cacheStyle1.ledGeo;
+        // Clone material so we can uniquely animate its emissiveIntensity per tile in the loop
+        const ledMat = window._cacheStyle1.ledMat.clone(); 
         const ledMesh = new THREE.Mesh(ledGeo, ledMat);
         ledMesh.position.set(0, 0, 0.005);
         signGroup.add(ledMesh);
 
-        // 3. Volumetric Glow Haze Sprite (Using cached texture to avoid memory leak / CPU lag)
+        // 3. Volumetric Glow Haze Sprite
         if (!window._cachedHazeTex) {
           const canvas = document.createElement('canvas');
           canvas.width = 64;
@@ -1867,14 +1878,16 @@
           ctx.fillRect(0, 0, 64, 64);
           window._cachedHazeTex = new THREE.CanvasTexture(canvas);
         }
-        const hazeTex = window._cachedHazeTex;
-        const hazeMat = new THREE.SpriteMaterial({
-          map: hazeTex,
-          color: 0xff0000,
-          transparent: true,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false
-        });
+        if (!window._cachedHazeMat) {
+          window._cachedHazeMat = new THREE.SpriteMaterial({
+            map: window._cachedHazeTex,
+            color: 0xff0000,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+          });
+        }
+        const hazeMat = window._cachedHazeMat;
         const hazeSprite = new THREE.Sprite(hazeMat);
         hazeSprite.scale.set(0.05, 0.05, 1.0); // Large soft volumetric glow haze
         hazeSprite.position.set(0, 0, 0.008);
