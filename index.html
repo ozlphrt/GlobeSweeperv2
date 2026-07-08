@@ -1870,9 +1870,9 @@
           canvas.height = 64;
           const ctx = canvas.getContext('2d');
           const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-          grad.addColorStop(0, 'rgba(255, 60, 60, 1.0)');
-          grad.addColorStop(0.2, 'rgba(255, 0, 0, 0.6)');
-          grad.addColorStop(0.5, 'rgba(255, 0, 0, 0.2)');
+          grad.addColorStop(0, 'rgba(255, 80, 80, 1.0)');
+          grad.addColorStop(0.3, 'rgba(255, 10, 10, 0.8)');
+          grad.addColorStop(0.6, 'rgba(255, 0, 0, 0.35)');
           grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = grad;
           ctx.fillRect(0, 0, 64, 64);
@@ -1883,13 +1883,14 @@
             map: window._cachedHazeTex,
             color: 0xff0000,
             transparent: true,
+            opacity: 1.0, // Maximum opacity for stronger glow
             blending: THREE.AdditiveBlending,
             depthWrite: false
           });
         }
         const hazeMat = window._cachedHazeMat;
         const hazeSprite = new THREE.Sprite(hazeMat);
-        hazeSprite.scale.set(0.05, 0.05, 1.0); // Large soft volumetric glow haze
+        hazeSprite.scale.set(0.075, 0.075, 1.0); // Enlarge scale size from 0.05 to 0.075
         hazeSprite.position.set(0, 0, 0.008);
         signGroup.add(hazeSprite);
 
@@ -6819,9 +6820,9 @@
                if (ud.emissiveMat) {
                  ud.emissiveMat.emissiveIntensity = blinkWave * 5.5;
                }
-               // Modulate Haze Sprite Scale
+               // Modulate Haze Sprite Scale (Scale up to 0.075 max for stronger glow)
                if (ud.hazeSprite) {
-                 const scaleSize = blinkWave * 0.05;
+                 const scaleSize = blinkWave * 0.075;
                  ud.hazeSprite.scale.set(scaleSize, scaleSize, 1.0);
                }
              } else {
