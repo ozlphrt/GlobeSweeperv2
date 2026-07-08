@@ -1844,7 +1844,7 @@
         const ledMat = new THREE.MeshStandardMaterial({ 
           color: 0xff2222, 
           emissive: 0xff0000, 
-          emissiveIntensity: 5.0, 
+          emissiveIntensity: 5.5, 
           roughness: 0.1,
           metalness: 0.1
         });
@@ -1852,16 +1852,16 @@
         ledMesh.position.set(0, 0, 0.005);
         signGroup.add(ledMesh);
 
-        // 3. Volumetric Glow Haze Sprite (raised above tile surface)
+        // 3. Volumetric Glow Haze Sprite
         function createHazeTexture() {
           const canvas = document.createElement('canvas');
           canvas.width = 64;
           canvas.height = 64;
           const ctx = canvas.getContext('2d');
           const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-          grad.addColorStop(0, 'rgba(255, 50, 50, 1.0)');
-          grad.addColorStop(0.2, 'rgba(255, 0, 0, 0.7)');
-          grad.addColorStop(0.5, 'rgba(255, 0, 0, 0.25)');
+          grad.addColorStop(0, 'rgba(255, 60, 60, 1.0)');
+          grad.addColorStop(0.2, 'rgba(255, 0, 0, 0.6)');
+          grad.addColorStop(0.5, 'rgba(255, 0, 0, 0.2)');
           grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.fillStyle = grad;
           ctx.fillRect(0, 0, 64, 64);
@@ -1872,14 +1872,18 @@
           map: hazeTex,
           color: 0xff0000,
           transparent: true,
-          opacity: 0.9,
           blending: THREE.AdditiveBlending,
           depthWrite: false
         });
         const hazeSprite = new THREE.Sprite(hazeMat);
-        hazeSprite.scale.set(0.04, 0.04, 1.0); // Larger haze for more visible glow
-        hazeSprite.position.set(0, 0, 0.012); // Raised above the tile surface
+        hazeSprite.scale.set(0.05, 0.05, 1.0); // Large soft volumetric glow haze
+        hazeSprite.position.set(0, 0, 0.008);
         signGroup.add(hazeSprite);
+
+        // 4. PointLight to cast a dynamic red glow onto surrounding surfaces
+        const glowLight = new THREE.PointLight(0xff0000, 1.8, 0.12, 1.2);
+        glowLight.position.set(0, 0, 0.010);
+        signGroup.add(glowLight);
 
         // Apply scale & positioning
         const autoScale = flagScale * (15.0 / (state.f || 15));

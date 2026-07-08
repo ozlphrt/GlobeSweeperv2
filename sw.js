@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.0.69';
+const CACHE_NAME = 'globesweeper-v1.0.70';
 const urlsToCache = [
   './',
   'index.html',
