@@ -3489,7 +3489,7 @@
       const t = state.tiles[i]; 
       if (t.revealed || state.gameOver) return; 
       t.flagged = !t.flagged; 
-      t.mesh.material = t.flagged ? matFlag : getHiddenMaterial(t); 
+      t.mesh.material = getHiddenMaterial(t); 
       // Reset scale to normal when flag state changes
       t.mesh.scale.set(1.0, 1.0, 1.0);
       
@@ -3718,7 +3718,7 @@
               t.mesh.material = getHiddenMaterial(t); // Keep original tile material
               createBurntDecal(t); // Spawn burnt spot decal on top
             } else if (t.flagged) {
-              t.mesh.material = matFlag; // Keep correctly marked tiles green
+              t.mesh.material = getHiddenMaterial(t); // Keep original tile material unchanged
             } else {
               t.mesh.material = matMine; 
             }
@@ -6662,13 +6662,12 @@
             const pulse = Math.sin(animTime * oscillationSpeed * 1.5 + i * 0.15); // -1 to 1, faster
             const scale = 1.0 + pulse * scaleAmplitude; // Scale between 0.9921875 and 1.0078125
             t.mesh.scale.set(scale, scale, scale);
-            t.mesh.material = matFlagIncorrect; // Change tile color to indicate error
+            t.mesh.material = getHiddenMaterial(t); // Keep original tile material unchanged
           }
           // Reset scale/material for correctly flagged tiles
           else if (t.flagged && t.mine) {
             t.mesh.scale.set(1.0, 1.0, 1.0);
-            t.mesh.material = matFlag; // Ensure it keeps the standard flag color
-          }
+            t.mesh.material = getHiddenMaterial(t); // Keep original tile material unchanged
           // Reset scale for other tiles
           else {
             t.mesh.scale.set(1.0, 1.0, 1.0);
@@ -8101,7 +8100,7 @@
           } else if (t.mine && t.revealed) {
             t.mesh.material = matMine;
           } else if (t.flagged) {
-            t.mesh.material = matFlag;
+            t.mesh.material = getHiddenMaterial(t);
           } else if (t.revealed) {
             t.mesh.material = matRevealed;
           } else {
@@ -8171,7 +8170,7 @@
                 t.mesh.material = getRevealedMaterial(t);
               }
             } else if (t.flagged) {
-              t.mesh.material = matFlag;
+              t.mesh.material = getHiddenMaterial(t);
             } else {
               t.mesh.material = getHiddenMaterial(t);
             }
