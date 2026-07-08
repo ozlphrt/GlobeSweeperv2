@@ -106,94 +106,141 @@
       top: max(20px, env(safe-area-inset-top));
       left: max(20px, env(safe-area-inset-left));
       z-index: 99;
-      padding: 10px 16px;
-      border-radius: 12px;
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
       background: rgba(15, 15, 20, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 1px;
+      align-items: center;
+      justify-content: center;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     #levelDisplay.hidden {
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
+      transform: scale(0.8);
+    }
+    
+    #levelDisplay .level-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      pointer-events: none;
+      z-index: 2;
     }
     
     #levelDisplay .level-label {
-      font-size: 10px;
+      font-size: 8px;
       font-weight: 800;
       text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.5);
-      letter-spacing: 1.5px;
-      line-height: 1.1;
+      color: rgba(255, 255, 255, 0.4);
+      letter-spacing: 1px;
+      line-height: 1;
+      margin-bottom: 2px;
     }
     
     #levelDisplay .level-value {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 900;
       color: #ffffff;
-      line-height: 1.1;
+      line-height: 1;
+    }
+
+    /* SVG Progress Bar Around Level Indicator */
+    .level-progress-svg {
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      width: calc(100% + 6px);
+      height: calc(100% + 6px);
+      transform: rotate(-90deg);
+      pointer-events: none;
+      z-index: 1;
+      overflow: visible;
+    }
+
+    .level-progress-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 4px;
+    }
+    .level-progress-bar {
+      fill: none;
+      stroke: #ffd000;
+      stroke-width: 7px;
+      stroke-linecap: round;
+      stroke-dasharray: 289.03;
+      stroke-dashoffset: 289.03;
+      transition: stroke-dashoffset 0.3s ease, stroke 0.3s ease;
+      filter: drop-shadow(0 0 5px rgba(255, 208, 0, 0.8)) drop-shadow(0 0 10px rgba(255, 208, 0, 0.4));
     }
 
     .ui {
       display: flex !important;
       flex-direction: row !important;
       align-items: center !important;
-      gap: 18px !important;
+      justify-content: center !important;
       position: absolute;
-      top: max(20px, env(safe-area-inset-top));
-      left: calc(max(20px, env(safe-area-inset-left)) + 92px) !important;
-      padding: 10px 18px !important;
+      top: calc(max(20px, env(safe-area-inset-top)) + 86px) !important; /* Stacked below 76px high levelDisplay with 10px gap */
+      left: max(20px, env(safe-area-inset-left)) !important; /* Aligned left with levelDisplay */
+      padding: 0 !important;
       border-radius: 12px;
       backdrop-filter: blur(20px) saturate(180%);
       -webkit-backdrop-filter: blur(20px) saturate(180%);
       background: rgba(15, 15, 20, 0.95) !important;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
       border: 1px solid rgba(255, 255, 255, 0.15) !important;
-      width: fit-content !important;
+      width: 76px !important; /* Width aligned with levelDisplay */
+      height: 36px !important; /* Shorter, sleeker height */
+      box-sizing: border-box !important;
       transition: opacity 0.5s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       z-index: 99;
+    }
+
+    .ui .heart {
+      font-size: 18px !important;
+      color: #ff3b30;
+      filter: drop-shadow(0 0 6px rgba(255,59,48,0.7));
+      transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
     @media (max-width: 600px) {
       #levelDisplay {
         left: max(12px, env(safe-area-inset-left)) !important;
         top: max(12px, env(safe-area-inset-top)) !important;
-        padding: 8px 12px !important;
-        border-radius: 10px !important;
+        width: 64px !important;
+        height: 64px !important;
       }
       #levelDisplay .level-label {
-        font-size: 9px !important;
-        letter-spacing: 1px !important;
+        font-size: 7px !important;
+        letter-spacing: 0.5px !important;
       }
       #levelDisplay .level-value {
-        font-size: 22px !important;
+        font-size: 20px !important;
       }
       .ui {
-        left: calc(max(12px, env(safe-area-inset-left)) + 74px) !important;
-        transform: none !important;
-        top: max(12px, env(safe-area-inset-top)) !important;
-        padding: 6px 12px !important;
-        border-radius: 12px !important;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6) !important;
-        width: fit-content !important;
-        max-width: calc(100vw - 110px) !important;
-        box-sizing: border-box !important;
-      }
-      .ui .stats-wrapper {
-        flex-direction: row !important;
-        gap: 12px !important;
-        font-size: 13px !important;
-      }
-      .ui .stats-data {
-        gap: 10px !important;
+        left: max(12px, env(safe-area-inset-left)) !important; /* Aligned left with levelDisplay */
+        top: calc(max(12px, env(safe-area-inset-top)) + 72px) !important; /* Stacked below 64px high levelDisplay with 8px gap */
+        padding: 0 !important;
+        width: 64px !important; /* Width aligned with levelDisplay */
+        height: 30px !important;
+        border-radius: 10px !important;
       }
       .ui .heart {
-        font-size: 18px !important;
+        font-size: 14px !important;
+      }
+      .ui.compact {
+        transform: none !important;
+        padding: 0 !important;
+      }
+      .ui.compact .heart {
+        font-size: 14px !important;
       }
     }
 
@@ -252,8 +299,7 @@
     .timer-icon { font-size: 16px; opacity: 1.0; filter: drop-shadow(0 1px 2px rgba(255,255,255,0.8)); transition: font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
 
     .timer-value { font-size: 14px; font-weight: 900; color: #000000; font-variant-numeric: tabular-nums; letter-spacing: 1px; transition: font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-
-    .ui.compact { padding: 6px 4px 0 6px; min-width: auto; transform: scale(0.6); transform-origin: top left; }
+    .ui.compact { padding: 0 !important; min-width: auto; transform: none !important; }
 
     .ui.compact .progress-label { opacity: 0; visibility: hidden; max-height: 0; overflow: hidden; }
 
@@ -272,8 +318,7 @@
     .ui.compact .timer-value { font-size: 18px; }
 
     .ui.compact .timer-icon { font-size: 20px; }
-
-    .ui.compact .heart { font-size: 22px; }
+    .ui.compact .heart { font-size: 18px !important; }
 
     .controls-section { display: flex; gap: 8px; width: fit-content; box-sizing: border-box; transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s cubic-bezier(0.4, 0, 0.2, 1), max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     
@@ -842,9 +887,15 @@
     </div>
   </div>
 
-  <div id="levelDisplay" class="hidden">
-    <div class="level-label">Level</div>
-    <div class="level-value" id="levelValue">15</div>
+  <div id="levelDisplay" class="hidden" title="Flags: 0/0">
+    <svg class="level-progress-svg" viewBox="0 0 100 100">
+      <circle class="level-progress-bg" cx="50" cy="50" r="46"></circle>
+      <circle class="level-progress-bar" cx="50" cy="50" r="46" id="levelProgressBar"></circle>
+    </svg>
+    <div class="level-content">
+      <div class="level-label">Level</div>
+      <div class="level-value" id="levelValue">15</div>
+    </div>
   </div>
 
   <div class="ui hidden">
@@ -861,16 +912,19 @@
     <button id="soundToggle" style="display: none !important;"></button>
  
     <!-- Sleek Horizontal Stats Row -->
-    <div class="stats-wrapper" style="display: flex; align-items: center; gap: 14px; font-family: inherit; font-size: 15px; font-weight: 900; color: #ffffff;">
-      <div style="display: flex; align-items: center; gap: 5px;" title="Mines Flagged">
+    <div class="stats-wrapper" style="display: flex; align-items: center; font-family: inherit; font-size: 15px; font-weight: 900; color: #ffffff;">
+      <!-- Hidden flags counter to satisfy JS selectors without crashes -->
+      <div style="display: none !important;" title="Mines Flagged">
         <span>🚩</span>
-        <span id="mineHuntValue" style="color: #ffd000;">0/0</span>
+        <span id="mineHuntValue">0/0</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 5px;" title="Time Elapsed">
+      <!-- Hidden timer to satisfy JS selectors without crashes -->
+      <div style="display: none !important;" title="Time Elapsed">
         <span>🕐</span>
         <span id="timerValue">00:00</span>
       </div>
-      <div id="heartsContainer" style="display: flex; align-items: center; gap: 2px; color: #ff3b30; font-size: 16px; margin-left: 4px;">
+      <!-- Hearts Container -->
+      <div id="heartsContainer" style="display: flex; align-items: center; gap: 4px; color: #ff3b30; margin-left: 0;">
         <div class="heart">♥</div>
         <div class="heart">♥</div>
         <div class="heart">♥</div>
@@ -1097,7 +1151,7 @@
   <div id="fpsCounter" style="position: fixed; bottom: 12px; right: 12px; font-family: monospace; font-size: 12px; color: rgba(255, 255, 255, 0.8); z-index: 100; pointer-events: none; user-select: none;">
     <span id="fpsValue">FPS: --</span>
   </div>
-  <button id="bottomRestartBtn" style="position: fixed; bottom: 12px; left: 12px; z-index: 100; padding: 8px 14px; font-family: inherit; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #ffffff; background: rgba(15, 15, 20, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); cursor: pointer; transition: all 0.2s; letter-spacing: 0.8px;">Restart Level</button>
+  <button id="bottomRestartBtn" style="position: fixed; bottom: 12px; left: 12px; z-index: 100; padding: 8px 14px; font-family: inherit; font-size: 11px; font-weight: 900; text-transform: uppercase; color: #ffffff; background: rgba(15, 15, 20, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); cursor: pointer; transition: all 0.2s; letter-spacing: 0.8px;">Restart</button>
 
   <!-- Three.js (UMD) pinned to r146 so OrbitControls works without modules -->
 
@@ -2411,8 +2465,7 @@
     const app = document.getElementById('app');
 
     const scene = new THREE.Scene(); scene.background = new THREE.Color(0x242528);
-
-    const defaultCameraDistance = 3.5;
+    const defaultCameraDistance = 3.1;
     const baseCameraDirection = new THREE.Vector3(3.6, 0.7, 1.6).normalize();
     function getDefaultCameraDistance(aspect) {
       return aspect < 1.0
@@ -2498,6 +2551,16 @@
       emissiveIntensity: 0.0
     });
     
+    let matFlagIncorrect = new THREE.MeshStandardMaterial({ 
+      color: 0xff4f00, // Distinct reddish-orange warning color
+      side: THREE.DoubleSide,
+      roughness: 1.0,
+      metalness: 0.0,
+      emissive: 0xff4f00,
+      emissiveIntensity: 0.15
+    });
+
+    
     let matMine = new THREE.MeshStandardMaterial({ 
       color: 0xff4444, 
       side: THREE.DoubleSide,
@@ -2540,7 +2603,8 @@
       flags: 0, 
       lives: 3, 
       won: false,
-      currentTheme: 'standard'
+      currentTheme: 'standard',
+      levelClicks: 0
     };
 
     // Extended Theme Materials
@@ -3788,6 +3852,19 @@
 
     function updateCounters(){
 
+      // Update circular level progress bar
+      const levelProgressBar = document.getElementById('levelProgressBar');
+      if (levelProgressBar) {
+        const circumference = 289.03;
+        const clampedRatio = Math.max(0, Math.min(1, state.totalMines > 0 ? state.flags / state.totalMines : 0));
+        const offset = circumference * (1 - clampedRatio);
+        levelProgressBar.style.strokeDashoffset = offset;
+      }
+      const levelDisplay = document.getElementById('levelDisplay');
+      if (levelDisplay) {
+        levelDisplay.title = `Flags: ${state.flags}/${state.totalMines}`;
+      }
+
       const mineHuntPercent = state.totalMines > 0 ? Math.round((state.flags / state.totalMines) * 100) : 0;
 
       const mineHuntCircle = document.getElementById('mineHuntCircle');
@@ -5033,19 +5110,56 @@
       rebuildCore(state.f); 
     });
 
+    function handleRestartWithCheat() {
+      if (state.levelClicks >= 3) {
+        state.levelClicks = 0; // reset
+        const targetLevelStr = prompt("Choose Level (1-100):", state.level);
+        if (targetLevelStr !== null) {
+          const targetLevel = parseInt(targetLevelStr, 10);
+          if (!isNaN(targetLevel) && targetLevel >= 1 && targetLevel <= 100) {
+            state.level = targetLevel;
+            localStorage.setItem('globesweeper_level', state.level);
+            return true; // cheat applied
+          }
+        }
+      }
+      return false; // cheat not applied
+    }
+
+    const levelDisplayEl = document.getElementById('levelDisplay');
+    if (levelDisplayEl) {
+      levelDisplayEl.style.cursor = 'pointer';
+      levelDisplayEl.addEventListener('click', () => {
+        state.levelClicks = (state.levelClicks || 0) + 1;
+        // Visual indicator (flash level number) to confirm tap registered
+        const lvlVal = document.getElementById('levelValue');
+        if (lvlVal) {
+          lvlVal.style.transition = 'none';
+          lvlVal.style.color = '#ffd000';
+          setTimeout(() => {
+            lvlVal.style.transition = 'color 0.3s ease';
+            lvlVal.style.color = '#ffffff';
+          }, 100);
+        }
+      });
+    }
+
+
+
     // Restart button in game over overlay
     document.getElementById('restartButton').addEventListener('click', ()=>{ 
       initAudioContext();
+      const cheatApplied = handleRestartWithCheat();
       const gameOverOverlay = document.getElementById('gameOverOverlay');
       if (gameOverOverlay) {
         gameOverOverlay.classList.remove('visible');
       }
-      if (state.won) {
+      if (state.won && !cheatApplied) {
         state.level++;
         localStorage.setItem('globesweeper_level', state.level);
         rebuildCore();
       } else {
-        rebuildCore(state.f); 
+        rebuildCore(cheatApplied ? undefined : state.f); 
       }
     });
 
@@ -5053,11 +5167,12 @@
     if (bottomRestartBtn) {
       bottomRestartBtn.addEventListener('click', () => {
         initAudioContext();
+        const cheatApplied = handleRestartWithCheat();
         const gameOverOverlay = document.getElementById('gameOverOverlay');
         if (gameOverOverlay) {
           gameOverOverlay.classList.remove('visible');
         }
-        rebuildCore(state.f);
+        rebuildCore(cheatApplied ? undefined : state.f);
       });
     }
 
@@ -6528,7 +6643,6 @@
         const animTime = time * 0.001; // Convert to seconds
         const oscillationSpeed = 12.0; // Much faster oscillation frequency for quick vibration
         const scaleAmplitude = 0.0078125; // Half of previous: 1.5625% of radius variation (±0.78125% = 1.5625% total range)
-        
         state.tiles.forEach((t, i) => {
           if (t.isEmpty) return; // Skip empty tiles
           
@@ -6543,6 +6657,12 @@
             const pulse = Math.sin(animTime * oscillationSpeed * 1.5 + i * 0.15); // -1 to 1, faster
             const scale = 1.0 + pulse * scaleAmplitude; // Scale between 0.9921875 and 1.0078125
             t.mesh.scale.set(scale, scale, scale);
+            t.mesh.material = matFlagIncorrect; // Change tile color to indicate error
+          }
+          // Reset scale/material for correctly flagged tiles
+          else if (t.flagged && t.mine) {
+            t.mesh.scale.set(1.0, 1.0, 1.0);
+            t.mesh.material = matFlag; // Ensure it keeps the standard flag color
           }
           // Reset scale for other tiles
           else {
@@ -6550,13 +6670,17 @@
           }
         });
       } else {
-        // Reset all tile scales when oscillation is not active
+        // Reset all tile scales and materials when oscillation is not active
         state.tiles.forEach(t => {
           if (!t.isEmpty) {
             t.mesh.scale.set(1.0, 1.0, 1.0);
+            if (t.flagged) {
+              t.mesh.material = matFlag; // Reset back to standard flag color
+            }
           }
         });
       }
+
       // Auto-rotate number decals and animate/blink 3D naval mine status LEDs.
       // Work entirely in tileGroup LOCAL space so globe rotation is accounted for.
       if (state.tiles) {
@@ -7941,6 +8065,16 @@
           roughness: preset.roughness,
           metalness: preset.metalness
         });
+
+        matFlagIncorrect = new THREE.MeshStandardMaterial({
+          color: 0xff4f00,
+          side: THREE.DoubleSide,
+          roughness: preset.roughness,
+          metalness: preset.metalness,
+          emissive: 0xff4f00,
+          emissiveIntensity: 0.15
+        });
+
 
         matMine = new THREE.MeshStandardMaterial({
           color: mineColor,
