@@ -1894,7 +1894,9 @@
         mineGroup.userData = {
           style: 1,
           clone: signGroup,
-          emissiveMat: ledMat
+          emissiveMat: ledMat,
+          pointLight: glowLight,
+          hazeSprite: hazeSprite
         };
       }
       
@@ -6797,14 +6799,36 @@
               }
             }
             
-            // Hover/bobbing animation along normal axis (Disabled for Style 1 LED to keep it static and flush)
-            if (t.flagMesh.userData && t.flagMesh.userData.style === 1) {
-              t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0);
-            } else {
-              const hoverOffset = Math.sin(time * 0.0035 + t.index * 0.4) * 0.0025;
-              t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0 + hoverOffset);
-            }
-          }
+             // Hover/bobbing animation along normal axis (Disabled for Style 1 LED to keep it static and flush)
+             if (t.flagMesh.userData && t.flagMesh.userData.style === 1) {
+               t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0);
+               
+               // Walking ants/chasing light animation across flagged LEDs
+               const speed = 0.005;
+               // Stagger the phase using the tile index (using modulo/multiplier)
+               const phase = t.index * 1.5;
+               // Calculate wave intensity between 0.15 (dim/less bright) and 1.0 (brightest)
+               const wave = 0.15 + 0.85 * Math.max(0, Math.sin(time * speed - phase));
+               
+               // Modulate LED Emissive Intensity
+               if (ud.emissiveMat) {
+                 ud.emissiveMat.emissiveIntensity = wave * 5.5;
+               }
+               // Modulate PointLight Intensity and Range
+               if (ud.pointLight) {
+                 ud.pointLight.intensity = wave * 1.8;
+                 ud.pointLight.distance = wave * 0.12;
+               }
+               // Modulate Haze Sprite Scale
+               if (ud.hazeSprite) {
+                 const scaleSize = wave * 0.05;
+                 ud.hazeSprite.scale.set(scaleSize, scaleSize, 1.0);
+               }
+             } else {
+               const hoverOffset = Math.sin(time * 0.0035 + t.index * 0.4) * 0.0025;
+               t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0 + hoverOffset);
+             }
+           }
 
           // Update animated plasma inside burnt holes (only if visible)
           if (t.burntDecal && t.burntDecal.userData && t.burntDecal.userData.plasmaMat && isVisible) {
