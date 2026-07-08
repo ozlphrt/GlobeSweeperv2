@@ -2549,12 +2549,12 @@
     });
     
     let matFlagIncorrect = new THREE.MeshStandardMaterial({ 
-      color: 0xff4f00, // Distinct reddish-orange warning color
+      color: 0x2ecc71, // Keep it green
       side: THREE.DoubleSide,
-      roughness: 1.0,
-      metalness: 0.0,
-      emissive: 0xff4f00,
-      emissiveIntensity: 0.15
+      roughness: 0.8,
+      metalness: 0.1,
+      emissive: 0x0a2f18, // Subtle dark green emissive base
+      emissiveIntensity: 0.5
     });
 
     
@@ -8075,12 +8075,12 @@
         });
 
         matFlagIncorrect = new THREE.MeshStandardMaterial({
-          color: 0xff4f00,
+          color: 0x2ecc71, // Keep it green
           side: THREE.DoubleSide,
           roughness: preset.roughness,
           metalness: preset.metalness,
-          emissive: 0xff4f00,
-          emissiveIntensity: 0.15
+          emissive: 0x0a2f18,
+          emissiveIntensity: 0.5
         });
 
 
