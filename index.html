@@ -3717,6 +3717,8 @@
             if (idx === mineIndex) {
               t.mesh.material = getHiddenMaterial(t); // Keep original tile material
               createBurntDecal(t); // Spawn burnt spot decal on top
+            } else if (t.flagged) {
+              t.mesh.material = matFlag; // Keep correctly marked tiles green
             } else {
               t.mesh.material = matMine; 
             }
@@ -8099,7 +8101,7 @@
           } else if (t.mine && t.revealed) {
             t.mesh.material = matMine;
           } else if (t.flagged) {
-            t.mesh.material = getHiddenMaterial(t);
+            t.mesh.material = matFlag;
           } else if (t.revealed) {
             t.mesh.material = matRevealed;
           } else {
@@ -8169,7 +8171,7 @@
                 t.mesh.material = getRevealedMaterial(t);
               }
             } else if (t.flagged) {
-              t.mesh.material = getHiddenMaterial(t);
+              t.mesh.material = matFlag;
             } else {
               t.mesh.material = getHiddenMaterial(t);
             }
