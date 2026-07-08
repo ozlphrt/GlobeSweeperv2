@@ -1893,11 +1893,6 @@
         hazeSprite.position.set(0, 0, 0.008);
         signGroup.add(hazeSprite);
 
-        // 4. PointLight to cast a dynamic red glow onto surrounding surfaces
-        const glowLight = new THREE.PointLight(0xff0000, 1.8, 0.12, 1.2);
-        glowLight.position.set(0, 0, 0.010);
-        signGroup.add(glowLight);
-
         // Apply scale & positioning
         const autoScale = flagScale * (15.0 / (state.f || 15));
         signGroup.scale.set(autoScale, autoScale, autoScale);
@@ -1908,7 +1903,6 @@
           style: 1,
           clone: signGroup,
           emissiveMat: ledMat,
-          pointLight: glowLight,
           hazeSprite: hazeSprite
         };
       }
@@ -6824,11 +6818,6 @@
                // Modulate LED Emissive Intensity
                if (ud.emissiveMat) {
                  ud.emissiveMat.emissiveIntensity = blinkWave * 5.5;
-               }
-               // Modulate PointLight Intensity and Range
-               if (ud.pointLight) {
-                 ud.pointLight.intensity = blinkWave * 1.8;
-                 ud.pointLight.distance = blinkWave * 0.12;
                }
                // Modulate Haze Sprite Scale
                if (ud.hazeSprite) {
