@@ -3489,7 +3489,7 @@
       const t = state.tiles[i]; 
       if (t.revealed || state.gameOver) return; 
       t.flagged = !t.flagged; 
-      t.mesh.material = getHiddenMaterial(t); 
+      t.mesh.material = t.flagged ? matFlag : getHiddenMaterial(t); 
       // Reset scale to normal when flag state changes
       t.mesh.scale.set(1.0, 1.0, 1.0);
       
@@ -3718,7 +3718,7 @@
               t.mesh.material = getHiddenMaterial(t); // Keep original tile material
               createBurntDecal(t); // Spawn burnt spot decal on top
             } else if (t.flagged) {
-              t.mesh.material = getHiddenMaterial(t); // Keep original tile material unchanged
+              t.mesh.material = matFlag; // Keep correctly marked tiles green
             } else {
               t.mesh.material = matMine; 
             }
@@ -6662,12 +6662,12 @@
             const pulse = Math.sin(animTime * oscillationSpeed * 1.5 + i * 0.15); // -1 to 1, faster
             const scale = 1.0 + pulse * scaleAmplitude; // Scale between 0.9921875 and 1.0078125
             t.mesh.scale.set(scale, scale, scale);
-            t.mesh.material = getHiddenMaterial(t); // Keep original tile material unchanged
+            t.mesh.material = matFlagIncorrect; // Keep it green
           }
           // Reset scale/material for correctly flagged tiles
           else if (t.flagged && t.mine) {
             t.mesh.scale.set(1.0, 1.0, 1.0);
-            t.mesh.material = getHiddenMaterial(t); // Keep original tile material unchanged
+            t.mesh.material = matFlag; // Keep it green
           }
           // Reset scale for other tiles
           else {
@@ -8099,7 +8099,7 @@
             // Keep empty material as is
             t.mesh.material = matEmpty;
           } else if (t.flagged) {
-            t.mesh.material = getHiddenMaterial(t);
+            t.mesh.material = matFlag;
           } else if (t.mine && t.revealed) {
             t.mesh.material = matMine;
           } else if (t.revealed) {
@@ -8165,7 +8165,7 @@
             if (t.isEmpty) {
               t.mesh.material = getEmptyMaterial();
             } else if (t.flagged) {
-              t.mesh.material = getHiddenMaterial(t);
+              t.mesh.material = matFlag;
             } else if (t.revealed) {
               if (t.mine) {
                 t.mesh.material = matMine;
