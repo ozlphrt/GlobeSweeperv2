@@ -3286,6 +3286,7 @@
             } else {
               t.currentOuterR = 1.0;
               t.targetOuterR = 1.0 + t.count * 0.04;
+              t.isInitialRaising = true;
               t.mesh.geometry.dispose();
               t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, 1.0);
               t.mesh.material = getRevealedMaterial(t);
@@ -3507,6 +3508,11 @@
     function updateTilePillarElevation(i) {
       const t = state.tiles[i];
       if (!t || !t.revealed || t.isEmpty || t.count === 0) return;
+      
+      if (t.isInitialRaising) {
+        t.targetOuterR = 1.0 + t.count * 0.04;
+        return;
+      }
       
       const flagsAround = state.neighbors[i].reduce((acc, nb) => acc + (state.tiles[nb].flagged ? 1 : 0), 0);
       if (flagsAround === t.count) {
@@ -6677,6 +6683,12 @@
           }
           // Request label rotation update to prevent glitches
           forceLabelUpdate = true;
+
+          // Check if initial raising is complete
+          if (t.isInitialRaising && Math.abs(t.currentOuterR - t.targetOuterR) < 0.002) {
+            t.isInitialRaising = false;
+            updateTilePillarElevation(idx);
+          }
         }
       });
 
