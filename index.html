@@ -3515,7 +3515,7 @@
       }
       
       const flagsAround = state.neighbors[i].reduce((acc, nb) => acc + (state.tiles[nb].flagged ? 1 : 0), 0);
-      if (flagsAround === t.count) {
+      if (flagsAround >= t.count) {
         t.targetOuterR = 1.0;
       } else {
         t.targetOuterR = 1.0 + t.count * 0.04;
@@ -6685,7 +6685,7 @@
           forceLabelUpdate = true;
 
           // Check if initial raising is complete
-          if (t.isInitialRaising && Math.abs(t.currentOuterR - t.targetOuterR) < 0.002) {
+          if (t.isInitialRaising && Math.abs(t.currentOuterR - t.targetOuterR) < 0.005) {
             t.isInitialRaising = false;
             updateTilePillarElevation(idx);
           }
