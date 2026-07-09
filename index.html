@@ -2767,7 +2767,7 @@
         
         tileGroup.add(mesh);
 
-        return { index:i, mesh, center, mine:false, count:0, flagged:false, revealed:false, label:null, isEmpty:false };
+        return { index:i, mesh, center, mine:false, count:0, flagged:false, revealed:false, label:null, isEmpty:false, currentOuterR: 1.0, targetOuterR: 1.0 };
 
       });
 
@@ -2993,6 +2993,8 @@
         t.mesh.geometry.dispose(); 
         t.mesh.geometry = createPrismGeometry(idx, 0.97, 1.0); 
         t.mesh.material = getHiddenMaterial(t); 
+        t.currentOuterR = 1.0;
+        t.targetOuterR = 1.0; 
         if (t.burntDecal) { 
           tileGroup.remove(t.burntDecal); 
           t.burntDecal.traverse(child => { 
@@ -3039,6 +3041,8 @@
             t.isEmpty = false; 
             t.revealed = false; 
             t.flagged = false; 
+            t.currentOuterR = 1.0;
+            t.targetOuterR = 1.0; 
           });
 
           const forbidden = excludeIndex >= 0 ? new Set([excludeIndex, ...state.neighbors[excludeIndex]]) : new Set();
@@ -3280,12 +3284,14 @@
                 return;
               }
             } else {
-              const outerR = 1.0 + t.count * 0.04;
+              t.currentOuterR = 1.0;
+              t.targetOuterR = 1.0 + t.count * 0.04;
               t.mesh.geometry.dispose();
-              t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, outerR);
+              t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, 1.0);
               t.mesh.material = getRevealedMaterial(t);
               t.mesh.castShadow = (t.count > 0);
               state.safeRevealed++;
+              updateTilePillarElevation(idx);
             }
             
             if (t.count > 0) {
@@ -3498,10 +3504,30 @@
 
 
 
+    function updateTilePillarElevation(i) {
+      const t = state.tiles[i];
+      if (!t || !t.revealed || t.isEmpty || t.count === 0) return;
+      
+      const flagsAround = state.neighbors[i].reduce((acc, nb) => acc + (state.tiles[nb].flagged ? 1 : 0), 0);
+      if (flagsAround === t.count) {
+        t.targetOuterR = 1.0;
+      } else {
+        t.targetOuterR = 1.0 + t.count * 0.04;
+      }
+    }
+
     function toggleFlag(i){ 
       const t = state.tiles[i]; 
       if (t.revealed || t.isEmpty || state.gameOver) return; 
       t.flagged = !t.flagged; 
+      
+      // Update neighbors' pillar elevations
+      if (state.neighbors[i]) {
+        state.neighbors[i].forEach(nb => {
+          updateTilePillarElevation(nb);
+        });
+      }
+
       // Don't change tile material - just leave it as its current hidden color
       // Reset scale to normal when flag state changes
       t.mesh.scale.set(1.0, 1.0, 1.0);
@@ -6612,8 +6638,15 @@
       const hasParticles = activeExplosionParticles.length > 0;
       const isRevealing = (typeof revealQueue !== 'undefined' && revealQueue.length > 0) || (typeof isInitialReveal !== 'undefined' && isInitialReveal);
       const zoomChanged = Math.abs(camera.zoom - lastCameraZoom) > 0.001;
+      
+      let isAnimatingPillars = false;
+      state.tiles.forEach(t => {
+        if (t.currentOuterR !== undefined && t.targetOuterR !== undefined && Math.abs(t.currentOuterR - t.targetOuterR) > 0.001) {
+          isAnimatingPillars = true;
+        }
+      });
 
-      if (hasRotationMomentum || hasParticles || isRevealing || zoomChanged || forceLabelUpdate) {
+      if (hasRotationMomentum || hasParticles || isRevealing || zoomChanged || forceLabelUpdate || isAnimatingPillars) {
         requestRender(2);
       }
 
@@ -6628,6 +6661,24 @@
       lastAnimTime = time;
 
       updateExplosionParticles(dt);
+
+      // Animate tile pillar heights dynamically
+      state.tiles.forEach((t, idx) => {
+        if (t.currentOuterR !== undefined && t.targetOuterR !== undefined && Math.abs(t.currentOuterR - t.targetOuterR) > 0.001) {
+          const speed = 10.0 * dt; // Easing animation speed
+          t.currentOuterR += (t.targetOuterR - t.currentOuterR) * Math.min(1.0, speed);
+          
+          t.mesh.geometry.dispose();
+          t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, t.currentOuterR);
+
+          // Position label dynamically to match new animated height
+          if (t.label) {
+            t.label.position.copy(t.center).normalize().multiplyScalar(t.currentOuterR);
+          }
+          // Request label rotation update to prevent glitches
+          forceLabelUpdate = true;
+        }
+      });
 
       // Only update controls if camera zoom changed (for damping)
       // Since rotation is disabled, controls.update() is mainly for zoom damping
