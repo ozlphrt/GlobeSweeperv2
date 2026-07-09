@@ -3500,7 +3500,7 @@
 
     function toggleFlag(i){ 
       const t = state.tiles[i]; 
-      if (t.revealed || state.gameOver) return; 
+      if (t.revealed || t.isEmpty || state.gameOver) return; 
       t.flagged = !t.flagged; 
       // Don't change tile material - just leave it as its current hidden color
       // Reset scale to normal when flag state changes
