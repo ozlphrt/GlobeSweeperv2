@@ -65,6 +65,9 @@
       .ui {
         max-width: calc(100vw - 24px);
       }
+      #fpsCounter {
+        display: none !important;
+      }
     }
     
     /* Safe area insets for notched devices (iPhone X and later) */
@@ -8170,29 +8173,7 @@
       });
     }
     
-    // Global preset cycling - click on FPS counter to cycle
-    const fpsCounterClickable = document.getElementById('fpsCounter');
-    if (fpsCounterClickable) {
-      fpsCounterClickable.addEventListener('click', (e) => {
-        // Only cycle on left click, not on right click or middle click
-        if (e.button === 0 || !e.button) {
-          cycleGlobalPreset();
-        }
-      });
-      // Add hover effect
-      fpsCounterClickable.addEventListener('mouseenter', () => {
-        const presetDisplay = document.getElementById('presetDisplay');
-        if (presetDisplay) {
-          presetDisplay.style.background = 'rgba(255, 255, 255, 0.2)';
-        }
-      });
-      fpsCounterClickable.addEventListener('mouseleave', () => {
-        const presetDisplay = document.getElementById('presetDisplay');
-        if (presetDisplay) {
-          presetDisplay.style.background = 'rgba(255, 255, 255, 0.1)';
-        }
-      });
-    }
+    // Global preset cycling removed to decouple color palettes from FPS counter
     
     // Initialize with default preset (original settings)
     applyGlobalPreset(1);
