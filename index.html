@@ -3974,6 +3974,12 @@
       for (let i = 0; i < state.tiles.length; i++) {
         const t = state.tiles[i];
         
+        // Empty tiles (recessed blue-purple glass) always keep empty material
+        if (t.isEmpty) {
+          t.mesh.material = getEmptyMaterial();
+          continue;
+        }
+
         // Unrevealed green tiles are completely untouched - NO CLUES!
         if (!t.revealed) {
           t.mesh.material = getHiddenMaterial(t);
