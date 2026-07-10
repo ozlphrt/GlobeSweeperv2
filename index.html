@@ -3699,8 +3699,8 @@
         const mesh = new THREE.Mesh(geom, mat);
         mesh.position.copy(position).addScaledVector(normal, 0.002);
         
-        // Push particles outward horizontally as well so they spread to neighboring tiles
-        const speed = 0.015 + Math.random() * 0.035;
+        // Push particles outward with higher initial speed so they reach greater altitudes
+        const speed = 0.032 + Math.random() * 0.048;
         const velocity = normal.clone()
           .add(new THREE.Vector3(
             (Math.random() - 0.5) * 1.5,
@@ -3710,9 +3710,9 @@
           .normalize()
           .multiplyScalar(speed);
           
-        const drag = 0.95;
-        const gravity = 0.08 + Math.random() * 0.12; // Positive gravity pulls back down to the sphere
-        const maxLife = 0.8 + Math.random() * 1.2;
+        const drag = 0.96; // Slightly reduced drag to let them carry momentum higher
+        const gravity = 0.09 + Math.random() * 0.13; // Similar low natural gravity
+        const maxLife = 1.8 + Math.random() * 1.6; // Longer lifetime so they don't disappear at the apex of flight
         
         tileGroup.add(mesh);
         
