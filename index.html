@@ -2751,7 +2751,7 @@
         
         tileGroup.add(mesh);
 
-        return { index:i, mesh, center, mine:false, count:0, flagged:false, revealed:false, label:null, isEmpty:false, currentOuterR: 1.0, targetOuterR: 1.0 };
+        return { index:i, mesh, center, mine:false, count:0, flagged:false, revealed:false, label:null, isEmpty:false, currentOuterR: 1.0, targetOuterR: 1.0, shouldLowerAfterRaise: false };
 
       });
 
@@ -2979,6 +2979,7 @@
         t.mesh.material = getHiddenMaterial(t); 
         t.currentOuterR = 1.0;
         t.targetOuterR = 1.0; 
+        t.shouldLowerAfterRaise = false;
         if (t.burntDecal) { 
           tileGroup.remove(t.burntDecal); 
           t.burntDecal.traverse(child => { 
@@ -3027,6 +3028,7 @@
             t.flagged = false; 
             t.currentOuterR = 1.0;
             t.targetOuterR = 1.0; 
+            t.shouldLowerAfterRaise = false;
           });
 
           const forbidden = excludeIndex >= 0 ? new Set([excludeIndex, ...state.neighbors[excludeIndex]]) : new Set();
@@ -3493,16 +3495,18 @@
       const t = state.tiles[i];
       if (!t || !t.revealed || t.isEmpty || t.count === 0) return;
       
-      if (t.isInitialRaising) {
-        t.targetOuterR = 1.0 + t.count * 0.04;
-        return;
-      }
-      
       const flagsAround = state.neighbors[i].reduce((acc, nb) => acc + (state.tiles[nb].flagged ? 1 : 0), 0);
-      if (flagsAround >= t.count) {
-        t.targetOuterR = 1.0;
-      } else {
+      const isSatisfied = (flagsAround >= t.count);
+
+      if (t.isInitialRaising) {
+        t.shouldLowerAfterRaise = isSatisfied;
         t.targetOuterR = 1.0 + t.count * 0.04;
+      } else {
+        if (isSatisfied) {
+          t.targetOuterR = 1.0;
+        } else {
+          t.targetOuterR = 1.0 + t.count * 0.04;
+        }
       }
     }
 
@@ -6671,7 +6675,10 @@
           // Check if initial raising is complete
           if (t.isInitialRaising && Math.abs(t.currentOuterR - t.targetOuterR) < 0.005) {
             t.isInitialRaising = false;
-            updateTilePillarElevation(idx);
+            if (t.shouldLowerAfterRaise) {
+              t.targetOuterR = 1.0;
+              t.shouldLowerAfterRaise = false;
+            }
           }
         }
       });
