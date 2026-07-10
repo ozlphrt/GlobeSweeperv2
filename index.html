@@ -3998,26 +3998,16 @@
           // No heat: use standard revealed theme material
           t.mesh.material = getRevealedMaterial(t);
         } else {
-          // Soft, premium slate-grey base to prevent aggressive primary red saturation
-          const baseR = 0.96;
-          const baseG = 0.96;
-          const baseB = 0.98;
-
-          // Muted red target (a premium, desaturated crimson)
-          const targetR = 0.92;
-          const targetG = 0.15;
-          const targetB = 0.22;
-
-          // Eased drop-off curve for smooth transitioning
-          const f = Math.pow(heat, 0.6);
-
-          const r = baseR + (targetR - baseR) * f;
-          const g = baseG + (targetG - baseG) * f;
-          const b = baseB + (targetB - baseB) * f;
+          // Burgundy to Crimson Red scale (Green & Blue are kept at 0 to prevent pink)
+          // Low heat = dark burgundy/maroon; High heat = bright crimson red
+          const minRed = 0.45;
+          const r = minRed + (1.0 - minRed) * heat;
+          const g = 0.0;
+          const b = 0.0;
           
           const finalColor = new THREE.Color(r, g, b);
-          // Fainter emissive glow to match the premium muted tones
-          const emissiveColor = new THREE.Color(0xd6001c).multiplyScalar(heat * 0.1);
+          // Rich matching dark-red emissive glow
+          const emissiveColor = new THREE.Color(0xd6001c).multiplyScalar(heat * 0.15);
 
           if (!t.heatmapMaterial) {
             t.heatmapMaterial = new THREE.MeshStandardMaterial({
