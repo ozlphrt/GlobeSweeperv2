@@ -6867,17 +6867,29 @@
             const scale = 1.0 + pulse * scaleAmplitude; // Scale between 0.9921875 and 1.0078125
             t.mesh.scale.set(scale, scale, scale);
           }
-          // Oscillate scale of incorrectly flagged tiles (2x bigger amplitude and 1.5x faster pattern)
+          // Oscillate scale of incorrectly flagged tiles (original amplitude, 1.5x faster pattern, and warning red-orange color)
           else if (t.flagged && !t.mine) {
             const pulse = Math.sin(animTime * oscillationSpeed * 1.5 + i * 0.15); // -1 to 1, faster
-            const scale = 1.0 + pulse * (scaleAmplitude * 2.0); // 2x bigger distance (scale range between 0.984375 and 1.015625)
+            const scale = 1.0 + pulse * scaleAmplitude; 
             t.mesh.scale.set(scale, scale, scale);
-            // Don't change tile material - leave as original hidden color
+            
+            // Apply warning red-orange material
+            if (!window._matIncorrectFlag) {
+              window._matIncorrectFlag = new THREE.MeshStandardMaterial({
+                color: 0xd63030, // Warning red-orange
+                side: THREE.DoubleSide,
+                roughness: 0.8,
+                metalness: 0.1,
+                emissive: 0xaa0000,
+                emissiveIntensity: 0.25
+              });
+            }
+            t.mesh.material = window._matIncorrectFlag;
           }
           // Reset scale for correctly flagged tiles
           else if (t.flagged && t.mine) {
             t.mesh.scale.set(1.0, 1.0, 1.0);
-            // Don't change tile material - leave as original hidden color
+            t.mesh.material = getHiddenMaterial(t); // Keep original hidden color
           }
           // Reset scale for other tiles
           else {
@@ -6889,7 +6901,9 @@
         state.tiles.forEach(t => {
           if (!t.isEmpty) {
             t.mesh.scale.set(1.0, 1.0, 1.0);
-            // Don't change flagged tile material - leave as original hidden color
+            if (t.flagged || !t.revealed) {
+              t.mesh.material = getHiddenMaterial(t); // Revert to standard theme hidden color
+            }
           }
         });
       }
