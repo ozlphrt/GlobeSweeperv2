@@ -3998,9 +3998,15 @@
           // No heat: use standard revealed theme material
           t.mesh.material = getRevealedMaterial(t);
         } else {
-          // Direct dynamic color interpolation (White -> Red)
-          const finalColor = baseColor.clone().lerp(hotColor, heat);
-          const emissiveColor = hotColor.clone().multiplyScalar(heat * 0.25);
+          // Non-linear interpolation to avoid pastel pink mid-tones
+          // Dropping Green and Blue rapidly pushes the color immediately into brick-red/crimson
+          const r = 1.0;
+          const g = Math.max(0.0, Math.min(1.0, 1.0 - Math.pow(heat, 0.25)));
+          const b = Math.max(0.0, Math.min(1.0, 1.0 - Math.pow(heat, 0.25)));
+          
+          const finalColor = new THREE.Color(r, g, b);
+          // Emissive glow is also pure deep red
+          const emissiveColor = new THREE.Color(0xd6001c).multiplyScalar(heat * 0.25);
 
           if (!t.heatmapMaterial) {
             t.heatmapMaterial = new THREE.MeshStandardMaterial({
