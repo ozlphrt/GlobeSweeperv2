@@ -1722,7 +1722,7 @@
       const burntGroup = new THREE.Group();
       
       // Flat polygon shape geometry is more performant and fits flush on the sphere face
-      const shape = createBurntShape(0.042);
+      const shape = createBurntShape(0.075);
       const geom = new THREE.ShapeGeometry(shape);
       geom.center();
       
@@ -1773,8 +1773,8 @@
 
           void main() {
             // Local normalized coordinates (centered around 0.0)
-            vec2 uv = vPosition.xy * 25.0; 
-            float dist = length(vPosition.xy) / 0.042; // Distance from center
+            vec2 uv = vPosition.xy * 15.0; 
+            float dist = length(vPosition.xy) / 0.075; // Distance from center
             
             float t = time * 0.0018;
 
