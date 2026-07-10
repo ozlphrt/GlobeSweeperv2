@@ -1721,29 +1721,27 @@
       if (tile.burntDecal) return;
       const burntGroup = new THREE.Group();
       
-      // We will create a single unified mesh for the soot & embers
-      // This is more performant and eliminates extrusion gaps on the sphere curvature
+      // Flat polygon shape geometry is more performant and fits flush on the sphere face
       const shape = createBurntShape(0.042);
-      const geom = new THREE.ExtrudeGeometry(shape, { depth: 0.0003, bevelEnabled: false });
+      const geom = new THREE.ShapeGeometry(shape);
       geom.center();
       
       const plasmaMat = new THREE.ShaderMaterial({
         uniforms: {
           time: { value: 0 }
         },
+        extensions: {
+          derivatives: true // Tells Three.js to inject #extension GL_OES_standard_derivatives at the absolute top of the shader
+        },
         vertexShader: `
           varying vec3 vPosition;
-          varying vec2 vUv;
           void main() {
             vPosition = position;
-            vUv = uv;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
           }
         `,
         fragmentShader: `
-          #extension GL_OES_standard_derivatives : enable
           varying vec3 vPosition;
-          varying vec2 vUv;
           uniform float time;
 
           // Pseudo-random 2D Noise
@@ -1764,7 +1762,6 @@
             float v = 0.0;
             float a = 0.5;
             vec2 shift = vec2(100.0);
-            // Rotate to reduce axial bias
             mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.50));
             for (int i = 0; i < 4; ++i) {
               v += a * noise(p);
@@ -1806,7 +1803,7 @@
             float heatMask = smoothstep(0.85, 0.2, dist + sootPattern * 0.15);
             vec3 col = mix(sootColor, magmaColor, fissure * heatMask * 0.9);
             
-            // 5. Fake 3D normals for lighting depth using derivatives
+            // 5. Fake 3D normals for lighting depth using derivatives (WebGL extension enabled via THREE config)
             float h = fissure * heatMask;
             vec2 dH = vec2(dFdx(h), dFdy(h));
             vec3 normal = normalize(vec3(-dH * 4.0, 1.0));
