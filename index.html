@@ -3967,245 +3967,149 @@
 
 
     function calculateTileProbabilities() {
-      // 1. Initialize all probabilities
-      state.tiles.forEach(t => {
-        if (t.revealed) {
-          t.probability = 0.0;
-        } else if (t.flagged) {
-          t.probability = 1.0;
-        } else {
-          t.probability = 0.0;
+      if (!state.tiles || state.tiles.length === 0) return;
+      
+      try {
+        // 1. Initialize all probabilities
+        for (let i = 0; i < state.tiles.length; i++) {
+          const t = state.tiles[i];
+          if (t.revealed) {
+            t.probability = 0.0;
+          } else if (t.flagged) {
+            t.probability = 1.0;
+          } else if (t.isEmpty) {
+            t.probability = 0.0;
+          } else {
+            t.probability = -1; // Mark as uncomputed
+          }
         }
-      });
 
-      // 2. Build constraints
-      const constraints = [];
-      const borderTileSet = new Set();
+        // 2. Build constraints from revealed numbered tiles
+        const borderTileSet = new Set();
+        const constraints = [];
 
-      state.tiles.forEach(t => {
-        if (t.revealed && t.count > 0 && !t.isEmpty) {
-          const neighbors = state.neighbors[t.index];
-          if (!neighbors) return;
+        for (let i = 0; i < state.tiles.length; i++) {
+          const t = state.tiles[i];
+          if (!t.revealed || t.count <= 0 || t.isEmpty) continue;
+          const neighbors = state.neighbors[i];
+          if (!neighbors) continue;
 
           const hiddenNbs = [];
           let flaggedCount = 0;
 
-          neighbors.forEach(nb => {
+          for (let j = 0; j < neighbors.length; j++) {
+            const nb = neighbors[j];
             const nbTile = state.tiles[nb];
-            if (!nbTile || nbTile.isEmpty) return;
+            if (!nbTile || nbTile.isEmpty) continue;
             if (nbTile.flagged) {
               flaggedCount++;
             } else if (!nbTile.revealed) {
               hiddenNbs.push(nb);
             }
-          });
+          }
 
           if (hiddenNbs.length > 0) {
             const remainingMines = Math.max(0, t.count - flaggedCount);
-            constraints.push({
-              cellIndex: t.index,
-              hiddenNbs: hiddenNbs,
-              remainingMines: remainingMines
-            });
-            hiddenNbs.forEach(idx => borderTileSet.add(idx));
-          }
-        }
-      });
-
-      const borderTiles = Array.from(borderTileSet);
-
-      // If no constraints, distribute remaining mines globally
-      if (constraints.length === 0) {
-        const unrevealedUnflagged = state.tiles.filter(t => !t.revealed && !t.flagged && !t.isEmpty);
-        if (unrevealedUnflagged.length > 0) {
-          const prob = Math.max(0, state.totalMines - state.flags) / unrevealedUnflagged.length;
-          unrevealedUnflagged.forEach(t => {
-            t.probability = Math.min(1.0, prob);
-          });
-        }
-        updateHeatmapColors();
-        return;
-      }
-
-      // 3. Segment into connected components using simple BFS
-      const tileAdjacency = new Map();
-      borderTiles.forEach(idx => tileAdjacency.set(idx, []));
-
-      constraints.forEach(c => {
-        const nbs = c.hiddenNbs;
-        for (let i = 0; i < nbs.length; i++) {
-          for (let j = i + 1; j < nbs.length; j++) {
-            tileAdjacency.get(nbs[i]).push(nbs[j]);
-            tileAdjacency.get(nbs[j]).push(nbs[i]);
-          }
-        }
-      });
-
-      // Find components of border tiles via BFS
-      const visited = new Set();
-      const components = [];
-
-      borderTiles.forEach(idx => {
-        if (!visited.has(idx)) {
-          const componentTiles = [];
-          const queue = [idx];
-          visited.add(idx);
-
-          while (queue.length > 0) {
-            const curr = queue.shift();
-            componentTiles.push(curr);
-
-            const adj = tileAdjacency.get(curr);
-            adj.forEach(neighbor => {
-              if (!visited.has(neighbor)) {
-                visited.add(neighbor);
-                queue.push(neighbor);
-              }
-            });
-          }
-          components.push(componentTiles);
-        }
-      });
-
-      // 4. Solve each component
-      components.forEach(componentTiles => {
-        // Find constraints that apply to this component
-        const componentConstraints = constraints.filter(c => 
-          c.hiddenNbs.some(tileIdx => componentTiles.includes(tileIdx))
-        );
-
-        if (componentTiles.length <= 15) {
-          // Exact backtracking
-          let validConfigs = 0;
-          const mineCounts = new Map();
-          componentTiles.forEach(tileIdx => mineCounts.set(tileIdx, 0));
-
-          function backtrack(tileListIndex, currentAssignment) {
-            // Check constraints after each assignment (early pruning)
-            for (let i = 0; i < componentConstraints.length; i++) {
-              const c = componentConstraints[i];
-              let assignedMines = 0;
-              let unassigned = 0;
-              
-              c.hiddenNbs.forEach(nb => {
-                if (currentAssignment.has(nb)) {
-                  assignedMines += currentAssignment.get(nb);
-                } else {
-                  unassigned++;
-                }
-              });
-
-              if (assignedMines > c.remainingMines || assignedMines + unassigned < c.remainingMines) {
-                return; // Prune invalid branch
-              }
+            constraints.push({ hiddenNbs: hiddenNbs, remainingMines: remainingMines });
+            for (let j = 0; j < hiddenNbs.length; j++) {
+              borderTileSet.add(hiddenNbs[j]);
             }
-
-            if (tileListIndex === componentTiles.length) {
-              validConfigs++;
-              currentAssignment.forEach((isMine, tileIdx) => {
-                if (isMine) {
-                  mineCounts.set(tileIdx, mineCounts.get(tileIdx) + 1);
-                }
-              });
-              return;
-            }
-
-            const tileIdx = componentTiles[tileListIndex];
-            
-            // Try placing no mine (0)
-            currentAssignment.set(tileIdx, 0);
-            backtrack(tileListIndex + 1, currentAssignment);
-            
-            // Try placing a mine (1)
-            currentAssignment.set(tileIdx, 1);
-            backtrack(tileListIndex + 1, currentAssignment);
-            
-            currentAssignment.delete(tileIdx);
           }
-
-          backtrack(0, new Map());
-
-          if (validConfigs > 0) {
-            componentTiles.forEach(tileIdx => {
-              state.tiles[tileIdx].probability = mineCounts.get(tileIdx) / validConfigs;
-            });
-          } else {
-            fallbackHeuristic(componentTiles, componentConstraints);
-          }
-        } else {
-          // Large component fallback: local density
-          fallbackHeuristic(componentTiles, componentConstraints);
         }
-      });
 
-      function fallbackHeuristic(componentTiles, componentConstraints) {
-        componentTiles.forEach(tileIdx => {
+        // 3. Calculate probabilities for border tiles using local density heuristic
+        const borderTiles = Array.from(borderTileSet);
+        for (let bi = 0; bi < borderTiles.length; bi++) {
+          const tileIdx = borderTiles[bi];
           let maxProb = 0.0;
-          componentConstraints.forEach(c => {
-            if (c.hiddenNbs.includes(tileIdx)) {
-              const localProb = c.remainingMines / c.hiddenNbs.length;
-              if (localProb > maxProb) {
-                maxProb = localProb;
-              }
+          for (let ci = 0; ci < constraints.length; ci++) {
+            const c = constraints[ci];
+            if (c.hiddenNbs.indexOf(tileIdx) !== -1) {
+              const localProb = c.hiddenNbs.length > 0 ? c.remainingMines / c.hiddenNbs.length : 0;
+              if (localProb > maxProb) maxProb = localProb;
             }
-          });
-          state.tiles[tileIdx].probability = maxProb;
-        });
+          }
+          state.tiles[tileIdx].probability = Math.min(1.0, maxProb);
+        }
+
+        // 4. Global probability for isolated (non-border) unrevealed tiles
+        let borderMineSum = 0;
+        for (let bi = 0; bi < borderTiles.length; bi++) {
+          borderMineSum += state.tiles[borderTiles[bi]].probability;
+        }
+        const remainingGlobal = Math.max(0, state.totalMines - state.flags - borderMineSum);
+        let isolatedCount = 0;
+        for (let i = 0; i < state.tiles.length; i++) {
+          if (state.tiles[i].probability === -1) isolatedCount++;
+        }
+        const isolatedProb = isolatedCount > 0 ? Math.min(1.0, remainingGlobal / isolatedCount) : 0;
+        for (let i = 0; i < state.tiles.length; i++) {
+          if (state.tiles[i].probability === -1) {
+            state.tiles[i].probability = isolatedProb;
+          }
+        }
+      } catch (e) {
+        console.error('[Scan Mode] Error calculating probabilities:', e);
+        // Fallback: set all uncomputed to uniform probability
+        const totalUnrevealed = state.tiles.filter(t => !t.revealed && !t.flagged && !t.isEmpty).length;
+        const fallbackProb = totalUnrevealed > 0 ? Math.min(1.0, Math.max(0, state.totalMines - state.flags) / totalUnrevealed) : 0;
+        for (let i = 0; i < state.tiles.length; i++) {
+          const t = state.tiles[i];
+          if (!t.revealed && !t.flagged && !t.isEmpty) {
+            t.probability = fallbackProb;
+          }
+        }
       }
-
-      // 5. Global redistribution for isolated unrevealed/unflagged tiles
-      let sumBorderProb = 0.0;
-      borderTiles.forEach(tileIdx => {
-        sumBorderProb += state.tiles[tileIdx].probability;
-      });
-
-      const remainingMinesGlobal = Math.max(0, state.totalMines - state.flags - sumBorderProb);
-      const isolatedTiles = state.tiles.filter(t => 
-        !t.revealed && !t.flagged && !t.isEmpty && !borderTileSet.has(t.index)
-      );
-
-      if (isolatedTiles.length > 0) {
-        const isolatedProb = Math.min(1.0, remainingMinesGlobal / isolatedTiles.length);
-        isolatedTiles.forEach(t => {
-          t.probability = isolatedProb;
-        });
-      }
-      
-      updateHeatmapColors();
     }
 
     function updateHeatmapColors() {
-      const colorSafe = new THREE.Color(0x00e5ff);   // Cyan
-      const colorMid = new THREE.Color(0xffaa00);    // Orange/Yellow
-      const colorDanger = new THREE.Color(0xff0033); // Red
+      if (!state.tiles || state.tiles.length === 0) return;
 
-      state.tiles.forEach(t => {
-        if (!t.revealed && !t.flagged && !t.isEmpty) {
-          const prob = t.probability || 0.0;
-          const finalColor = new THREE.Color();
+      for (let i = 0; i < state.tiles.length; i++) {
+        const t = state.tiles[i];
+        if (t.revealed || t.flagged || t.isEmpty) continue;
+
+        if (state.showRiskHeatmap) {
+          const prob = Math.max(0, Math.min(1, t.probability || 0));
+          
+          // Interpolate: cyan (safe) -> orange (mid) -> red (danger)
+          let r, g, b;
           if (prob < 0.5) {
-            finalColor.lerpColors(colorSafe, colorMid, prob * 2);
+            const f = prob * 2;
+            r = f * 1.0;
+            g = 0.9 - f * 0.23;
+            b = 1.0 - f * 1.0;
           } else {
-            finalColor.lerpColors(colorMid, colorDanger, (prob - 0.5) * 2);
+            const f = (prob - 0.5) * 2;
+            r = 1.0;
+            g = 0.67 - f * 0.67;
+            b = 0;
           }
 
+          // Create or reuse a per-tile heatmap material
           if (!t.heatmapMaterial) {
-            t.heatmapMaterial = getHiddenMaterial(t).clone();
+            t.heatmapMaterial = new THREE.MeshStandardMaterial({
+              side: THREE.DoubleSide,
+              roughness: 0.5,
+              metalness: 0.1,
+              emissiveIntensity: 0.3
+            });
           }
-          t.heatmapMaterial.color.copy(finalColor);
-
-          // Apply material based on Scan Mode state
-          if (state.showRiskHeatmap) {
-            t.mesh.material = t.heatmapMaterial;
-          } else {
-            t.mesh.material = getHiddenMaterial(t);
-          }
+          t.heatmapMaterial.color.setRGB(r, g, b);
+          t.heatmapMaterial.emissive.setRGB(r * 0.3, g * 0.3, b * 0.3);
+          t.heatmapMaterial.needsUpdate = true;
+          t.mesh.material = t.heatmapMaterial;
+        } else {
+          // Restore original hidden material
+          t.mesh.material = getHiddenMaterial(t);
         }
-      });
+      }
+      requestRender(10);
     }
 
     function updateCounters(){
       calculateTileProbabilities();
+      updateHeatmapColors();
 
       // Update circular level progress bar
       const levelProgressBar = document.getElementById('levelProgressBar');
@@ -5565,18 +5469,13 @@
         if (state.showRiskHeatmap) {
           scannerBtn.classList.add('active');
           scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Scan Mode: ON';
-          updateHeatmapColors();
         } else {
           scannerBtn.classList.remove('active');
           scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Scan Mode: OFF';
-          // Reset tile materials back to normal hidden theme material immediately
-          state.tiles.forEach(t => {
-            if (!t.revealed && !t.flagged && !t.isEmpty) {
-              t.mesh.material = getHiddenMaterial(t);
-            }
-          });
         }
-        requestRender(10);
+        calculateTileProbabilities();
+        updateHeatmapColors();
+        requestRender(30);
       });
     }
 
