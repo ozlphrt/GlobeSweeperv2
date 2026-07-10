@@ -1721,26 +1721,11 @@
       if (tile.burntDecal) return;
       const burntGroup = new THREE.Group();
       
-      // Outer soft irregular ring for gradient blend
-      const shapeOuter = createBurntShape(0.038);
-      const boardGeoOuter = new THREE.ExtrudeGeometry(shapeOuter, { depth: 0.0002, bevelEnabled: false });
-      boardGeoOuter.center();
-      const circleMatOuter = new THREE.MeshStandardMaterial({
-        color: 0x0a0a0c,
-        transparent: true,
-        opacity: 0.55,
-        roughness: 1.0,
-        depthWrite: false
-      });
-      const spotOuter = new THREE.Mesh(boardGeoOuter, circleMatOuter);
-      spotOuter.position.set(0, 0, 0.0005);
-      spotOuter.renderOrder = 3; // Ensure it renders on top of the tile mesh
-      burntGroup.add(spotOuter);
-
-      // Inner glowing orange/purple/red plasma spot
-      const shapeInner = createBurntShape(0.024);
-      const boardGeoInner = new THREE.ExtrudeGeometry(shapeInner, { depth: 0.0004, bevelEnabled: false });
-      boardGeoInner.center();
+      // We will create a single unified mesh for the soot & embers
+      // This is more performant and eliminates extrusion gaps on the sphere curvature
+      const shape = createBurntShape(0.042);
+      const geom = new THREE.ExtrudeGeometry(shape, { depth: 0.0003, bevelEnabled: false });
+      geom.center();
       
       const plasmaMat = new THREE.ShaderMaterial({
         uniforms: {
@@ -1748,56 +1733,103 @@
         },
         vertexShader: `
           varying vec3 vPosition;
+          varying vec2 vUv;
           void main() {
             vPosition = position;
+            vUv = uv;
             gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
           }
         `,
         fragmentShader: `
+          #extension GL_OES_standard_derivatives : enable
           varying vec3 vPosition;
+          varying vec2 vUv;
           uniform float time;
+
+          // Pseudo-random 2D Noise
+          float hash(vec2 p) {
+            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+          }
+          
+          float noise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            vec2 u = f * f * (3.0 - 2.0 * f);
+            return mix(mix(hash(i + vec2(0.0,0.0)), hash(i + vec2(1.0,0.0)), u.x),
+                       mix(hash(i + vec2(0.0,1.0)), hash(i + vec2(1.0,1.0)), u.x), u.y);
+          }
+
+          // Fractional Brownian Motion for complex soot/cracks
+          float fbm(vec2 p) {
+            float v = 0.0;
+            float a = 0.5;
+            vec2 shift = vec2(100.0);
+            // Rotate to reduce axial bias
+            mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.50));
+            for (int i = 0; i < 4; ++i) {
+              v += a * noise(p);
+              p = rot * p * 2.0 + shift;
+              a *= 0.5;
+            }
+            return v;
+          }
+
           void main() {
-            // Local coordinates on the face of the geometry (centered at origin)
-            vec2 localCoord = vPosition.xy;
+            // Local normalized coordinates (centered around 0.0)
+            vec2 uv = vPosition.xy * 25.0; 
+            float dist = length(vPosition.xy) / 0.042; // Distance from center
             
-            float t = time * 0.0035;
-            float angle = atan(localCoord.y, localCoord.x);
+            float t = time * 0.0018;
+
+            // 1. Soot Base (dark, rough carbon)
+            float sootPattern = fbm(uv * 1.5 + vec2(t * 0.1));
+            float sootAlpha = smoothstep(1.0, 0.4, dist + sootPattern * 0.25);
             
-            // Calculate a chaotic, organic wave boundary (no symmetric star shapes)
-            float wave = sin(angle * 4.3 + t * 0.7) * 0.16 
-                       + cos(angle * 2.7 - t * 1.1) * 0.12 
-                       + sin(angle * 9.0 + t * 2.1) * 0.05;
-            float maxRadius = 0.024 * (1.0 + wave);
-            float dist = length(localCoord) / maxRadius; // Irregular normalized distance
+            // 2. Magma cracks using high-contrast noise
+            vec2 crackUv = uv * 3.5 + vec2(sin(t * 0.4) * 0.2, cos(t * 0.3) * 0.2);
+            float crackVal = fbm(crackUv);
             
-            // Scale frequencies relative to local geometry scale
-            float w1 = sin(localCoord.x * 1200.0 + t) * 0.5 + 0.5;
-            float w2 = sin(localCoord.y * 1200.0 - t * 1.5) * 0.5 + 0.5;
-            float w = (w1 + w2) * 0.5;
+            // Create thin sharp fissures
+            float fissure = smoothstep(0.48, 0.53, crackVal);
             
-            vec3 colorOrange = vec3(1.0, 0.40, 0.0);
-            vec3 colorPurple = vec3(0.50, 0.0, 1.0);
-            vec3 colorRed = vec3(1.0, 0.02, 0.10);
+            // 3. Animated Heat/Magma color
+            float pulse = sin(t * 2.5 + crackVal * 12.0) * 0.5 + 0.5;
+            vec3 magmaColor = mix(vec3(0.5, 0.0, 0.0), vec3(1.0, 0.3, 0.0), pulse); // Dark red to hot orange
+            // Add yellow core highlights inside the hottest cracks
+            magmaColor = mix(magmaColor, vec3(1.0, 0.85, 0.1), smoothstep(0.7, 1.0, pulse));
+
+            // Soot color (very dark carbon grey)
+            vec3 sootColor = vec3(0.04, 0.04, 0.06);
+
+            // 4. Combine layers
+            // Fissure mask only appears in the hotter center of the explosion
+            float heatMask = smoothstep(0.85, 0.2, dist + sootPattern * 0.15);
+            vec3 col = mix(sootColor, magmaColor, fissure * heatMask * 0.9);
             
-            // Mix red and orange as the primary colors
-            vec3 col = mix(colorRed, colorOrange, w);
-            // Apply purple only as rare, high-threshold highlight ripples
-            float purpleWeight = smoothstep(0.65, 1.0, sin(dist * 14.0 - t));
-            col = mix(col, colorPurple, purpleWeight * 0.35);
+            // 5. Fake 3D normals for lighting depth using derivatives
+            float h = fissure * heatMask;
+            vec2 dH = vec2(dFdx(h), dFdy(h));
+            vec3 normal = normalize(vec3(-dH * 4.0, 1.0));
+            vec3 lightDir = normalize(vec3(0.5, 0.5, 1.5));
+            float diffuse = max(0.12, dot(normal, lightDir));
             
-            // Soft edge mask relative to the irregular shape boundary
-            float alpha = smoothstep(1.0, 0.5, dist) * 0.95;
-            gl_FragColor = vec4(col, alpha);
+            col *= diffuse;
+            
+            // Apply slight emissive glow to the magma spots
+            vec3 emissive = magmaColor * (fissure * heatMask * 0.7);
+            col += emissive;
+
+            gl_FragColor = vec4(col, sootAlpha * 0.96);
           }
         `,
         transparent: true,
         depthWrite: false
       });
 
-      const spotInner = new THREE.Mesh(boardGeoInner, plasmaMat);
-      spotInner.position.set(0, 0, 0.001);
-      spotInner.renderOrder = 4; // Ensure it renders on top of the black spot and tile
-      burntGroup.add(spotInner);
+      const spot = new THREE.Mesh(geom, plasmaMat);
+      spot.position.set(0, 0, 0.001);
+      spot.renderOrder = 4;
+      burntGroup.add(spot);
 
       // Position flat on tile surface
       burntGroup.position.copy(tile.center).normalize().multiplyScalar(1.0);
