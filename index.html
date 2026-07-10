@@ -3196,12 +3196,16 @@
       isInitialReveal = true;
       processRevealQueue();
       
-      // Conditional welcome flow: show simple how-to-play welcome modal first time
-      if (firstLaunch) {
+      // Conditional welcome flow: show simple how-to-play welcome modal first time or on Level 1
+      if (firstLaunch || state.level === 1) {
         const howToPlayModal = document.getElementById('howToPlayModal');
         if (howToPlayModal) {
           howToPlayModal.classList.add('visible');
         }
+        const ui = document.querySelector('.ui');
+        if (ui) ui.classList.add('hidden');
+        const lvlDisp = document.getElementById('levelDisplay');
+        if (lvlDisp) lvlDisp.classList.add('hidden');
         
         const startBtn = document.getElementById('startGameButton');
         if (startBtn) {
