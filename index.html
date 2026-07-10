@@ -104,6 +104,57 @@
       transform: translateY(0);
     }
 
+    #scannerBtn {
+      position: fixed;
+      bottom: max(50px, calc(38px + env(safe-area-inset-bottom)));
+      right: max(12px, env(safe-area-inset-right));
+      z-index: 100;
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #787e87;
+      background: rgba(15, 15, 20, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #scannerBtn.active {
+      color: #00e5ff;
+      border-color: rgba(0, 229, 255, 0.4);
+      box-shadow: 0 0 12px rgba(0, 229, 255, 0.2), inset 0 0 6px rgba(0, 229, 255, 0.1);
+    }
+    #scannerBtn:focus {
+      outline: none;
+    }
+    #scannerBtn:active {
+      transform: translateY(0);
+    }
+    @media (hover: hover) {
+      #scannerBtn:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+        transform: translateY(-1px);
+      }
+      #scannerBtn.active:hover {
+        background: rgba(0, 229, 255, 0.1) !important;
+        border-color: rgba(0, 229, 255, 0.6) !important;
+      }
+    }
+    @media (max-width: 768px) {
+      #scannerBtn {
+        bottom: max(12px, env(safe-area-inset-bottom)) !important;
+        right: max(12px, env(safe-area-inset-right)) !important;
+      }
+    }
+
     #levelDisplay {
       position: absolute;
       top: max(20px, env(safe-area-inset-top));
@@ -1150,6 +1201,10 @@
     <button id="debugCloseBtn">Close Controls</button>
 
   </div>
+
+  <button id="scannerBtn">
+    <span style="font-size: 12px;">📡</span> Scan Mode: OFF
+  </button>
 
   <div id="fpsCounter" style="position: fixed; bottom: 12px; right: 12px; font-family: monospace; font-size: 18px; font-weight: bold; color: rgba(255, 255, 255, 1.0); background: rgba(0, 0, 0, 0.6); padding: 4px 8px; border-radius: 4px; z-index: 100; cursor: pointer; user-select: none;">
     <span id="fpsValue">FPS: --</span>
@@ -2598,6 +2653,7 @@
       lives: 3, 
       won: false,
       currentTheme: 'standard',
+      showRiskHeatmap: false,
       levelClicks: 0
     };
 
@@ -2716,6 +2772,20 @@
     }
 
     function buildTiles() {
+      if (state.tiles) {
+        state.tiles.forEach(t => {
+          if (t && t.heatmapMaterial) {
+            t.heatmapMaterial.dispose();
+            t.heatmapMaterial = null;
+          }
+        });
+      }
+      state.showRiskHeatmap = false;
+      const scannerBtn = document.getElementById('scannerBtn');
+      if (scannerBtn) {
+        scannerBtn.classList.remove('active');
+        scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Scan Mode: OFF';
+      }
 
       scene.remove(wireGroup); wireGroup.clear(); wireGroup = new THREE.Group(); scene.add(wireGroup);
 
@@ -3896,7 +3966,245 @@
 
 
 
+    function calculateTileProbabilities() {
+      // 1. Initialize all probabilities
+      state.tiles.forEach(t => {
+        if (t.revealed) {
+          t.probability = 0.0;
+        } else if (t.flagged) {
+          t.probability = 1.0;
+        } else {
+          t.probability = 0.0;
+        }
+      });
+
+      // 2. Build constraints
+      const constraints = [];
+      const borderTileSet = new Set();
+
+      state.tiles.forEach(t => {
+        if (t.revealed && t.count > 0 && !t.isEmpty) {
+          const neighbors = state.neighbors[t.index];
+          if (!neighbors) return;
+
+          const hiddenNbs = [];
+          let flaggedCount = 0;
+
+          neighbors.forEach(nb => {
+            const nbTile = state.tiles[nb];
+            if (!nbTile || nbTile.isEmpty) return;
+            if (nbTile.flagged) {
+              flaggedCount++;
+            } else if (!nbTile.revealed) {
+              hiddenNbs.push(nb);
+            }
+          });
+
+          if (hiddenNbs.length > 0) {
+            const remainingMines = Math.max(0, t.count - flaggedCount);
+            constraints.push({
+              cellIndex: t.index,
+              hiddenNbs: hiddenNbs,
+              remainingMines: remainingMines
+            });
+            hiddenNbs.forEach(idx => borderTileSet.add(idx));
+          }
+        }
+      });
+
+      const borderTiles = Array.from(borderTileSet);
+
+      // If no constraints, distribute remaining mines globally
+      if (constraints.length === 0) {
+        const unrevealedUnflagged = state.tiles.filter(t => !t.revealed && !t.flagged && !t.isEmpty);
+        if (unrevealedUnflagged.length > 0) {
+          const prob = Math.max(0, state.totalMines - state.flags) / unrevealedUnflagged.length;
+          unrevealedUnflagged.forEach(t => {
+            t.probability = Math.min(1.0, prob);
+          });
+        }
+        return;
+      }
+
+      // 3. Segment into connected components using simple BFS
+      const tileAdjacency = new Map();
+      borderTiles.forEach(idx => tileAdjacency.set(idx, []));
+
+      constraints.forEach(c => {
+        const nbs = c.hiddenNbs;
+        for (let i = 0; i < nbs.length; i++) {
+          for (let j = i + 1; j < nbs.length; j++) {
+            tileAdjacency.get(nbs[i]).push(nbs[j]);
+            tileAdjacency.get(nbs[j]).push(nbs[i]);
+          }
+        }
+      });
+
+      // Find components of border tiles via BFS
+      const visited = new Set();
+      const components = [];
+
+      borderTiles.forEach(idx => {
+        if (!visited.has(idx)) {
+          const componentTiles = [];
+          const queue = [idx];
+          visited.add(idx);
+
+          while (queue.length > 0) {
+            const curr = queue.shift();
+            componentTiles.push(curr);
+
+            const adj = tileAdjacency.get(curr);
+            adj.forEach(neighbor => {
+              if (!visited.has(neighbor)) {
+                visited.add(neighbor);
+                queue.push(neighbor);
+              }
+            });
+          }
+          components.push(componentTiles);
+        }
+      });
+
+      // 4. Solve each component
+      components.forEach(componentTiles => {
+        // Find constraints that apply to this component
+        const componentConstraints = constraints.filter(c => 
+          c.hiddenNbs.some(tileIdx => componentTiles.includes(tileIdx))
+        );
+
+        if (componentTiles.length <= 15) {
+          // Exact backtracking
+          let validConfigs = 0;
+          const mineCounts = new Map();
+          componentTiles.forEach(tileIdx => mineCounts.set(tileIdx, 0));
+
+          function backtrack(tileListIndex, currentAssignment) {
+            // Check constraints after each assignment (early pruning)
+            for (let i = 0; i < componentConstraints.length; i++) {
+              const c = componentConstraints[i];
+              let assignedMines = 0;
+              let unassigned = 0;
+              
+              c.hiddenNbs.forEach(nb => {
+                if (currentAssignment.has(nb)) {
+                  assignedMines += currentAssignment.get(nb);
+                } else {
+                  unassigned++;
+                }
+              });
+
+              if (assignedMines > c.remainingMines || assignedMines + unassigned < c.remainingMines) {
+                return; // Prune invalid branch
+              }
+            }
+
+            if (tileListIndex === componentTiles.length) {
+              validConfigs++;
+              currentAssignment.forEach((isMine, tileIdx) => {
+                if (isMine) {
+                  mineCounts.set(tileIdx, mineCounts.get(tileIdx) + 1);
+                }
+              });
+              return;
+            }
+
+            const tileIdx = componentTiles[tileListIndex];
+            
+            // Try placing no mine (0)
+            currentAssignment.set(tileIdx, 0);
+            backtrack(tileListIndex + 1, currentAssignment);
+            
+            // Try placing a mine (1)
+            currentAssignment.set(tileIdx, 1);
+            backtrack(tileListIndex + 1, currentAssignment);
+            
+            currentAssignment.delete(tileIdx);
+          }
+
+          backtrack(0, new Map());
+
+          if (validConfigs > 0) {
+            componentTiles.forEach(tileIdx => {
+              state.tiles[tileIdx].probability = mineCounts.get(tileIdx) / validConfigs;
+            });
+          } else {
+            fallbackHeuristic(componentTiles, componentConstraints);
+          }
+        } else {
+          // Large component fallback: local density
+          fallbackHeuristic(componentTiles, componentConstraints);
+        }
+      });
+
+      function fallbackHeuristic(componentTiles, componentConstraints) {
+        componentTiles.forEach(tileIdx => {
+          let maxProb = 0.0;
+          componentConstraints.forEach(c => {
+            if (c.hiddenNbs.includes(tileIdx)) {
+              const localProb = c.remainingMines / c.hiddenNbs.length;
+              if (localProb > maxProb) {
+                maxProb = localProb;
+              }
+            }
+          });
+          state.tiles[tileIdx].probability = maxProb;
+        });
+      }
+
+      // 5. Global redistribution for isolated unrevealed/unflagged tiles
+      let sumBorderProb = 0.0;
+      borderTiles.forEach(tileIdx => {
+        sumBorderProb += state.tiles[tileIdx].probability;
+      });
+
+      const remainingMinesGlobal = Math.max(0, state.totalMines - state.flags - sumBorderProb);
+      const isolatedTiles = state.tiles.filter(t => 
+        !t.revealed && !t.flagged && !t.isEmpty && !borderTileSet.has(t.index)
+      );
+
+      if (isolatedTiles.length > 0) {
+        const isolatedProb = Math.min(1.0, remainingMinesGlobal / isolatedTiles.length);
+        isolatedTiles.forEach(t => {
+          t.probability = isolatedProb;
+        });
+      }
+      
+      updateHeatmapColors();
+    }
+
+    function updateHeatmapColors() {
+      const colorSafe = new THREE.Color(0x00e5ff);   // Cyan
+      const colorMid = new THREE.Color(0xffaa00);    // Orange/Yellow
+      const colorDanger = new THREE.Color(0xff0033); // Red
+
+      state.tiles.forEach(t => {
+        if (!t.revealed && !t.flagged && !t.isEmpty) {
+          const prob = t.probability || 0.0;
+          const finalColor = new THREE.Color();
+          if (prob < 0.5) {
+            finalColor.lerpColors(colorSafe, colorMid, prob * 2);
+          } else {
+            finalColor.lerpColors(colorMid, colorDanger, (prob - 0.5) * 2);
+          }
+
+          if (!t.heatmapMaterial) {
+            t.heatmapMaterial = getHiddenMaterial(t).clone();
+          }
+          t.heatmapMaterial.color.copy(finalColor);
+
+          // Apply material based on Scan Mode state
+          if (state.showRiskHeatmap) {
+            t.mesh.material = t.heatmapMaterial;
+          } else {
+            t.mesh.material = getHiddenMaterial(t);
+          }
+        }
+      });
+    }
+
     function updateCounters(){
+      calculateTileProbabilities();
 
       // Update circular level progress bar
       const levelProgressBar = document.getElementById('levelProgressBar');
@@ -5244,6 +5552,29 @@
           gameOverOverlay.classList.remove('visible');
         }
         rebuildCore(cheatApplied ? undefined : state.f);
+      });
+    }
+
+    const scannerBtn = document.getElementById('scannerBtn');
+    if (scannerBtn) {
+      scannerBtn.addEventListener('click', () => {
+        initAudioContext();
+        playSound('click');
+        state.showRiskHeatmap = !state.showRiskHeatmap;
+        if (state.showRiskHeatmap) {
+          scannerBtn.classList.add('active');
+          scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Scan Mode: ON';
+        } else {
+          scannerBtn.classList.remove('active');
+          scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Scan Mode: OFF';
+          // Reset tile materials back to normal hidden theme material immediately
+          state.tiles.forEach(t => {
+            if (!t.revealed && !t.flagged && !t.isEmpty) {
+              t.mesh.material = getHiddenMaterial(t);
+            }
+          });
+        }
+        requestRender(10);
       });
     }
 
@@ -8256,6 +8587,10 @@
           
           // Re-apply materials to all tiles based on new theme
           state.tiles.forEach(t => {
+            if (t.heatmapMaterial) {
+              t.heatmapMaterial.dispose();
+              t.heatmapMaterial = null;
+            }
             if (t.isEmpty) {
               t.mesh.material = getEmptyMaterial();
             } else if (t.flagged) {
@@ -8270,6 +8605,7 @@
               t.mesh.material = getHiddenMaterial(t);
             }
           });
+          updateHeatmapColors();
           
           // Volcanic wireframe logic (emissive pulsing glow)
           if (state.currentTheme === 'volcanic') {
