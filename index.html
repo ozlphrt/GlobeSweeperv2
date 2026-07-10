@@ -3912,123 +3912,7 @@
 
 
 
-    function calculateTileProbabilities() {
-      if (!state.tiles || state.tiles.length === 0) return;
-      
-      try {
-        // Initialize heat to 0 for all tiles
-        for (let i = 0; i < state.tiles.length; i++) {
-          state.tiles[i].revealedHeat = 0.0;
-        }
-
-        const queue = [];
-        
-        // Find all revealed numbered tiles to act as starting heat sources
-        for (let i = 0; i < state.tiles.length; i++) {
-          const t = state.tiles[i];
-          if (t.revealed && t.count > 0 && !t.isEmpty) {
-            t.revealedHeat = t.count / 6.0; // Dynamic intensity: count out of max 6
-            queue.push(i);
-          }
-        }
-
-        // Multi-source BFS to propagate heat through empty revealed tiles
-        while (queue.length > 0) {
-          const currIdx = queue.shift();
-          const currTile = state.tiles[currIdx];
-          const currHeat = currTile.revealedHeat;
-          
-          // Decaying factor per step (approx 50% drop)
-          const nextHeat = currHeat * Math.exp(-0.7);
-          
-          // Stop propagation if intensity is negligible
-          if (nextHeat < 0.05) continue;
-
-          const neighbors = state.neighbors[currIdx] || [];
-          for (let j = 0; j < neighbors.length; j++) {
-            const nbIdx = neighbors[j];
-            const nbTile = state.tiles[nbIdx];
-            
-            // Only propagate through revealed empty tiles
-            if (nbTile && nbTile.revealed && (nbTile.count === 0 || nbTile.isEmpty)) {
-              if (nextHeat > nbTile.revealedHeat) {
-                nbTile.revealedHeat = nextHeat;
-                queue.push(nbIdx);
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.error('[Heatmap] Error calculating revealed heat:', e);
-      }
-    }
-
-    function updateHeatmapColors() {
-      if (!state.tiles || state.tiles.length === 0) return;
-
-      // Color palette for the heatmap
-      const baseColor = new THREE.Color(0xffffff);      // Base White
-      const hotColor = new THREE.Color(0xd6001c);       // Pure Crimson Red
-
-      for (let i = 0; i < state.tiles.length; i++) {
-        const t = state.tiles[i];
-        
-        // Empty tiles (recessed blue-purple glass) always keep empty material
-        if (t.isEmpty) {
-          t.mesh.material = getEmptyMaterial();
-          continue;
-        }
-
-        // Unrevealed green tiles are completely untouched - NO CLUES!
-        if (!t.revealed) {
-          t.mesh.material = getHiddenMaterial(t);
-          continue;
-        }
-
-        // Mines revealed at game over are kept red
-        if (t.mine) {
-          t.mesh.material = matMine;
-          continue;
-        }
-
-        // Dynamic styling for revealed white tiles
-        const heat = Math.max(0, Math.min(1.0, t.revealedHeat || 0.0));
-        
-        if (heat === 0.0) {
-          // No heat: use standard revealed theme material
-          t.mesh.material = getRevealedMaterial(t);
-        } else {
-          // Burgundy to Crimson Red scale (Green & Blue are kept at 0 to prevent pink)
-          // Low heat = dark burgundy/maroon; High heat = bright crimson red
-          const minRed = 0.45;
-          const r = minRed + (1.0 - minRed) * heat;
-          const g = 0.0;
-          const b = 0.0;
-          
-          const finalColor = new THREE.Color(r, g, b);
-          // Rich matching dark-red emissive glow
-          const emissiveColor = new THREE.Color(0xd6001c).multiplyScalar(heat * 0.15);
-
-          if (!t.heatmapMaterial) {
-            t.heatmapMaterial = new THREE.MeshStandardMaterial({
-              side: THREE.DoubleSide,
-              roughness: 0.5,
-              metalness: 0.1,
-            });
-          }
-          t.heatmapMaterial.color.copy(finalColor);
-          t.heatmapMaterial.emissive.copy(emissiveColor);
-          t.heatmapMaterial.needsUpdate = true;
-          t.mesh.material = t.heatmapMaterial;
-        }
-      }
-      requestRender(10);
-    }
-
     function updateCounters(){
-      calculateTileProbabilities();
-      updateHeatmapColors();
-
       // Update circular level progress bar
       const levelProgressBar = document.getElementById('levelProgressBar');
       if (levelProgressBar) {
@@ -8407,7 +8291,7 @@
               t.mesh.material = getHiddenMaterial(t);
             }
           });
-          updateHeatmapColors();
+
           
           // Volcanic wireframe logic (emissive pulsing glow)
           if (state.currentTheme === 'volcanic') {
