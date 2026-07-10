@@ -6884,12 +6884,17 @@
                 emissiveIntensity: 0.25
               });
             }
-            t.mesh.material = window._matIncorrectFlag;
+            if (t.mesh.material !== window._matIncorrectFlag) {
+              t.mesh.material = window._matIncorrectFlag;
+            }
           }
           // Reset scale for correctly flagged tiles
           else if (t.flagged && t.mine) {
             t.mesh.scale.set(1.0, 1.0, 1.0);
-            t.mesh.material = getHiddenMaterial(t); // Keep original hidden color
+            const targetMat = getHiddenMaterial(t);
+            if (t.mesh.material !== targetMat) {
+              t.mesh.material = targetMat;
+            }
           }
           // Reset scale for other tiles
           else {
@@ -6902,7 +6907,10 @@
           if (!t.isEmpty) {
             t.mesh.scale.set(1.0, 1.0, 1.0);
             if (t.flagged || !t.revealed) {
-              t.mesh.material = getHiddenMaterial(t); // Revert to standard theme hidden color
+              const targetMat = getHiddenMaterial(t);
+              if (t.mesh.material !== targetMat) {
+                t.mesh.material = targetMat;
+              }
             }
           }
         });
