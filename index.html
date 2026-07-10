@@ -1203,7 +1203,7 @@
   </div>
 
   <button id="scannerBtn">
-    <span style="font-size: 12px;">📡</span> Scan Mode: OFF
+    <span style="font-size: 12px;">📡</span> Flag Radar: OFF
   </button>
 
   <div id="fpsCounter" style="position: fixed; bottom: 12px; right: 12px; font-family: monospace; font-size: 18px; font-weight: bold; color: rgba(255, 255, 255, 1.0); background: rgba(0, 0, 0, 0.6); padding: 4px 8px; border-radius: 4px; z-index: 100; cursor: pointer; user-select: none;">
@@ -3970,135 +3970,127 @@
       if (!state.tiles || state.tiles.length === 0) return;
       
       try {
-        // 1. Initialize all probabilities
+        // Find all currently flagged tile indices
+        const flaggedIndices = [];
+        for (let i = 0; i < state.tiles.length; i++) {
+          if (state.tiles[i].flagged) {
+            flaggedIndices.push(i);
+          }
+        }
+
+        // If no flags are placed, set heat/proximity of all tiles to 0
+        if (flaggedIndices.length === 0) {
+          for (let i = 0; i < state.tiles.length; i++) {
+            state.tiles[i].probability = 0.0; // Use probability field to store heatmap concentration
+          }
+          return;
+        }
+
+        // Calculate proximity heat for each tile
         for (let i = 0; i < state.tiles.length; i++) {
           const t = state.tiles[i];
-          if (t.revealed) {
+          if (t.revealed || t.flagged || t.isEmpty) {
             t.probability = 0.0;
-          } else if (t.flagged) {
-            t.probability = 1.0;
-          } else if (t.isEmpty) {
-            t.probability = 0.0;
-          } else {
-            t.probability = -1; // Mark as uncomputed
+            continue;
           }
-        }
 
-        // 2. Build constraints from revealed numbered tiles
-        const borderTileSet = new Set();
-        const constraints = [];
+          // Calculate cumulative heat based on distance to all flags
+          let accumulatedHeat = 0.0;
+          
+          for (let fi = 0; fi < flaggedIndices.length; fi++) {
+            const flagIdx = flaggedIndices[fi];
+            
+            // Check direct neighbors (distance 1)
+            const neighbors1 = state.neighbors[i] || [];
+            if (neighbors1.indexOf(flagIdx) !== -1) {
+              accumulatedHeat += 0.8;
+              continue;
+            }
 
-        for (let i = 0; i < state.tiles.length; i++) {
-          const t = state.tiles[i];
-          if (!t.revealed || t.count <= 0 || t.isEmpty) continue;
-          const neighbors = state.neighbors[i];
-          if (!neighbors) continue;
+            // Check distance 2 neighbors
+            let isDist2 = false;
+            for (let n1 = 0; n1 < neighbors1.length; n1++) {
+              const neighbors2 = state.neighbors[neighbors1[n1]] || [];
+              if (neighbors2.indexOf(flagIdx) !== -1) {
+                isDist2 = true;
+                break;
+              }
+            }
+            if (isDist2) {
+              accumulatedHeat += 0.35;
+              continue;
+            }
 
-          const hiddenNbs = [];
-          let flaggedCount = 0;
-
-          for (let j = 0; j < neighbors.length; j++) {
-            const nb = neighbors[j];
-            const nbTile = state.tiles[nb];
-            if (!nbTile || nbTile.isEmpty) continue;
-            if (nbTile.flagged) {
-              flaggedCount++;
-            } else if (!nbTile.revealed) {
-              hiddenNbs.push(nb);
+            // Check distance 3 neighbors
+            let isDist3 = false;
+            for (let n1 = 0; n1 < neighbors1.length; n1++) {
+              const neighbors2 = state.neighbors[neighbors1[n1]] || [];
+              for (let n2 = 0; n2 < neighbors2.length; n2++) {
+                const neighbors3 = state.neighbors[neighbors2[n2]] || [];
+                if (neighbors3.indexOf(flagIdx) !== -1) {
+                  isDist3 = true;
+                  break;
+                }
+              }
+              if (isDist3) break;
+            }
+            if (isDist3) {
+              accumulatedHeat += 0.12;
             }
           }
 
-          if (hiddenNbs.length > 0) {
-            const remainingMines = Math.max(0, t.count - flaggedCount);
-            constraints.push({ hiddenNbs: hiddenNbs, remainingMines: remainingMines });
-            for (let j = 0; j < hiddenNbs.length; j++) {
-              borderTileSet.add(hiddenNbs[j]);
-            }
-          }
-        }
-
-        // 3. Calculate probabilities for border tiles using local density heuristic
-        const borderTiles = Array.from(borderTileSet);
-        for (let bi = 0; bi < borderTiles.length; bi++) {
-          const tileIdx = borderTiles[bi];
-          let maxProb = 0.0;
-          for (let ci = 0; ci < constraints.length; ci++) {
-            const c = constraints[ci];
-            if (c.hiddenNbs.indexOf(tileIdx) !== -1) {
-              const localProb = c.hiddenNbs.length > 0 ? c.remainingMines / c.hiddenNbs.length : 0;
-              if (localProb > maxProb) maxProb = localProb;
-            }
-          }
-          state.tiles[tileIdx].probability = Math.min(1.0, maxProb);
-        }
-
-        // 4. Global probability for isolated (non-border) unrevealed tiles
-        let borderMineSum = 0;
-        for (let bi = 0; bi < borderTiles.length; bi++) {
-          borderMineSum += state.tiles[borderTiles[bi]].probability;
-        }
-        const remainingGlobal = Math.max(0, state.totalMines - state.flags - borderMineSum);
-        let isolatedCount = 0;
-        for (let i = 0; i < state.tiles.length; i++) {
-          if (state.tiles[i].probability === -1) isolatedCount++;
-        }
-        const isolatedProb = isolatedCount > 0 ? Math.min(1.0, remainingGlobal / isolatedCount) : 0;
-        for (let i = 0; i < state.tiles.length; i++) {
-          if (state.tiles[i].probability === -1) {
-            state.tiles[i].probability = isolatedProb;
-          }
+          // Normalize heat between 0.0 and 1.0
+          t.probability = Math.min(1.0, accumulatedHeat);
         }
       } catch (e) {
-        console.error('[Scan Mode] Error calculating probabilities:', e);
-        // Fallback: set all uncomputed to uniform probability
-        const totalUnrevealed = state.tiles.filter(t => !t.revealed && !t.flagged && !t.isEmpty).length;
-        const fallbackProb = totalUnrevealed > 0 ? Math.min(1.0, Math.max(0, state.totalMines - state.flags) / totalUnrevealed) : 0;
-        for (let i = 0; i < state.tiles.length; i++) {
-          const t = state.tiles[i];
-          if (!t.revealed && !t.flagged && !t.isEmpty) {
-            t.probability = fallbackProb;
-          }
-        }
+        console.error('[Flag Radar] Error calculating flag concentration:', e);
       }
     }
 
     function updateHeatmapColors() {
       if (!state.tiles || state.tiles.length === 0) return;
 
+      const baseThemeColor = new THREE.Color(0xffffff); // White base tile
+      const glowHotColor = new THREE.Color(0xff2a6d);   // Glowing magenta/red
+      const glowWarmColor = new THREE.Color(0x05d9e8);  // Glowing cyan/blue
+
       for (let i = 0; i < state.tiles.length; i++) {
         const t = state.tiles[i];
         if (t.revealed || t.flagged || t.isEmpty) continue;
 
         if (state.showRiskHeatmap) {
-          const prob = Math.max(0, Math.min(1, t.probability || 0));
+          const intensity = Math.max(0, Math.min(1, t.probability || 0));
           
-          // Interpolate: cyan (safe) -> orange (mid) -> red (danger)
-          let r, g, b;
-          if (prob < 0.5) {
-            const f = prob * 2;
-            r = f * 1.0;
-            g = 0.9 - f * 0.23;
-            b = 1.0 - f * 1.0;
+          if (intensity === 0) {
+            // Keep normal hidden material color (pure white/theme color)
+            t.mesh.material = getHiddenMaterial(t);
           } else {
-            const f = (prob - 0.5) * 2;
-            r = 1.0;
-            g = 0.67 - f * 0.67;
-            b = 0;
-          }
+            // Blend from base white (0.0 heat) -> cyan (0.5 heat) -> magenta (1.0 heat)
+            const finalColor = baseThemeColor.clone();
+            const emissiveColor = new THREE.Color(0x000000);
 
-          // Create or reuse a per-tile heatmap material
-          if (!t.heatmapMaterial) {
-            t.heatmapMaterial = new THREE.MeshStandardMaterial({
-              side: THREE.DoubleSide,
-              roughness: 0.5,
-              metalness: 0.1,
-              emissiveIntensity: 0.3
-            });
+            if (intensity < 0.5) {
+              const f = intensity * 2;
+              finalColor.lerp(glowWarmColor, f);
+              emissiveColor.copy(glowWarmColor).multiplyScalar(f * 0.4);
+            } else {
+              const f = (intensity - 0.5) * 2;
+              finalColor.copy(glowWarmColor).lerp(glowHotColor, f);
+              emissiveColor.copy(glowWarmColor).lerp(glowHotColor, f).multiplyScalar(0.4 + f * 0.4);
+            }
+
+            if (!t.heatmapMaterial) {
+              t.heatmapMaterial = new THREE.MeshStandardMaterial({
+                side: THREE.DoubleSide,
+                roughness: 0.4,
+                metalness: 0.2,
+              });
+            }
+            t.heatmapMaterial.color.copy(finalColor);
+            t.heatmapMaterial.emissive.copy(emissiveColor);
+            t.heatmapMaterial.needsUpdate = true;
+            t.mesh.material = t.heatmapMaterial;
           }
-          t.heatmapMaterial.color.setRGB(r, g, b);
-          t.heatmapMaterial.emissive.setRGB(r * 0.3, g * 0.3, b * 0.3);
-          t.heatmapMaterial.needsUpdate = true;
-          t.mesh.material = t.heatmapMaterial;
         } else {
           // Restore original hidden material
           t.mesh.material = getHiddenMaterial(t);
@@ -5468,10 +5460,10 @@
         state.showRiskHeatmap = !state.showRiskHeatmap;
         if (state.showRiskHeatmap) {
           scannerBtn.classList.add('active');
-          scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Scan Mode: ON';
+          scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Flag Radar: ON';
         } else {
           scannerBtn.classList.remove('active');
-          scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Scan Mode: OFF';
+          scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Flag Radar: OFF';
         }
         calculateTileProbabilities();
         updateHeatmapColors();
