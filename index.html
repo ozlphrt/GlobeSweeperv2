@@ -137,13 +137,48 @@
     #scannerBtn:active {
       transform: translateY(0);
     }
+
+    #flagRadarBtn {
+      position: fixed;
+      bottom: max(88px, calc(76px + env(safe-area-inset-bottom)));
+      right: max(12px, env(safe-area-inset-right));
+      z-index: 100;
+      padding: 8px 12px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: #787e87;
+      background: rgba(15, 15, 20, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #flagRadarBtn.active {
+      color: #ff2a6d;
+      border-color: rgba(255, 42, 109, 0.4);
+      box-shadow: 0 0 12px rgba(255, 42, 109, 0.2), inset 0 0 6px rgba(255, 42, 109, 0.1);
+    }
+    #flagRadarBtn:focus {
+      outline: none;
+    }
+    #flagRadarBtn:active {
+      transform: translateY(0);
+    }
+
     @media (hover: hover) {
-      #scannerBtn:hover {
+      #scannerBtn:hover, #flagRadarBtn:hover {
         background: rgba(255, 255, 255, 0.1) !important;
         border-color: rgba(255, 255, 255, 0.3) !important;
         transform: translateY(-1px);
       }
-      #scannerBtn.active:hover {
+    }  #scannerBtn.active:hover {
         background: rgba(0, 229, 255, 0.1) !important;
         border-color: rgba(0, 229, 255, 0.6) !important;
       }
@@ -1202,8 +1237,12 @@
 
   </div>
 
+  <button id="flagRadarBtn">
+    <span style="font-size: 12px;">🚩</span> Flag Radar: OFF
+  </button>
+
   <button id="scannerBtn">
-    <span style="font-size: 12px;">📡</span> Flag Radar: OFF
+    <span style="font-size: 12px;">📡</span> Scan Mode: OFF
   </button>
 
   <div id="fpsCounter" style="position: fixed; bottom: 12px; right: 12px; font-family: monospace; font-size: 18px; font-weight: bold; color: rgba(255, 255, 255, 1.0); background: rgba(0, 0, 0, 0.6); padding: 4px 8px; border-radius: 4px; z-index: 100; cursor: pointer; user-select: none;">
@@ -2654,6 +2693,7 @@
       won: false,
       currentTheme: 'standard',
       showRiskHeatmap: false,
+      showFlagRadar: false,
       levelClicks: 0
     };
 
@@ -3970,80 +4010,83 @@
       if (!state.tiles || state.tiles.length === 0) return;
       
       try {
-        // Find all currently flagged tile indices
+        // 1. Find all mine indices and flag indices
+        const mineIndices = [];
         const flaggedIndices = [];
         for (let i = 0; i < state.tiles.length; i++) {
+          if (state.tiles[i].mine) {
+            mineIndices.push(i);
+          }
           if (state.tiles[i].flagged) {
             flaggedIndices.push(i);
           }
         }
 
-        // If no flags are placed, set heat/proximity of all tiles to 0
-        if (flaggedIndices.length === 0) {
+        // Helper to calculate proximity heat for a set of target indices
+        function calculateHeatForTargets(targetIndices) {
+          const heats = new Array(state.tiles.length).fill(0.0);
+          if (targetIndices.length === 0) return heats;
+
           for (let i = 0; i < state.tiles.length; i++) {
-            state.tiles[i].probability = 0.0; // Use probability field to store heatmap concentration
-          }
-          return;
-        }
+            const t = state.tiles[i];
+            if (t.revealed || t.isEmpty) continue;
 
-        // Calculate proximity heat for each tile
-        for (let i = 0; i < state.tiles.length; i++) {
-          const t = state.tiles[i];
-          if (t.revealed || t.flagged || t.isEmpty) {
-            t.probability = 0.0;
-            continue;
-          }
-
-          // Calculate cumulative heat based on distance to all flags
-          let accumulatedHeat = 0.0;
-          
-          for (let fi = 0; fi < flaggedIndices.length; fi++) {
-            const flagIdx = flaggedIndices[fi];
-            
-            // Check direct neighbors (distance 1)
-            const neighbors1 = state.neighbors[i] || [];
-            if (neighbors1.indexOf(flagIdx) !== -1) {
-              accumulatedHeat += 0.8;
-              continue;
-            }
-
-            // Check distance 2 neighbors
-            let isDist2 = false;
-            for (let n1 = 0; n1 < neighbors1.length; n1++) {
-              const neighbors2 = state.neighbors[neighbors1[n1]] || [];
-              if (neighbors2.indexOf(flagIdx) !== -1) {
-                isDist2 = true;
-                break;
+            let accumulatedHeat = 0.0;
+            for (let ti = 0; ti < targetIndices.length; ti++) {
+              const targetIdx = targetIndices[ti];
+              
+              // Check distance 1
+              const neighbors1 = state.neighbors[i] || [];
+              if (neighbors1.indexOf(targetIdx) !== -1) {
+                accumulatedHeat += 0.8;
+                continue;
               }
-            }
-            if (isDist2) {
-              accumulatedHeat += 0.35;
-              continue;
-            }
 
-            // Check distance 3 neighbors
-            let isDist3 = false;
-            for (let n1 = 0; n1 < neighbors1.length; n1++) {
-              const neighbors2 = state.neighbors[neighbors1[n1]] || [];
-              for (let n2 = 0; n2 < neighbors2.length; n2++) {
-                const neighbors3 = state.neighbors[neighbors2[n2]] || [];
-                if (neighbors3.indexOf(flagIdx) !== -1) {
-                  isDist3 = true;
+              // Check distance 2
+              let isDist2 = false;
+              for (let n1 = 0; n1 < neighbors1.length; n1++) {
+                const neighbors2 = state.neighbors[neighbors1[n1]] || [];
+                if (neighbors2.indexOf(targetIdx) !== -1) {
+                  isDist2 = true;
                   break;
                 }
               }
-              if (isDist3) break;
-            }
-            if (isDist3) {
-              accumulatedHeat += 0.12;
-            }
-          }
+              if (isDist2) {
+                accumulatedHeat += 0.35;
+                continue;
+              }
 
-          // Normalize heat between 0.0 and 1.0
-          t.probability = Math.min(1.0, accumulatedHeat);
+              // Check distance 3
+              let isDist3 = false;
+              for (let n1 = 0; n1 < neighbors1.length; n1++) {
+                const neighbors2 = state.neighbors[neighbors1[n1]] || [];
+                for (let n2 = 0; n2 < neighbors2.length; n2++) {
+                  const neighbors3 = state.neighbors[neighbors2[n2]] || [];
+                  if (neighbors3.indexOf(targetIdx) !== -1) {
+                    isDist3 = true;
+                    break;
+                  }
+                }
+                if (isDist3) break;
+              }
+              if (isDist3) {
+                accumulatedHeat += 0.12;
+              }
+            }
+            heats[i] = Math.min(1.0, accumulatedHeat);
+          }
+          return heats;
+        }
+
+        const mineHeats = calculateHeatForTargets(mineIndices);
+        const flagHeats = calculateHeatForTargets(flaggedIndices);
+
+        for (let i = 0; i < state.tiles.length; i++) {
+          state.tiles[i].mineProximityHeat = mineHeats[i];
+          state.tiles[i].flagProximityHeat = flagHeats[i];
         }
       } catch (e) {
-        console.error('[Flag Radar] Error calculating flag concentration:', e);
+        console.error('[Heatmap] Error calculating concentrations:', e);
       }
     }
 
@@ -4051,46 +4094,63 @@
       if (!state.tiles || state.tiles.length === 0) return;
 
       const baseThemeColor = new THREE.Color(0xffffff); // White base tile
-      const glowHotColor = new THREE.Color(0xff2a6d);   // Glowing magenta/red
-      const glowWarmColor = new THREE.Color(0x05d9e8);  // Glowing cyan/blue
+      
+      // Theme colors for Flag Radar: Cyan/Blue -> Neon Pink
+      const flagWarmColor = new THREE.Color(0x05d9e8);
+      const flagHotColor = new THREE.Color(0xff2a6d);
+
+      // Theme colors for Mine Heatmap: Yellow -> Red/Orange
+      const mineWarmColor = new THREE.Color(0xffaa00);
+      const mineHotColor = new THREE.Color(0xff0033);
 
       for (let i = 0; i < state.tiles.length; i++) {
         const t = state.tiles[i];
-        if (t.revealed || t.flagged || t.isEmpty) continue;
+        if (t.revealed || t.isEmpty) continue;
 
-        if (state.showRiskHeatmap) {
-          const intensity = Math.max(0, Math.min(1, t.probability || 0));
-          
-          if (intensity === 0) {
-            // Keep normal hidden material color (pure white/theme color)
-            t.mesh.material = getHiddenMaterial(t);
+        // Determine active heat intensity and colors
+        let intensity = 0.0;
+        let warmColor = flagWarmColor;
+        let hotColor = flagHotColor;
+        let activeOverlay = false;
+
+        if (state.showFlagRadar) {
+          intensity = t.flagProximityHeat || 0.0;
+          warmColor = flagWarmColor;
+          hotColor = flagHotColor;
+          activeOverlay = true;
+        } else if (state.showRiskHeatmap) {
+          intensity = t.mineProximityHeat || 0.0;
+          warmColor = mineWarmColor;
+          hotColor = mineHotColor;
+          activeOverlay = true;
+        }
+
+        if (activeOverlay && intensity > 0) {
+          // Blend from base white (0.0 heat) -> warmColor (0.5 heat) -> hotColor (1.0 heat)
+          const finalColor = baseThemeColor.clone();
+          const emissiveColor = new THREE.Color(0x000000);
+
+          if (intensity < 0.5) {
+            const f = intensity * 2;
+            finalColor.lerp(warmColor, f);
+            emissiveColor.copy(warmColor).multiplyScalar(f * 0.4);
           } else {
-            // Blend from base white (0.0 heat) -> cyan (0.5 heat) -> magenta (1.0 heat)
-            const finalColor = baseThemeColor.clone();
-            const emissiveColor = new THREE.Color(0x000000);
-
-            if (intensity < 0.5) {
-              const f = intensity * 2;
-              finalColor.lerp(glowWarmColor, f);
-              emissiveColor.copy(glowWarmColor).multiplyScalar(f * 0.4);
-            } else {
-              const f = (intensity - 0.5) * 2;
-              finalColor.copy(glowWarmColor).lerp(glowHotColor, f);
-              emissiveColor.copy(glowWarmColor).lerp(glowHotColor, f).multiplyScalar(0.4 + f * 0.4);
-            }
-
-            if (!t.heatmapMaterial) {
-              t.heatmapMaterial = new THREE.MeshStandardMaterial({
-                side: THREE.DoubleSide,
-                roughness: 0.4,
-                metalness: 0.2,
-              });
-            }
-            t.heatmapMaterial.color.copy(finalColor);
-            t.heatmapMaterial.emissive.copy(emissiveColor);
-            t.heatmapMaterial.needsUpdate = true;
-            t.mesh.material = t.heatmapMaterial;
+            const f = (intensity - 0.5) * 2;
+            finalColor.copy(warmColor).lerp(hotColor, f);
+            emissiveColor.copy(warmColor).lerp(hotColor, f).multiplyScalar(0.4 + f * 0.4);
           }
+
+          if (!t.heatmapMaterial) {
+            t.heatmapMaterial = new THREE.MeshStandardMaterial({
+              side: THREE.DoubleSide,
+              roughness: 0.4,
+              metalness: 0.2,
+            });
+          }
+          t.heatmapMaterial.color.copy(finalColor);
+          t.heatmapMaterial.emissive.copy(emissiveColor);
+          t.heatmapMaterial.needsUpdate = true;
+          t.mesh.material = t.heatmapMaterial;
         } else {
           // Restore original hidden material
           t.mesh.material = getHiddenMaterial(t);
@@ -5453,18 +5513,50 @@
     }
 
     const scannerBtn = document.getElementById('scannerBtn');
+    const flagRadarBtn = document.getElementById('flagRadarBtn');
+
+    function syncButtonVisuals() {
+      if (scannerBtn) {
+        if (state.showRiskHeatmap) {
+          scannerBtn.classList.add('active');
+          scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Scan Mode: ON';
+        } else {
+          scannerBtn.classList.remove('active');
+          scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Scan Mode: OFF';
+        }
+      }
+
+      if (flagRadarBtn) {
+        if (state.showFlagRadar) {
+          flagRadarBtn.classList.add('active');
+          flagRadarBtn.innerHTML = '<span style="font-size: 12px;">🚩</span> Flag Radar: ON';
+        } else {
+          flagRadarBtn.classList.remove('active');
+          flagRadarBtn.innerHTML = '<span style="font-size: 12px;">🚩</span> Flag Radar: OFF';
+        }
+      }
+    }
+
     if (scannerBtn) {
       scannerBtn.addEventListener('click', () => {
         initAudioContext();
         playSound('click');
         state.showRiskHeatmap = !state.showRiskHeatmap;
-        if (state.showRiskHeatmap) {
-          scannerBtn.classList.add('active');
-          scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Flag Radar: ON';
-        } else {
-          scannerBtn.classList.remove('active');
-          scannerBtn.innerHTML = '<span style="font-size: 12px;">📡</span> Flag Radar: OFF';
-        }
+        state.showFlagRadar = false; // Turn off Flag Radar
+        syncButtonVisuals();
+        calculateTileProbabilities();
+        updateHeatmapColors();
+        requestRender(30);
+      });
+    }
+
+    if (flagRadarBtn) {
+      flagRadarBtn.addEventListener('click', () => {
+        initAudioContext();
+        playSound('click');
+        state.showFlagRadar = !state.showFlagRadar;
+        state.showRiskHeatmap = false; // Turn off Scan Mode
+        syncButtonVisuals();
         calculateTileProbabilities();
         updateHeatmapColors();
         requestRender(30);
