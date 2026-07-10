@@ -3998,15 +3998,26 @@
           // No heat: use standard revealed theme material
           t.mesh.material = getRevealedMaterial(t);
         } else {
-          // Non-linear interpolation to avoid pastel pink mid-tones
-          // Dropping Green and Blue rapidly pushes the color immediately into brick-red/crimson
-          const r = 1.0;
-          const g = Math.max(0.0, Math.min(1.0, 1.0 - Math.pow(heat, 0.25)));
-          const b = Math.max(0.0, Math.min(1.0, 1.0 - Math.pow(heat, 0.25)));
+          // Soft, premium slate-grey base to prevent aggressive primary red saturation
+          const baseR = 0.96;
+          const baseG = 0.96;
+          const baseB = 0.98;
+
+          // Muted red target (a premium, desaturated crimson)
+          const targetR = 0.92;
+          const targetG = 0.15;
+          const targetB = 0.22;
+
+          // Eased drop-off curve for smooth transitioning
+          const f = Math.pow(heat, 0.6);
+
+          const r = baseR + (targetR - baseR) * f;
+          const g = baseG + (targetG - baseG) * f;
+          const b = baseB + (targetB - baseB) * f;
           
           const finalColor = new THREE.Color(r, g, b);
-          // Emissive glow is also pure deep red
-          const emissiveColor = new THREE.Color(0xd6001c).multiplyScalar(heat * 0.25);
+          // Fainter emissive glow to match the premium muted tones
+          const emissiveColor = new THREE.Color(0xd6001c).multiplyScalar(heat * 0.1);
 
           if (!t.heatmapMaterial) {
             t.heatmapMaterial = new THREE.MeshStandardMaterial({
