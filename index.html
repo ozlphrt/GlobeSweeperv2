@@ -3968,8 +3968,7 @@
 
       // Color palette for the heatmap
       const baseColor = new THREE.Color(0xffffff);      // Base White
-      const warmColor = new THREE.Color(0xff6688);      // Soft Pink-Red
-      const hotColor = new THREE.Color(0xd6001c);       // Deep Crimson Red
+      const hotColor = new THREE.Color(0xd6001c);       // Pure Crimson Red
 
       for (let i = 0; i < state.tiles.length; i++) {
         const t = state.tiles[i];
@@ -3999,19 +3998,9 @@
           // No heat: use standard revealed theme material
           t.mesh.material = getRevealedMaterial(t);
         } else {
-          // Dynamic color interpolation
-          const finalColor = baseColor.clone();
-          const emissiveColor = new THREE.Color(0x000000);
-
-          if (heat < 0.5) {
-            const f = heat * 2;
-            finalColor.lerp(warmColor, f);
-            emissiveColor.copy(warmColor).multiplyScalar(f * 0.15);
-          } else {
-            const f = (heat - 0.5) * 2;
-            finalColor.copy(warmColor).lerp(hotColor, f);
-            emissiveColor.copy(warmColor).lerp(hotColor, f).multiplyScalar(0.15 + f * 0.2);
-          }
+          // Direct dynamic color interpolation (White -> Red)
+          const finalColor = baseColor.clone().lerp(hotColor, heat);
+          const emissiveColor = hotColor.clone().multiplyScalar(heat * 0.25);
 
           if (!t.heatmapMaterial) {
             t.heatmapMaterial = new THREE.MeshStandardMaterial({
