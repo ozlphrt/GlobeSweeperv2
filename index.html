@@ -1679,7 +1679,7 @@
       const mesh = new THREE.Mesh(g, mat);
 
       // Position mesh at tile surface (accounting for dynamic topographic extrusion)
-      const outerR = 1.0 + tile.count * 0.04;
+      const outerR = (tile.currentOuterR !== undefined) ? tile.currentOuterR : (1.0 + tile.count * 0.04);
       mesh.position.copy(tile.center).normalize().multiplyScalar(outerR);
       // Quaternion will be set every frame by the render loop upright-tracking code
 
@@ -3186,12 +3186,6 @@
       // Apply appropriate material: mine, empty (glass), or revealed
       if (t.mine) {
         t.mesh.material = matMine;
-      } else if (t.isEmpty) {
-        t.mesh.material = getEmptyMaterial();
-      } else {
-        t.mesh.material = getRevealedMaterial(t);
-      }
-      if (t.mine) {
         if (!document.getElementById('debugImmortal')?.checked) {
           gameLost(i); 
           if (state.lives > 0) {
@@ -3200,6 +3194,17 @@
           return false; 
         }
         return false;
+      } else if (t.isEmpty) {
+        t.mesh.material = getEmptyMaterial();
+      } else {
+        t.currentOuterR = 1.0;
+        t.targetOuterR = 1.0 + t.count * 0.04;
+        t.isInitialRaising = true;
+        t.mesh.geometry.dispose();
+        t.mesh.geometry = createPrismGeometry(state.polys[i], 0.97, 1.0);
+        t.mesh.material = getRevealedMaterial(t);
+        t.mesh.castShadow = (t.count > 0);
+        updateTilePillarElevation(i);
       }
 
       state.safeRevealed++;
@@ -3368,12 +3373,15 @@
               return;
             }
           } else {
-            const outerR = 1.0 + t.count * 0.04;
+            t.currentOuterR = 1.0;
+            t.targetOuterR = 1.0 + t.count * 0.04;
+            t.isInitialRaising = true;
             t.mesh.geometry.dispose();
-            t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, outerR);
+            t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, 1.0);
             t.mesh.material = getRevealedMaterial(t);
             t.mesh.castShadow = (t.count > 0);
             state.safeRevealed++; // Only count non-empty, non-mine tiles
+            updateTilePillarElevation(idx);
 
             
             // Play sound for each tile revealed during normal cascade
@@ -3440,12 +3448,15 @@
           t.revealed = true;
           // Reset scale to normal when revealed
           t.mesh.scale.set(1.0, 1.0, 1.0);
-          const outerR = 1.0 + t.count * 0.04;
+          t.currentOuterR = 1.0;
+          t.targetOuterR = 1.0 + t.count * 0.04;
+          t.isInitialRaising = true;
           t.mesh.geometry.dispose();
-          t.mesh.geometry = createPrismGeometry(state.polys[i], 0.97, outerR);
+          t.mesh.geometry = createPrismGeometry(state.polys[i], 0.97, 1.0);
           t.mesh.material = getRevealedMaterial(t);
           t.mesh.castShadow = (t.count > 0);
           state.safeRevealed++;
+          updateTilePillarElevation(i);
 
           addLabel(i, t.count);
           playSound('reveal');
