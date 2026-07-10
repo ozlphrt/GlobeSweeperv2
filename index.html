@@ -939,6 +939,21 @@
 
 
 
+  <div id="cheatDebugModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); display: none; align-items: center; justify-content: center; z-index: 2000; font-family: inherit;">
+    <div style="background: rgba(30, 30, 40, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 24px; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center;">
+      <h3 style="margin-top: 0; margin-bottom: 16px; color: #ffd000; font-family: inherit; font-size: 18px;">🛠️ Debug Panel</h3>
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #ccc; font-family: inherit;">Select Level (1-100):</label>
+        <input type="number" id="cheatLevelInput" min="1" max="100" style="width: 80px; padding: 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; text-align: center; font-size: 16px; font-weight: bold; font-family: inherit;">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button id="cheatConfirmBtn" style="background: #ffd000; color: black; border: none; border-radius: 6px; padding: 10px; font-weight: bold; cursor: pointer; font-family: inherit;">Confirm Level</button>
+        <button id="cheatResetBtn" style="background: #ff3b30; color: white; border: none; border-radius: 6px; padding: 10px; font-weight: bold; cursor: pointer; font-family: inherit;">Reset to Level 1</button>
+        <button id="cheatCancelBtn" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 10px; cursor: pointer; font-family: inherit;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div id="debugPanel">
 
     <div class="debug-section collapsed">
@@ -5225,17 +5240,48 @@
       rebuildCore(state.f); 
     });
 
+    // Custom Debug Panel Modal Event Listeners
+    const cheatDebugModal = document.getElementById('cheatDebugModal');
+    const cheatLevelInput = document.getElementById('cheatLevelInput');
+    const cheatConfirmBtn = document.getElementById('cheatConfirmBtn');
+    const cheatResetBtn = document.getElementById('cheatResetBtn');
+    const cheatCancelBtn = document.getElementById('cheatCancelBtn');
+
+    if (cheatConfirmBtn) {
+      cheatConfirmBtn.addEventListener('click', () => {
+        const val = parseInt(cheatLevelInput.value, 10);
+        if (!isNaN(val) && val >= 1 && val <= 100) {
+          state.level = val;
+          localStorage.setItem('globesweeper_level', state.level);
+        }
+        if (cheatDebugModal) cheatDebugModal.style.display = 'none';
+        rebuildCore();
+      });
+    }
+
+    if (cheatResetBtn) {
+      cheatResetBtn.addEventListener('click', () => {
+        state.level = 1;
+        localStorage.setItem('globesweeper_level', state.level);
+        if (cheatDebugModal) cheatDebugModal.style.display = 'none';
+        rebuildCore();
+      });
+    }
+
+    if (cheatCancelBtn) {
+      cheatCancelBtn.addEventListener('click', () => {
+        if (cheatDebugModal) cheatDebugModal.style.display = 'none';
+        rebuildCore(state.f);
+      });
+    }
+
     function handleRestartWithCheat() {
       if (state.levelClicks >= 3) {
         state.levelClicks = 0; // reset
-        const targetLevelStr = prompt("Choose Level (1-100):", state.level);
-        if (targetLevelStr !== null) {
-          const targetLevel = parseInt(targetLevelStr, 10);
-          if (!isNaN(targetLevel) && targetLevel >= 1 && targetLevel <= 100) {
-            state.level = targetLevel;
-            localStorage.setItem('globesweeper_level', state.level);
-            return true; // cheat applied
-          }
+        if (cheatDebugModal && cheatLevelInput) {
+          cheatLevelInput.value = state.level;
+          cheatDebugModal.style.display = 'flex';
+          return true; // suspends instant restart so modal takes over
         }
       }
       return false; // cheat not applied
@@ -5265,16 +5311,22 @@
     document.getElementById('restartButton').addEventListener('click', ()=>{ 
       initAudioContext();
       const cheatApplied = handleRestartWithCheat();
+      if (cheatApplied) {
+        // Hide game over overlay so debug panel modal is clearly visible
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
+        if (gameOverOverlay) gameOverOverlay.classList.remove('visible');
+        return;
+      }
       const gameOverOverlay = document.getElementById('gameOverOverlay');
       if (gameOverOverlay) {
         gameOverOverlay.classList.remove('visible');
       }
-      if (state.won && !cheatApplied) {
+      if (state.won) {
         state.level++;
         localStorage.setItem('globesweeper_level', state.level);
         rebuildCore();
       } else {
-        rebuildCore(cheatApplied ? undefined : state.f); 
+        rebuildCore(state.f); 
       }
     });
 
@@ -5283,11 +5335,16 @@
       bottomRestartBtn.addEventListener('click', () => {
         initAudioContext();
         const cheatApplied = handleRestartWithCheat();
+        if (cheatApplied) {
+          const gameOverOverlay = document.getElementById('gameOverOverlay');
+          if (gameOverOverlay) gameOverOverlay.classList.remove('visible');
+          return;
+        }
         const gameOverOverlay = document.getElementById('gameOverOverlay');
         if (gameOverOverlay) {
           gameOverOverlay.classList.remove('visible');
         }
-        rebuildCore(cheatApplied ? undefined : state.f);
+        rebuildCore(state.f);
       });
     }
 
