@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.0.87';
+const CACHE_NAME = 'globesweeper-v1.0.88';
 const urlsToCache = [
   './',
   'index.html',
@@ -64,21 +64,21 @@ self.addEventListener('fetch', (event) => {
   // For same-origin requests, use cache-first strategy
   if (url.origin === self.location.origin) {
     event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200 && response.type === 'basic') {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(event.request).then((cachedResponse) => {
-            if (cachedResponse) {
-              return cachedResponse;
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(event.request)
+          .then((response) => {
+            if (response && response.status === 200 && response.type === 'basic') {
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
             }
+            return response;
+          })
+          .catch(() => {
             if (event.request.mode === 'navigate') {
               return caches.match('index.html').then((indexResponse) => {
                 return indexResponse || new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
@@ -86,7 +86,7 @@ self.addEventListener('fetch', (event) => {
             }
             return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
           });
-        })
+      })
     );
   } else {
     // For CDN resources (Three.js, etc.), use network-first strategy
