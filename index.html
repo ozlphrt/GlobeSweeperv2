@@ -6867,10 +6867,10 @@
             const scale = 1.0 + pulse * scaleAmplitude; // Scale between 0.9921875 and 1.0078125
             t.mesh.scale.set(scale, scale, scale);
           }
-          // Oscillate scale of incorrectly flagged tiles (faster pattern)
+          // Oscillate scale of incorrectly flagged tiles (2x bigger amplitude and 1.5x faster pattern)
           else if (t.flagged && !t.mine) {
             const pulse = Math.sin(animTime * oscillationSpeed * 1.5 + i * 0.15); // -1 to 1, faster
-            const scale = 1.0 + pulse * scaleAmplitude; // Scale between 0.9921875 and 1.0078125
+            const scale = 1.0 + pulse * (scaleAmplitude * 2.0); // 2x bigger distance (scale range between 0.984375 and 1.015625)
             t.mesh.scale.set(scale, scale, scale);
             // Don't change tile material - leave as original hidden color
           }
