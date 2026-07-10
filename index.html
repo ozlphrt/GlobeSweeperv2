@@ -3699,20 +3699,20 @@
         const mesh = new THREE.Mesh(geom, mat);
         mesh.position.copy(position).addScaledVector(normal, 0.002);
         
-        // Push particles outward horizontally as well so they spread to neighboring tiles
-        const speed = 0.015 + Math.random() * 0.035;
+        // Push particles outward with more horizontal spread and higher gravity so they land on the sphere
+        const speed = 0.012 + Math.random() * 0.028;
         const velocity = normal.clone()
           .add(new THREE.Vector3(
-            (Math.random() - 0.5) * 1.5,
-            (Math.random() - 0.5) * 1.5,
-            (Math.random() - 0.5) * 1.5
+            (Math.random() - 0.5) * 2.2,
+            (Math.random() - 0.5) * 2.2,
+            (Math.random() - 0.5) * 2.2
           ))
           .normalize()
           .multiplyScalar(speed);
           
-        const drag = 0.95;
-        const gravity = 0.08 + Math.random() * 0.12; // Positive gravity pulls back down to the sphere
-        const maxLife = 0.8 + Math.random() * 1.2;
+        const drag = 0.94;
+        const gravity = 0.35 + Math.random() * 0.45; // High gravity pulls particles down quickly to ensure landing
+        const maxLife = 3.0 + Math.random() * 1.5; // Longer life to give all particles time to land
         
         tileGroup.add(mesh);
         
