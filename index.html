@@ -1172,22 +1172,6 @@
 
 
   <script>
-    // Force unregister service worker and clear old caches to apply updates
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (const r of registrations) {
-          r.unregister();
-        }
-      });
-    }
-    if ('caches' in window) {
-      caches.keys().then(names => {
-        for (const name of names) {
-          caches.delete(name);
-        }
-      });
-    }
-
     // Globally initialize renderRequestCount and requestRender to avoid Temporal Dead Zone ReferenceErrors (Trigger new build v3)
     let renderRequestCount = 180;
     function requestRender(frameCount = 30) {

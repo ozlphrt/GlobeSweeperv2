@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.0.88';
+const CACHE_NAME = 'globesweeper-v1.0.89';
 const urlsToCache = [
   './',
   'index.html',
@@ -30,8 +30,6 @@ self.addEventListener('install', (event) => {
         console.error('[SW] Cache install failed:', error);
       })
   );
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
 });
 
 // Activate event - clean up old caches
