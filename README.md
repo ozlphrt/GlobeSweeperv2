@@ -39,6 +39,7 @@ Visit the [live demo](https://ozlphrt.github.io/GlobeSweeper/) to play the game.
 - Added back-face culling (`mesh.visible` flag) to hide tiles on the far side of the globe from both render & shadow passes
 - Guarded label and warning flag rotation math to only execute on tiles that actually have rotatable elements
 - Added adaptive shadow map quality: automatically lowers shadow resolution from 2048 to 1024 or 512 on high-complexity levels
+- Fixed shadow acne artifacts (diagonal parallel bands on tiles) by configuring `shadow.normalBias` and fine-tuning `shadow.bias` on the directional light
 
 ### v2.2.0
 - Redesigned top-left HUD layout with unified flexbox container (#hudContainer)
