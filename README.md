@@ -33,7 +33,14 @@ Visit the [live demo](https://ozlphrt.github.io/GlobeSweeper/) to play the game.
 
 ## Version History
 
-### v2.1.0 (Current Stable)
+### v2.2.0 (Current Stable)
+- Redesigned top-left HUD layout with unified flexbox container (#hudContainer)
+- Swapped Mines progress circle to the right side and Level/Lives stats badge to the left
+- Compacted layout for short viewports (max-height: 550px) to prevent vertical overlap
+- Enlarged Level indicators (28px) and Heart/Lives icons (22px) with enhanced glows
+- Incremented PWA cache version to force client update
+
+### v2.1.0
 - Enabled high-performance, premium soft shadows (`THREE.PCFSoftShadowMap`)
 - Added dynamic shadow frustum clipping plane calculations based on light position coordinates to prevent rendering artifacts
 - Configured 3D warning markers/mines to cast shadows recursively on the globe
