@@ -33,7 +33,14 @@ Visit the [live demo](https://ozlphrt.github.io/GlobeSweeper/) to play the game.
 
 ## Version History
 
-### v2.2.0 (Current Stable)
+### v2.2.1 (Current Stable)
+- Unified animation, label rotation, and back-face checks into a single loop pass (O(1) iterations when idle)
+- Implemented `state.animatingTiles` Set tracking to only animate/process active tiles, avoiding O(n) whole-board scans
+- Added back-face culling (`mesh.visible` flag) to hide tiles on the far side of the globe from both render & shadow passes
+- Guarded label and warning flag rotation math to only execute on tiles that actually have rotatable elements
+- Added adaptive shadow map quality: automatically lowers shadow resolution from 2048 to 1024 or 512 on high-complexity levels
+
+### v2.2.0
 - Redesigned top-left HUD layout with unified flexbox container (#hudContainer)
 - Swapped Mines progress circle to the right side and Level/Lives stats badge to the left
 - Compacted layout for short viewports (max-height: 550px) to prevent vertical overlap

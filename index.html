@@ -2701,7 +2701,8 @@
       currentTheme: 'standard',
       showRiskHeatmap: false,
       showFlagRadar: false,
-      levelClicks: 0
+      levelClicks: 0,
+      animatingTiles: new Set()
     };
 
     // Extended Theme Materials
@@ -3315,7 +3316,7 @@
         t.mesh.material = getEmptyMaterial();
       } else {
         t.currentOuterR = 1.0;
-        t.targetOuterR = 1.0 + t.count * 0.04;
+        setTileTargetOuterR(i, 1.0 + t.count * 0.04);
         t.isInitialRaising = true;
         t.mesh.geometry.dispose();
         t.mesh.geometry = createPrismGeometry(state.polys[i], 0.97, 1.0);
@@ -3393,7 +3394,7 @@
               }
             } else {
               t.currentOuterR = 1.0;
-              t.targetOuterR = 1.0 + t.count * 0.04;
+              setTileTargetOuterR(idx, 1.0 + t.count * 0.04);
               t.isInitialRaising = true;
               t.mesh.geometry.dispose();
               t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, 1.0);
@@ -3491,7 +3492,7 @@
             }
           } else {
             t.currentOuterR = 1.0;
-            t.targetOuterR = 1.0 + t.count * 0.04;
+            setTileTargetOuterR(idx, 1.0 + t.count * 0.04);
             t.isInitialRaising = true;
             t.mesh.geometry.dispose();
             t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, 1.0);
@@ -3566,7 +3567,7 @@
           // Reset scale to normal when revealed
           t.mesh.scale.set(1.0, 1.0, 1.0);
           t.currentOuterR = 1.0;
-          t.targetOuterR = 1.0 + t.count * 0.04;
+          setTileTargetOuterR(i, 1.0 + t.count * 0.04);
           t.isInitialRaising = true;
           t.mesh.geometry.dispose();
           t.mesh.geometry = createPrismGeometry(state.polys[i], 0.97, 1.0);
@@ -3619,6 +3620,16 @@
 
 
 
+    function setTileTargetOuterR(i, val) {
+      const t = state.tiles[i];
+      if (!t) return;
+      t.targetOuterR = val;
+      if (Math.abs(t.currentOuterR - t.targetOuterR) > 0.001) {
+        if (!state.animatingTiles) state.animatingTiles = new Set();
+        state.animatingTiles.add(i);
+      }
+    }
+
     function updateTilePillarElevation(i) {
       const t = state.tiles[i];
       if (!t || !t.revealed || t.isEmpty || t.count === 0) return;
@@ -3628,12 +3639,12 @@
 
       if (t.isInitialRaising) {
         t.shouldLowerAfterRaise = isSatisfied;
-        t.targetOuterR = 1.0 + t.count * 0.04;
+        setTileTargetOuterR(i, 1.0 + t.count * 0.04);
       } else {
         if (isSatisfied) {
-          t.targetOuterR = 1.0;
+          setTileTargetOuterR(i, 1.0);
         } else {
-          t.targetOuterR = 1.0 + t.count * 0.04;
+          setTileTargetOuterR(i, 1.0 + t.count * 0.04);
         }
       }
     }
@@ -4206,6 +4217,18 @@
       if (gameOverOverlay) gameOverOverlay.classList.remove('visible');
       
       buildTiles(); state.firstClick = false; state.gameOver=false; state.safeRevealed=0; state.totalMines=0; state.flags=0; state.lives=3; state.won=false; lifeLostInCurrentReveal=false; resetTimer(); updateCounters();
+      
+      // Adaptive shadow map quality: reduce for high tile counts to maintain FPS
+      const tileCount = state.polys.length;
+      let shadowSize = 2048;
+      if (tileCount > 3500) shadowSize = 512;
+      else if (tileCount > 2000) shadowSize = 1024;
+      if (dir.shadow.mapSize.width !== shadowSize) {
+        dir.shadow.mapSize.width = shadowSize;
+        dir.shadow.mapSize.height = shadowSize;
+        if (dir.shadow.map) { dir.shadow.map.dispose(); dir.shadow.map = null; }
+      }
+      
       requestRender(180);
       
       // Reset sphere rotation and apply gentle initial spin inertia
@@ -6808,13 +6831,7 @@
       const hasParticles = activeExplosionParticles.length > 0;
       const isRevealing = (typeof revealQueue !== 'undefined' && revealQueue.length > 0) || (typeof isInitialReveal !== 'undefined' && isInitialReveal);
       const zoomChanged = Math.abs(camera.zoom - lastCameraZoom) > 0.001;
-      
-      let isAnimatingPillars = false;
-      state.tiles.forEach(t => {
-        if (t.currentOuterR !== undefined && t.targetOuterR !== undefined && Math.abs(t.currentOuterR - t.targetOuterR) > 0.001) {
-          isAnimatingPillars = true;
-        }
-      });
+      const isAnimatingPillars = !!(state.animatingTiles && state.animatingTiles.size > 0);
 
       if (hasRotationMomentum || hasParticles || isRevealing || zoomChanged || forceLabelUpdate || isAnimatingPillars) {
         requestRender(2);
@@ -6832,32 +6849,93 @@
 
       updateExplosionParticles(dt);
 
-      // Animate tile pillar heights dynamically
-      state.tiles.forEach((t, idx) => {
-        if (t.currentOuterR !== undefined && t.targetOuterR !== undefined && Math.abs(t.currentOuterR - t.targetOuterR) > 0.001) {
-          const speed = 10.0 * dt; // Easing animation speed
-          t.currentOuterR += (t.targetOuterR - t.currentOuterR) * Math.min(1.0, speed);
-          
-          t.mesh.geometry.dispose();
-          t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, t.currentOuterR);
-
-          // Position label dynamically to match new animated height
-          if (t.label) {
-            t.label.position.copy(t.center).normalize().multiplyScalar(t.currentOuterR);
-          }
-          // Request label rotation update to prevent glitches
-          forceLabelUpdate = true;
-
-          // Check if initial raising is complete
-          if (t.isInitialRaising && Math.abs(t.currentOuterR - t.targetOuterR) < 0.005) {
-            t.isInitialRaising = false;
-            if (t.shouldLowerAfterRaise) {
-              t.targetOuterR = 1.0;
-              t.shouldLowerAfterRaise = false;
+      // Animate tile pillar heights dynamically using in-place vertex updates
+      // Instead of disposing and recreating geometry every frame (expensive GC + allocation),
+      // we scale the outer vertices of the existing geometry buffer in-place.
+      let animatingTileCount = 0;
+      if (state.animatingTiles && state.animatingTiles.size > 0) {
+        state.animatingTiles.forEach(idx => {
+          const t = state.tiles[idx];
+          if (!t) return;
+          if (t.currentOuterR !== undefined && t.targetOuterR !== undefined && Math.abs(t.currentOuterR - t.targetOuterR) > 0.001) {
+            const speed = 10.0 * dt; // Easing animation speed
+            const prevOuterR = t.currentOuterR;
+            t.currentOuterR += (t.targetOuterR - t.currentOuterR) * Math.min(1.0, speed);
+            animatingTileCount++;
+            
+            // Scale outer vertices in-place instead of full geometry rebuild
+            const posAttr = t.mesh.geometry.getAttribute('position');
+            if (posAttr) {
+              const arr = posAttr.array;
+              const n = state.polys[idx].length; // 5 or 6 (pent or hex)
+              const scaleFactor = t.currentOuterR / prevOuterR;
+              
+              // Outer cap vertices: first n*3 triangles = n*9 floats (3 verts per tri, 3 floats per vert)
+              // Each triangle: center, vertA, vertB — all at outerRadius
+              const outerCapEnd = n * 3 * 3; // n triangles * 3 verts * 3 floats
+              for (let i = 0; i < outerCapEnd; i += 3) {
+                arr[i]     *= scaleFactor;
+                arr[i + 1] *= scaleFactor;
+                arr[i + 2] *= scaleFactor;
+              }
+              
+              // Inner cap: next n*3 triangles — skip these (at innerRadius, unchanged)
+              const innerCapEnd = outerCapEnd + n * 3 * 3;
+              
+              // Side wall quads: each side has 2 triangles = 6 verts
+              // Per side quad: aIn, bIn, bOut, aIn, bOut, aOut
+              // Outer verts are at positions [2], [4], [5] of each 6-vert quad (0-indexed)
+              const sideStart = innerCapEnd;
+              const totalFloats = arr.length;
+              for (let i = sideStart; i < totalFloats; i += 18) { // 6 verts * 3 floats = 18 per quad
+                // bOut (vert index 2 in quad) at offset +6,+7,+8
+                arr[i + 6] *= scaleFactor;
+                arr[i + 7] *= scaleFactor;
+                arr[i + 8] *= scaleFactor;
+                // bOut (vert index 4 in quad) at offset +12,+13,+14
+                arr[i + 12] *= scaleFactor;
+                arr[i + 13] *= scaleFactor;
+                arr[i + 14] *= scaleFactor;
+                // aOut (vert index 5 in quad) at offset +15,+16,+17
+                arr[i + 15] *= scaleFactor;
+                arr[i + 16] *= scaleFactor;
+                arr[i + 17] *= scaleFactor;
+              }
+              
+              posAttr.needsUpdate = true;
+              // Only recompute expensive normals/bounds when animation is nearly done
+              if (Math.abs(t.currentOuterR - t.targetOuterR) < 0.01) {
+                t.mesh.geometry.computeVertexNormals();
+                t.mesh.geometry.computeBoundingSphere();
+              }
             }
+
+            // Position label dynamically to match new animated height
+            if (t.label) {
+              t.label.position.copy(t.center).normalize().multiplyScalar(t.currentOuterR);
+            }
+            // Request label rotation update to prevent glitches
+            forceLabelUpdate = true;
+
+            // Check if initial raising is complete
+            if (t.isInitialRaising && Math.abs(t.currentOuterR - t.targetOuterR) < 0.005) {
+              t.isInitialRaising = false;
+              if (t.shouldLowerAfterRaise) {
+                t.targetOuterR = 1.0;
+                t.shouldLowerAfterRaise = false;
+              }
+            }
+            
+            // If animation is complete, remove from Set
+            if (Math.abs(t.currentOuterR - t.targetOuterR) <= 0.001) {
+              t.currentOuterR = t.targetOuterR;
+              state.animatingTiles.delete(idx);
+            }
+          } else {
+            state.animatingTiles.delete(idx);
           }
-        }
-      });
+        });
+      }
 
       // Only update controls if camera zoom changed (for damping)
       // Since rotation is disabled, controls.update() is mainly for zoom damping
@@ -6910,72 +6988,15 @@
         }
       }
       
-      // Oscillate tile scale when mine hunting reaches 80%
+      // === UNIFIED TILE LOOP ===
+      // Merge oscillation, flag animation, label rotation, and back-face culling into ONE pass.
+      // At level 31 (f=20, ~4000 tiles), this saves 2 redundant full-array iterations per frame.
       const mineHuntPercent = state.totalMines > 0 ? Math.round((state.flags / state.totalMines) * 100) : 0;
-      if (mineHuntPercent >= 80 && !state.gameOver && !state.won) {
-        const animTime = time * 0.001; // Convert to seconds
-        const oscillationSpeed = 12.0; // Much faster oscillation frequency for quick vibration
-        const scaleAmplitude = 0.0078125; // Half of previous: 1.5625% of radius variation (±0.78125% = 1.5625% total range)
-        state.tiles.forEach((t, i) => {
-          if (t.isEmpty) return; // Skip empty tiles
-          
-          // Oscillate scale of unrevealed tiles
-          if (!t.revealed && !t.flagged) {
-            const pulse = Math.sin(animTime * oscillationSpeed + i * 0.1); // -1 to 1
-            const scale = 1.0 + pulse * scaleAmplitude; // Scale between 0.9921875 and 1.0078125
-            t.mesh.scale.set(scale, scale, scale);
-          }
-          // Oscillate scale of incorrectly flagged tiles (original amplitude, 1.5x faster pattern, and warning red-orange color)
-          else if (t.flagged && !t.mine) {
-            const pulse = Math.sin(animTime * oscillationSpeed * 1.5 + i * 0.15); // -1 to 1, faster
-            const scale = 1.0 + pulse * scaleAmplitude; 
-            t.mesh.scale.set(scale, scale, scale);
-            
-            // Apply warning red-orange material
-            if (!window._matIncorrectFlag) {
-              window._matIncorrectFlag = new THREE.MeshStandardMaterial({
-                color: 0xd63030, // Warning red-orange
-                side: THREE.DoubleSide,
-                roughness: 0.8,
-                metalness: 0.1,
-                emissive: 0xaa0000,
-                emissiveIntensity: 0.25
-              });
-            }
-            if (t.mesh.material !== window._matIncorrectFlag) {
-              t.mesh.material = window._matIncorrectFlag;
-            }
-          }
-          // Reset scale for correctly flagged tiles
-          else if (t.flagged && t.mine) {
-            t.mesh.scale.set(1.0, 1.0, 1.0);
-            const targetMat = getHiddenMaterial(t);
-            if (t.mesh.material !== targetMat) {
-              t.mesh.material = targetMat;
-            }
-          }
-          // Reset scale for other tiles
-          else {
-            t.mesh.scale.set(1.0, 1.0, 1.0);
-          }
-        });
-      } else {
-        // Reset all tile scales and materials when oscillation is not active
-        state.tiles.forEach(t => {
-          if (!t.isEmpty) {
-            t.mesh.scale.set(1.0, 1.0, 1.0);
-            if (t.flagged || !t.revealed) {
-              const targetMat = getHiddenMaterial(t);
-              if (t.mesh.material !== targetMat) {
-                t.mesh.material = targetMat;
-              }
-            }
-          }
-        });
-      }
+      const doOscillation = mineHuntPercent >= 80 && !state.gameOver && !state.won;
+      const animTime = time * 0.001;
+      const oscillationSpeed = 12.0;
+      const scaleAmplitude = 0.0078125;
 
-      // Auto-rotate number decals and animate/blink 3D naval mine status LEDs.
-      // Work entirely in tileGroup LOCAL space so globe rotation is accounted for.
       if (state.tiles) {
         // Convert camera-up from world into tileGroup local space
         tempInvQuat.copy(tileGroup.quaternion).invert();
@@ -7030,13 +7051,66 @@
         }
 
         toCameraLocal.copy(camera.position).normalize().applyQuaternion(tempInvQuat);
+        const needsLabelUpdate = shouldRotate || hasVelocity || (Math.abs(camera.zoom - lastCameraZoom) > 0.001) || forceLabelUpdate;
 
-        state.tiles.forEach(t => {
+        state.tiles.forEach((t, i) => {
           const dot = t.center.dot(toCameraLocal);
-          const isVisible = dot > 0.15;
+          // Back-face culling: hide tiles on the far side of the globe from BOTH render and shadow passes
+          const isVisible = dot > -0.1;
+          t.mesh.visible = isVisible;
+          if (t.label) t.label.visible = dot > 0.15;
+          if (t.flagMesh) t.flagMesh.visible = isVisible;
+          if (t.burntDecal) t.burntDecal.visible = isVisible;
 
-          // If tile has a flag mesh, animate its respective elements (only if visible)
-          if (t.flagMesh && t.flagMesh.userData && isVisible) {
+          if (!isVisible) return; // Skip all processing for hidden tiles
+
+          // --- Oscillation logic (merged from loop 2) ---
+          if (!t.isEmpty) {
+            if (doOscillation) {
+              if (!t.revealed && !t.flagged) {
+                const pulse = Math.sin(animTime * oscillationSpeed + i * 0.1);
+                const scale = 1.0 + pulse * scaleAmplitude;
+                t.mesh.scale.set(scale, scale, scale);
+              } else if (t.flagged && !t.mine) {
+                const pulse = Math.sin(animTime * oscillationSpeed * 1.5 + i * 0.15);
+                const scale = 1.0 + pulse * scaleAmplitude;
+                t.mesh.scale.set(scale, scale, scale);
+                if (!window._matIncorrectFlag) {
+                  window._matIncorrectFlag = new THREE.MeshStandardMaterial({
+                    color: 0xd63030,
+                    side: THREE.DoubleSide,
+                    roughness: 0.8,
+                    metalness: 0.1,
+                    emissive: 0xaa0000,
+                    emissiveIntensity: 0.25
+                  });
+                }
+                if (t.mesh.material !== window._matIncorrectFlag) {
+                  t.mesh.material = window._matIncorrectFlag;
+                }
+              } else if (t.flagged && t.mine) {
+                t.mesh.scale.set(1.0, 1.0, 1.0);
+                const targetMat = getHiddenMaterial(t);
+                if (t.mesh.material !== targetMat) {
+                  t.mesh.material = targetMat;
+                }
+              } else {
+                t.mesh.scale.set(1.0, 1.0, 1.0);
+              }
+            } else {
+              t.mesh.scale.set(1.0, 1.0, 1.0);
+              if (t.flagged || !t.revealed) {
+                const targetMat = getHiddenMaterial(t);
+                if (t.mesh.material !== targetMat) {
+                  t.mesh.material = targetMat;
+                }
+              }
+            }
+          }
+
+          // --- Flag/mine animation logic (merged from loop 3) ---
+          const isFrontFace = dot > 0.15;
+          if (t.flagMesh && t.flagMesh.userData && isFrontFace) {
             const ud = t.flagMesh.userData;
             const tileEmissive = 2.0 + Math.sin(time * 0.008 + t.index * 0.5) * 1.2;
             const tileGlowAlpha = 0.35 + Math.sin(time * 0.008 + t.index * 0.5) * 0.15;
@@ -7081,26 +7155,17 @@
               });
             }
             if (ud.mixer) {
-              // Stagger skeletal/morph mixer animations to 30fps (even vs odd frames) to save 50% CPU
               if ((t.index + frameCount) % 2 === 0) {
                 ud.mixer.update(dt * 2.0);
               }
             }
             
-             // Hover/bobbing animation along normal axis (Disabled for Style 1 LED to keep it static and flush)
              if (t.flagMesh.userData && t.flagMesh.userData.style === 1) {
                t.flagMesh.position.copy(t.center).normalize().multiplyScalar(1.0);
-               
-               // Blink on/off every second (1Hz frequency), staggered out of sync using the tile index.
-               // Math.PI * 2 * (time / 1000) oscillates exactly once per second (1000ms).
-               // Adding t.index * 0.5 breaks synchronization.
                const blinkWave = 0.5 + 0.5 * Math.sin(Math.PI * 2 * (time / 1000) + t.index * 0.5);
-               
-               // Modulate LED Emissive Intensity
                if (ud.emissiveMat) {
                  ud.emissiveMat.emissiveIntensity = blinkWave * 5.5;
                }
-               // Modulate Haze Sprite Scale (Scale up to 0.065 max for toned down glow)
                if (ud.hazeSprite) {
                  const scaleSize = blinkWave * 0.065;
                  ud.hazeSprite.scale.set(scaleSize, scaleSize, 1.0);
@@ -7111,33 +7176,26 @@
              }
            }
 
-          // Update animated plasma inside burnt holes (only if visible)
-          if (t.burntDecal && t.burntDecal.userData && t.burntDecal.userData.plasmaMat && isVisible) {
+          // Update animated plasma inside burnt holes (only if front-facing)
+          if (t.burntDecal && t.burntDecal.userData && t.burntDecal.userData.plasmaMat && isFrontFace) {
             t.burntDecal.userData.plasmaMat.uniforms.time.value = time;
           }
 
-          const needsLabelUpdate = shouldRotate || hasVelocity || (Math.abs(camera.zoom - lastCameraZoom) > 0.001) || forceLabelUpdate;
-          if (needsLabelUpdate && isVisible) {
-            // tile.center is the local position in tileGroup – normalize for the local outward normal
+          // --- Label rotation (merged from loop 3) ---
+          const hasRotatableElement = t.label || (t.flagMesh && t.flagMesh.userData && t.flagMesh.userData.style === 1);
+          if (needsLabelUpdate && isFrontFace && hasRotatableElement) {
             _lNormal.copy(t.center).normalize();
-
-            // Project camera-up (local) onto this tile's tangent plane
             _lUp.copy(camUpLocal).addScaledVector(_lNormal, -camUpLocal.dot(_lNormal));
             if (_lUp.lengthSq() > 1e-6) {
               _lUp.normalize();
-
-              // right-hand rule in local space: right = up × normal
               _lRight.crossVectors(_lUp, _lNormal).normalize();
-
               const rotMatrix = staticMatrix.makeBasis(_lRight, _lUp, _lNormal);
 
               if (t.label && t.label.isMesh) {
-                // Set label's LOCAL quaternion: X→right, Y→up, Z→normal
                 t.label.quaternion.setFromRotationMatrix(rotMatrix);
               }
 
               if (t.flagMesh && t.flagMesh.userData && t.flagMesh.userData.style === 1) {
-                // Set warning sign's LOCAL quaternion flat and upright
                 t.flagMesh.quaternion.setFromRotationMatrix(rotMatrix);
               }
             }
