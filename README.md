@@ -34,11 +34,11 @@ Visit the [live demo](https://ozlphrt.github.io/GlobeSweeper/) to play the game.
 ## Version History
 
 ### v2.2.2 (Current Stable)
-- Re-engineered 3D geometry engine to create beveled/chamfered edges for all hexagonal and pentagonal tile pillars
-- Implemented quadratic Bezier curve subdivision on all polygon corners (`getRoundedPoly`) to convert sharp 5/6-sided shapes into smooth rounded tiles
-- Contracted top faces and added dynamic slope/bevel quads to smooth sharp tile corners under standard lighting
-- Aligned tile borders and wireframe outlines with the inset beveled top faces
-- Upgraded the in-place vertex scaling animation pipeline to support multi-stage bevel geometries seamlessly
+- Re-engineered 3D geometry engine to create rounded fillet edges for all hexagonal and pentagonal tile pillars
+- Implemented quadratic Bezier curve subdivision on all polygon corners (`getRoundedPoly`) with a fine-tuned corner fraction (0.08) for clean, geometric rounded corners
+- Subdivided the horizontal edge bevels into a 3-segment quarter-circle fillet (rounded vertical profile) to smooth the transition between the top face and vertical walls under standard lighting
+- Aligned tile borders and wireframe outlines with the inset rounded top faces
+- Upgraded the in-place vertex scaling animation pipeline to support multi-segment bevel geometries seamlessly
 - Maintained skip-wall optimization for empty tiles by mapping rounded sub-segments back to raw vertex coordinates
 
 ### v2.2.1

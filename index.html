@@ -1603,9 +1603,9 @@
       rawPoly.forEach(p => center.add(p));
       center.multiplyScalar(1 / rawPoly.length).normalize();
 
-      // Convert raw pent/hex to smooth rounded polygon
+      // Convert raw pent/hex to smooth rounded polygon (fraction = 0.08 for clean, subtle corner rounding)
       const samplesPerCorner = 4;
-      const poly = getRoundedPoly(rawPoly, 0.22, samplesPerCorner);
+      const poly = getRoundedPoly(rawPoly, 0.08, samplesPerCorner);
       const n = poly.length;
       const positions = [];
 
@@ -1620,6 +1620,7 @@
       const height = outerRadius - innerRadius;
       const bevelDepth = Math.min(0.007, height * 0.3);
       const bevelInset = Math.min(0.03, height * 0.35); // top-face inset factor
+      const shoulderRadius = outerRadius - bevelDepth;
 
       // Top face vertices (contracted slightly towards the centroid for the bevel edge)
       const normVertsTop = normVerts.map(v => {
@@ -1646,23 +1647,45 @@
         positions.push(aIn.x, aIn.y, aIn.z);
       }
 
-      // 3. Bevel Quads (connecting top face to the shoulder)
-      const shoulderRadius = outerRadius - bevelDepth;
-      for (let i = 0; i < n; i++) {
-        const aTop = normVertsTop[i].clone().multiplyScalar(outerRadius);
-        const bTop = normVertsTop[(i + 1) % n].clone().multiplyScalar(outerRadius);
-        const bShoulder = normVerts[(i + 1) % n].clone().multiplyScalar(shoulderRadius);
-        const aShoulder = normVerts[i].clone().multiplyScalar(shoulderRadius);
+      // 3. Rounded Bevel Section (connecting top face to the shoulder using a multi-segment quarter-circle fillet)
+      const bevelSegments = 3;
+      // Pre-calculate vertex rings for each step of the bevel arc
+      const bevelRings = [];
+      for (let s = 0; s <= bevelSegments; s++) {
+        const t = s / bevelSegments;
+        const theta = t * (Math.PI / 2); // 0 (shoulder) to PI/2 (top face)
+        
+        const r = shoulderRadius + bevelDepth * Math.sin(theta);
+        const inset = bevelInset * (1 - Math.cos(theta));
+        
+        const ringVerts = normVerts.map(v => {
+          return v.clone().lerp(center, inset).normalize().multiplyScalar(r);
+        });
+        bevelRings.push(ringVerts);
+      }
 
-        // CCW Tri 1
-        positions.push(aTop.x, aTop.y, aTop.z);
-        positions.push(aShoulder.x, aShoulder.y, aShoulder.z);
-        positions.push(bShoulder.x, bShoulder.y, bShoulder.z);
+      // Draw quads between successive rings
+      // Ring 0 is shoulder (bottom), Ring bevelSegments is top face (top)
+      for (let s = 0; s < bevelSegments; s++) {
+        const ringBottom = bevelRings[s];
+        const ringTop = bevelRings[s + 1];
+        
+        for (let i = 0; i < n; i++) {
+          const aBottom = ringBottom[i];
+          const bBottom = ringBottom[(i + 1) % n];
+          const aTop = ringTop[i];
+          const bTop = ringTop[(i + 1) % n];
 
-        // CCW Tri 2
-        positions.push(aTop.x, aTop.y, aTop.z);
-        positions.push(bShoulder.x, bShoulder.y, bShoulder.z);
-        positions.push(bTop.x, bTop.y, bTop.z);
+          // CCW Tri 1
+          positions.push(aTop.x, aTop.y, aTop.z);
+          positions.push(aBottom.x, aBottom.y, aBottom.z);
+          positions.push(bBottom.x, bBottom.y, bBottom.z);
+
+          // CCW Tri 2
+          positions.push(aTop.x, aTop.y, aTop.z);
+          positions.push(bBottom.x, bBottom.y, bBottom.z);
+          positions.push(bTop.x, bTop.y, bTop.z);
+        }
       }
 
       // 4. Side Quads (connecting shoulder to inner cap)
@@ -2570,8 +2593,8 @@
           continue;
         }
 
-        const poly = polys[tileIndex];
-        const n = poly.length;
+        const rawPoly = polys[tileIndex];
+        const nRaw = rawPoly.length;
 
         // Determine current outer radius for this tile
         let outerRadius = 1.0;
@@ -2581,8 +2604,11 @@
         }
 
         const center = new THREE.Vector3();
-        poly.forEach(p => center.add(p));
-        center.multiplyScalar(1 / poly.length).normalize();
+        rawPoly.forEach(p => center.add(p));
+        center.multiplyScalar(1 / nRaw).normalize();
+
+        const poly = getRoundedPoly(rawPoly, 0.08, 4);
+        const n = poly.length;
 
         const gapFactor = (t && t.isEmpty) ? -0.025 : 0.025;
         const normVerts = poly.map(p => {
@@ -2604,7 +2630,7 @@
 
           pts.push(a.x, a.y, a.z, b.x, b.y, b.z);
           
-          if (n === 5) {
+          if (nRaw === 5) {
             pentPts.push(a.x, a.y, a.z, b.x, b.y, b.z);
           }
         }
@@ -6967,8 +6993,9 @@
               // 2. Inner cap: next n*9 floats (Skip all, at innerRadius)
               const innerCapEnd = topFaceEnd + n * 9;
               
-              // 3. Bevel quads: next n*2 triangles = n*18 floats (Scale all)
-              const bevelEnd = innerCapEnd + n * 18;
+              // 3. Bevel quads: next bevelSegments * n * 18 floats (Scale all)
+              const bevelSegments = 3;
+              const bevelEnd = innerCapEnd + bevelSegments * n * 18;
               for (let i = innerCapEnd; i < bevelEnd; i++) {
                 arr[i] *= scaleFactor;
               }
