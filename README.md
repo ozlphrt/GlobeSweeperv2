@@ -36,9 +36,10 @@ Visit the [live demo](https://ozlphrt.github.io/GlobeSweeper/) to play the game.
 ### v2.2.2 (Current Stable)
 - Re-engineered 3D geometry engine to create rounded fillet edges for all hexagonal and pentagonal tile pillars
 - Implemented quadratic Bezier curve subdivision on all polygon corners (`getRoundedPoly`) with a fine-tuned corner fraction (0.08) for clean, geometric rounded corners
-- Subdivided the horizontal edge bevels into a 3-segment quarter-circle fillet (rounded vertical profile) to smooth the transition between the top face and vertical walls under standard lighting
+- Subdivided the horizontal edge bevels into a 3-segment quarter-circle fillet (rounded vertical profile) to smooth the transition between the top face and vertical walls
+- Introduced `indexGeometry` to convert non-indexed geometries into indexed ones, allowing Three.js to average adjacent vertex normals and produce perfectly smooth shading (fillets) across the top perimeter (marked edges) under standard lighting
+- Upgraded the in-place vertex scaling animation pipeline to use dynamic index mapping stored in `userData.outerVertexIndices` instead of flat index offsets
 - Aligned tile borders and wireframe outlines with the inset rounded top faces
-- Upgraded the in-place vertex scaling animation pipeline to support multi-segment bevel geometries seamlessly
 - Maintained skip-wall optimization for empty tiles by mapping rounded sub-segments back to raw vertex coordinates
 
 ### v2.2.1

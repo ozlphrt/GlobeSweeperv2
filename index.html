@@ -1593,6 +1593,56 @@
       return rounded;
     }
 
+    function indexGeometry(geometry, innerRadius) {
+      const posAttr = geometry.getAttribute('position');
+      if (!posAttr) return geometry;
+      
+      const precision = 5;
+      const hash = {};
+      const uniquePositions = [];
+      const indices = [];
+      const outerVertexIndices = new Set();
+      
+      const arr = posAttr.array;
+      const count = posAttr.count;
+      
+      const threshold = innerRadius + 0.002;
+      
+      for (let i = 0; i < count; i++) {
+        const x = arr[i * 3];
+        const y = arr[i * 3 + 1];
+        const z = arr[i * 3 + 2];
+        
+        const key = x.toFixed(precision) + '_' + y.toFixed(precision) + '_' + z.toFixed(precision);
+        let targetIndex;
+        
+        if (hash[key] !== undefined) {
+          targetIndex = hash[key];
+        } else {
+          targetIndex = uniquePositions.length / 3;
+          hash[key] = targetIndex;
+          uniquePositions.push(x, y, z);
+        }
+        indices.push(targetIndex);
+        
+        // If this vertex belongs to the outer cap/bevel/shoulder, mark its indexed position to scale
+        const radius = Math.sqrt(x*x + y*y + z*z);
+        if (radius > threshold) {
+          outerVertexIndices.add(targetIndex);
+        }
+      }
+      
+      const indexedGeo = new THREE.BufferGeometry();
+      indexedGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(uniquePositions), 3));
+      indexedGeo.setIndex(indices);
+      indexedGeo.computeVertexNormals();
+      
+      // Store the indices of the outer vertices to scale during animation
+      indexedGeo.userData.outerVertexIndices = Array.from(outerVertexIndices);
+      
+      return indexedGeo;
+    }
+
     function createPrismGeometry(tileIndexOrPoly, innerRadius, outerRadius) {
       const isIndex = typeof tileIndexOrPoly === 'number';
       const rawPoly = isIndex ? state.polys[tileIndexOrPoly] : tileIndexOrPoly;
@@ -1730,10 +1780,11 @@
 
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(positions), 3));
-      g.computeVertexNormals();
-      g.computeBoundingSphere();
-      g.computeBoundingBox();
-      return g;
+      
+      const indexedG = indexGeometry(g, innerRadius);
+      indexedG.computeBoundingSphere();
+      indexedG.computeBoundingBox();
+      return indexedG;
     }
 
     function polygonToMesh(tileIndexOrPoly, mat, innerRadius = 0.97, outerRadius = 1.0) {
@@ -6978,47 +7029,21 @@
             
             // Scale outer vertices in-place instead of full geometry rebuild
             const posAttr = t.mesh.geometry.getAttribute('position');
-            if (posAttr) {
+            if (posAttr && t.mesh.geometry.userData && t.mesh.geometry.userData.outerVertexIndices) {
               const arr = posAttr.array;
-              const rawN = state.polys[idx].length; // 5 or 6 (pent or hex)
-              const n = rawN * 5; // rounded polygon has 5 vertices per corner (samplesPerCorner = 4)
               const scaleFactor = t.currentOuterR / prevOuterR;
               
-              // 1. Top face vertices: first n*3 triangles = n*9 floats (Scale all)
-              const topFaceEnd = n * 9;
-              for (let i = 0; i < topFaceEnd; i++) {
-                arr[i] *= scaleFactor;
-              }
-              
-              // 2. Inner cap: next n*9 floats (Skip all, at innerRadius)
-              const innerCapEnd = topFaceEnd + n * 9;
-              
-              // 3. Bevel quads: next bevelSegments * n * 18 floats (Scale all)
-              const bevelSegments = 3;
-              const bevelEnd = innerCapEnd + bevelSegments * n * 18;
-              for (let i = innerCapEnd; i < bevelEnd; i++) {
-                arr[i] *= scaleFactor;
-              }
-              
-              // 4. Side wall quads: from bevelEnd to end of array, 18 floats per quad
-              // In each quad, scale the shoulder vertices (indices 2, 4, 5 in quad = offset +6, +12, +15)
-              for (let i = bevelEnd; i < arr.length; i += 18) {
-                // bShoulder (vert index 2) at offset +6,+7,+8
-                arr[i + 6] *= scaleFactor;
-                arr[i + 7] *= scaleFactor;
-                arr[i + 8] *= scaleFactor;
-                // bShoulder (vert index 4) at offset +12,+13,+14
-                arr[i + 12] *= scaleFactor;
-                arr[i + 13] *= scaleFactor;
-                arr[i + 14] *= scaleFactor;
-                // aShoulder (vert index 5) at offset +15,+16,+17
-                arr[i + 15] *= scaleFactor;
-                arr[i + 16] *= scaleFactor;
-                arr[i + 17] *= scaleFactor;
+              const outerIndices = t.mesh.geometry.userData.outerVertexIndices;
+              const len = outerIndices.length;
+              for (let i = 0; i < len; i++) {
+                const vIdx = outerIndices[i] * 3;
+                arr[vIdx]     *= scaleFactor;
+                arr[vIdx + 1] *= scaleFactor;
+                arr[vIdx + 2] *= scaleFactor;
               }
               
               posAttr.needsUpdate = true;
-              // Only recompute expensive normals/bounds when animation is nearly done
+              // Only recompute normals/bounds when animation is nearly done
               if (Math.abs(t.currentOuterR - t.targetOuterR) < 0.01) {
                 t.mesh.geometry.computeVertexNormals();
                 t.mesh.geometry.computeBoundingSphere();
