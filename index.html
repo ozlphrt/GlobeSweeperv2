@@ -1579,14 +1579,24 @@
         return v.lerp(center, gapFactor).normalize();
       });
 
-      // 1. Outer Cap (facing outwards)
+      // Calculate bevel sizing based on height to remain proportional
+      const height = outerRadius - innerRadius;
+      const bevelDepth = Math.min(0.007, height * 0.3);
+      const bevelInset = Math.min(0.03, height * 0.35); // top-face inset factor
+
+      // Top face vertices (contracted slightly towards the centroid for the bevel edge)
+      const normVertsTop = normVerts.map(v => {
+        return v.clone().lerp(center, bevelInset).normalize();
+      });
+
+      // 1. Top Face (Inset Cap)
       const centerOut = center.clone().multiplyScalar(outerRadius);
       for (let i = 0; i < n; i++) {
-        const aOut = normVerts[i].clone().multiplyScalar(outerRadius);
-        const bOut = normVerts[(i + 1) % n].clone().multiplyScalar(outerRadius);
+        const aTop = normVertsTop[i].clone().multiplyScalar(outerRadius);
+        const bTop = normVertsTop[(i + 1) % n].clone().multiplyScalar(outerRadius);
         positions.push(centerOut.x, centerOut.y, centerOut.z);
-        positions.push(aOut.x, aOut.y, aOut.z);
-        positions.push(bOut.x, bOut.y, bOut.z);
+        positions.push(aTop.x, aTop.y, aTop.z);
+        positions.push(bTop.x, bTop.y, bTop.z);
       }
 
       // 2. Inner Cap (facing inwards)
@@ -1599,7 +1609,26 @@
         positions.push(aIn.x, aIn.y, aIn.z);
       }
 
-      // 3. Side Quads (connecting inner and outer caps)
+      // 3. Bevel Quads (connecting top face to the shoulder)
+      const shoulderRadius = outerRadius - bevelDepth;
+      for (let i = 0; i < n; i++) {
+        const aTop = normVertsTop[i].clone().multiplyScalar(outerRadius);
+        const bTop = normVertsTop[(i + 1) % n].clone().multiplyScalar(outerRadius);
+        const bShoulder = normVerts[(i + 1) % n].clone().multiplyScalar(shoulderRadius);
+        const aShoulder = normVerts[i].clone().multiplyScalar(shoulderRadius);
+
+        // CCW Tri 1
+        positions.push(aTop.x, aTop.y, aTop.z);
+        positions.push(aShoulder.x, aShoulder.y, aShoulder.z);
+        positions.push(bShoulder.x, bShoulder.y, bShoulder.z);
+
+        // CCW Tri 2
+        positions.push(aTop.x, aTop.y, aTop.z);
+        positions.push(bShoulder.x, bShoulder.y, bShoulder.z);
+        positions.push(bTop.x, bTop.y, bTop.z);
+      }
+
+      // 4. Side Quads (connecting shoulder to inner cap)
       for (let i = 0; i < n; i++) {
         const vA = poly[i];
         const vB = poly[(i + 1) % n];
@@ -1623,17 +1652,17 @@
         if (skipWall) continue;
 
         const aIn  = normVerts[i].clone().multiplyScalar(innerRadius);
-        const aOut = normVerts[i].clone().multiplyScalar(outerRadius);
+        const aShoulder = normVerts[i].clone().multiplyScalar(shoulderRadius);
         const bIn  = normVerts[(i + 1) % n].clone().multiplyScalar(innerRadius);
-        const bOut = normVerts[(i + 1) % n].clone().multiplyScalar(outerRadius);
+        const bShoulder = normVerts[(i + 1) % n].clone().multiplyScalar(shoulderRadius);
 
         positions.push(aIn.x, aIn.y, aIn.z);
         positions.push(bIn.x, bIn.y, bIn.z);
-        positions.push(bOut.x, bOut.y, bOut.z);
+        positions.push(bShoulder.x, bShoulder.y, bShoulder.z);
 
         positions.push(aIn.x, aIn.y, aIn.z);
-        positions.push(bOut.x, bOut.y, bOut.z);
-        positions.push(aOut.x, aOut.y, aOut.z);
+        positions.push(bShoulder.x, bShoulder.y, bShoulder.z);
+        positions.push(aShoulder.x, aShoulder.y, aShoulder.z);
       }
 
       const g = new THREE.BufferGeometry();
@@ -2506,15 +2535,32 @@
 
         // Determine current outer radius for this tile
         let outerRadius = 1.0;
+        let innerRadius = 0.97;
         if (t && t.revealed) {
-          outerRadius = 1.0 + t.count * 0.04;
+          outerRadius = t.currentOuterR !== undefined ? t.currentOuterR : 1.0 + t.count * 0.04;
         }
 
-        const normVerts = poly.map(p => p.clone().normalize());
+        const center = new THREE.Vector3();
+        poly.forEach(p => center.add(p));
+        center.multiplyScalar(1 / poly.length).normalize();
+
+        const gapFactor = (t && t.isEmpty) ? -0.025 : 0.025;
+        const normVerts = poly.map(p => {
+          const v = p.clone().normalize();
+          return v.lerp(center, gapFactor).normalize();
+        });
+
+        // Match bevel calculations
+        const height = outerRadius - innerRadius;
+        const bevelInset = Math.min(0.03, height * 0.35);
+
+        const normVertsTop = normVerts.map(v => {
+          return v.clone().lerp(center, bevelInset).normalize();
+        });
 
         for (let i = 0; i < n; i++) {
-          const a = normVerts[i].clone().multiplyScalar(outerRadius);
-          const b = normVerts[(i + 1) % n].clone().multiplyScalar(outerRadius);
+          const a = normVertsTop[i].clone().multiplyScalar(outerRadius);
+          const b = normVertsTop[(i + 1) % n].clone().multiplyScalar(outerRadius);
 
           pts.push(a.x, a.y, a.z, b.x, b.y, b.z);
           
@@ -6871,33 +6917,33 @@
               const n = state.polys[idx].length; // 5 or 6 (pent or hex)
               const scaleFactor = t.currentOuterR / prevOuterR;
               
-              // Outer cap vertices: first n*3 triangles = n*9 floats (3 verts per tri, 3 floats per vert)
-              // Each triangle: center, vertA, vertB — all at outerRadius
-              const outerCapEnd = n * 3 * 3; // n triangles * 3 verts * 3 floats
-              for (let i = 0; i < outerCapEnd; i += 3) {
-                arr[i]     *= scaleFactor;
-                arr[i + 1] *= scaleFactor;
-                arr[i + 2] *= scaleFactor;
+              // 1. Top face vertices: first n*3 triangles = n*9 floats (Scale all)
+              const topFaceEnd = n * 9;
+              for (let i = 0; i < topFaceEnd; i++) {
+                arr[i] *= scaleFactor;
               }
               
-              // Inner cap: next n*3 triangles — skip these (at innerRadius, unchanged)
-              const innerCapEnd = outerCapEnd + n * 3 * 3;
+              // 2. Inner cap: next n*9 floats (Skip all, at innerRadius)
+              const innerCapEnd = topFaceEnd + n * 9;
               
-              // Side wall quads: each side has 2 triangles = 6 verts
-              // Per side quad: aIn, bIn, bOut, aIn, bOut, aOut
-              // Outer verts are at positions [2], [4], [5] of each 6-vert quad (0-indexed)
-              const sideStart = innerCapEnd;
-              const totalFloats = arr.length;
-              for (let i = sideStart; i < totalFloats; i += 18) { // 6 verts * 3 floats = 18 per quad
-                // bOut (vert index 2 in quad) at offset +6,+7,+8
+              // 3. Bevel quads: next n*2 triangles = n*18 floats (Scale all)
+              const bevelEnd = innerCapEnd + n * 18;
+              for (let i = innerCapEnd; i < bevelEnd; i++) {
+                arr[i] *= scaleFactor;
+              }
+              
+              // 4. Side wall quads: from bevelEnd to end of array, 18 floats per quad
+              // In each quad, scale the shoulder vertices (indices 2, 4, 5 in quad = offset +6, +12, +15)
+              for (let i = bevelEnd; i < arr.length; i += 18) {
+                // bShoulder (vert index 2) at offset +6,+7,+8
                 arr[i + 6] *= scaleFactor;
                 arr[i + 7] *= scaleFactor;
                 arr[i + 8] *= scaleFactor;
-                // bOut (vert index 4 in quad) at offset +12,+13,+14
+                // bShoulder (vert index 4) at offset +12,+13,+14
                 arr[i + 12] *= scaleFactor;
                 arr[i + 13] *= scaleFactor;
                 arr[i + 14] *= scaleFactor;
-                // aOut (vert index 5 in quad) at offset +15,+16,+17
+                // aShoulder (vert index 5) at offset +15,+16,+17
                 arr[i + 15] *= scaleFactor;
                 arr[i + 16] *= scaleFactor;
                 arr[i + 17] *= scaleFactor;

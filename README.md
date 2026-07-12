@@ -33,7 +33,13 @@ Visit the [live demo](https://ozlphrt.github.io/GlobeSweeper/) to play the game.
 
 ## Version History
 
-### v2.2.1 (Current Stable)
+### v2.2.2 (Current Stable)
+- Re-engineered 3D geometry engine to create beveled/chamfered edges for all hexagonal and pentagonal tile pillars
+- Contracted top faces and added dynamic slope/bevel quads to smooth sharp tile corners under standard lighting
+- Aligned tile borders and wireframe outlines with the inset beveled top faces
+- Upgraded the in-place vertex scaling animation pipeline to support multi-stage bevel geometries seamlessly
+
+### v2.2.1
 - Unified animation, label rotation, and back-face checks into a single loop pass (O(1) iterations when idle)
 - Implemented `state.animatingTiles` Set tracking to only animate/process active tiles, avoiding O(n) whole-board scans
 - Added back-face culling (`mesh.visible` flag) to hide tiles on the far side of the globe from both render & shadow passes
