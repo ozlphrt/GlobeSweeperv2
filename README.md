@@ -33,7 +33,11 @@ Visit the [live demo](https://ozlphrt.github.io/GlobeSweeper/) to play the game.
 
 ## Version History
 
-### v2.2.2 (Current Stable)
+### v2.2.3 (Current Stable)
+- Introduced an adaptive shadow rendering cutoff: automatically disables shadow mapping completely for levels with >2000 tiles (e.g. Level 31+) to double the rendering performance and maintain 60 FPS
+- Cleaned up real-time tile reveal routines to skip `castShadow` assignments when shadow mapping is disabled
+
+### v2.2.2
 - Re-engineered 3D geometry engine to create rounded fillet edges for all hexagonal and pentagonal tile pillars
 - Implemented quadratic Bezier curve subdivision on all polygon corners (`getRoundedPoly`) with a fine-tuned corner fraction (0.08) for clean, geometric rounded corners
 - Subdivided the horizontal edge bevels into a 3-segment quarter-circle fillet (rounded vertical profile) to smooth the transition between the top face and vertical walls

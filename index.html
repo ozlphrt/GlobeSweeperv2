@@ -3485,7 +3485,7 @@
         t.mesh.geometry.dispose();
         t.mesh.geometry = createPrismGeometry(state.polys[i], 0.97, 1.0);
         t.mesh.material = getRevealedMaterial(t);
-        t.mesh.castShadow = (t.count > 0);
+        t.mesh.castShadow = renderer.shadowMap.enabled && (t.count > 0);
         updateTilePillarElevation(i);
       }
 
@@ -3563,7 +3563,7 @@
               t.mesh.geometry.dispose();
               t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, 1.0);
               t.mesh.material = getRevealedMaterial(t);
-              t.mesh.castShadow = (t.count > 0);
+              t.mesh.castShadow = renderer.shadowMap.enabled && (t.count > 0);
               state.safeRevealed++;
               updateTilePillarElevation(idx);
             }
@@ -3661,7 +3661,7 @@
             t.mesh.geometry.dispose();
             t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, 1.0);
             t.mesh.material = getRevealedMaterial(t);
-            t.mesh.castShadow = (t.count > 0);
+            t.mesh.castShadow = renderer.shadowMap.enabled && (t.count > 0);
             state.safeRevealed++; // Only count non-empty, non-mine tiles
             updateTilePillarElevation(idx);
 
@@ -3736,7 +3736,7 @@
           t.mesh.geometry.dispose();
           t.mesh.geometry = createPrismGeometry(state.polys[i], 0.97, 1.0);
           t.mesh.material = getRevealedMaterial(t);
-          t.mesh.castShadow = (t.count > 0);
+          t.mesh.castShadow = renderer.shadowMap.enabled && (t.count > 0);
           state.safeRevealed++;
           updateTilePillarElevation(i);
 
@@ -4382,15 +4382,42 @@
       
       buildTiles(); state.firstClick = false; state.gameOver=false; state.safeRevealed=0; state.totalMines=0; state.flags=0; state.lives=3; state.won=false; lifeLostInCurrentReveal=false; resetTimer(); updateCounters();
       
-      // Adaptive shadow map quality: reduce for high tile counts to maintain FPS
+      // Adaptive shadow map quality: automatically disable for high tile counts to preserve high FPS (>30/60)
       const tileCount = state.polys.length;
-      let shadowSize = 2048;
-      if (tileCount > 3500) shadowSize = 512;
-      else if (tileCount > 2000) shadowSize = 1024;
-      if (dir.shadow.mapSize.width !== shadowSize) {
-        dir.shadow.mapSize.width = shadowSize;
-        dir.shadow.mapSize.height = shadowSize;
-        if (dir.shadow.map) { dir.shadow.map.dispose(); dir.shadow.map = null; }
+      if (tileCount > 2000) {
+        if (renderer.shadowMap.enabled) {
+          renderer.shadowMap.enabled = false;
+          dir.castShadow = false;
+          if (dir.shadow.map) {
+            dir.shadow.map.dispose();
+            dir.shadow.map = null;
+          }
+          // Remove shadow status on active tiles
+          state.tiles.forEach(t => {
+            if (t.mesh) {
+              t.mesh.castShadow = false;
+              t.mesh.receiveShadow = false;
+            }
+          });
+        }
+      } else {
+        if (!renderer.shadowMap.enabled) {
+          renderer.shadowMap.enabled = true;
+          dir.castShadow = true;
+          state.tiles.forEach(t => {
+            if (t.mesh) {
+              t.mesh.receiveShadow = true;
+              t.mesh.castShadow = (t.revealed && t.count > 0);
+            }
+          });
+        }
+        let shadowSize = 2048;
+        if (tileCount > 1200) shadowSize = 1024;
+        if (dir.shadow.mapSize.width !== shadowSize) {
+          dir.shadow.mapSize.width = shadowSize;
+          dir.shadow.mapSize.height = shadowSize;
+          if (dir.shadow.map) { dir.shadow.map.dispose(); dir.shadow.map = null; }
+        }
       }
       
       requestRender(180);
