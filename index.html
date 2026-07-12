@@ -1559,16 +1559,53 @@
 
 
 
+    function getRoundedPoly(poly, fraction = 0.22, samplesPerCorner = 4) {
+      if (poly.length > 6) return poly; // already rounded
+      const n = poly.length;
+      const rounded = [];
+      
+      const center = new THREE.Vector3();
+      poly.forEach(p => center.add(p));
+      center.multiplyScalar(1 / n).normalize();
+
+      for (let i = 0; i < n; i++) {
+        const prev = poly[(i - 1 + n) % n];
+        const curr = poly[i];
+        const next = poly[(i + 1) % n];
+        
+        // Find tangent points along the edges
+        const A = curr.clone().lerp(prev, fraction);
+        const B = curr.clone().lerp(next, fraction);
+        
+        // Sample quadratic Bezier curve with control point curr
+        for (let j = 0; j <= samplesPerCorner; j++) {
+          const s = j / samplesPerCorner;
+          const oneMinusS = 1 - s;
+          const p = new THREE.Vector3()
+            .addScaledVector(A, oneMinusS * oneMinusS)
+            .addScaledVector(curr, 2 * oneMinusS * s)
+            .addScaledVector(B, s * s);
+          
+          p.normalize();
+          rounded.push(p);
+        }
+      }
+      return rounded;
+    }
+
     function createPrismGeometry(tileIndexOrPoly, innerRadius, outerRadius) {
       const isIndex = typeof tileIndexOrPoly === 'number';
-      const poly = isIndex ? state.polys[tileIndexOrPoly] : tileIndexOrPoly;
+      const rawPoly = isIndex ? state.polys[tileIndexOrPoly] : tileIndexOrPoly;
       const tileIndex = isIndex ? tileIndexOrPoly : -1;
       const currentTileIsEmpty = isIndex && state.tiles && state.tiles[tileIndex] && state.tiles[tileIndex].isEmpty;
 
       const center = new THREE.Vector3();
-      poly.forEach(p => center.add(p));
-      center.multiplyScalar(1 / poly.length).normalize();
+      rawPoly.forEach(p => center.add(p));
+      center.multiplyScalar(1 / rawPoly.length).normalize();
 
+      // Convert raw pent/hex to smooth rounded polygon
+      const samplesPerCorner = 4;
+      const poly = getRoundedPoly(rawPoly, 0.22, samplesPerCorner);
       const n = poly.length;
       const positions = [];
 
@@ -1630,19 +1667,22 @@
 
       // 4. Side Quads (connecting shoulder to inner cap)
       for (let i = 0; i < n; i++) {
-        const vA = poly[i];
-        const vB = poly[(i + 1) % n];
-
         let skipWall = false;
         if (currentTileIsEmpty && state.neighbors[tileIndex] && state.tiles) {
+          const k_A = Math.floor(i / (samplesPerCorner + 1));
+          const k_B = Math.floor(((i + 1) % n) / (samplesPerCorner + 1));
+          
+          const rawVA = rawPoly[k_A % rawPoly.length];
+          const rawVB = rawPoly[k_B % rawPoly.length];
+          
           for (const nbIdx of state.neighbors[tileIndex]) {
             const nbTile = state.tiles[nbIdx];
             if (nbTile && nbTile.isEmpty) {
               const nbPoly = state.polys[nbIdx];
               let hasA = false, hasB = false;
               for (const p of nbPoly) {
-                if (!hasA && p.distanceToSquared(vA) < 1e-8) hasA = true;
-                if (!hasB && p.distanceToSquared(vB) < 1e-8) hasB = true;
+                if (!hasA && p.distanceToSquared(rawVA) < 1e-8) hasA = true;
+                if (!hasB && p.distanceToSquared(rawVB) < 1e-8) hasB = true;
                 if (hasA && hasB) break;
               }
               if (hasA && hasB) { skipWall = true; break; }
@@ -6914,7 +6954,8 @@
             const posAttr = t.mesh.geometry.getAttribute('position');
             if (posAttr) {
               const arr = posAttr.array;
-              const n = state.polys[idx].length; // 5 or 6 (pent or hex)
+              const rawN = state.polys[idx].length; // 5 or 6 (pent or hex)
+              const n = rawN * 5; // rounded polygon has 5 vertices per corner (samplesPerCorner = 4)
               const scaleFactor = t.currentOuterR / prevOuterR;
               
               // 1. Top face vertices: first n*3 triangles = n*9 floats (Scale all)
