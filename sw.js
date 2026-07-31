@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.58';
+const CACHE_NAME = 'globesweeper-v1.3.70-remove-debug-panel';
 const urlsToCache = [
   './',
   'index.html',

@@ -1894,7 +1894,7 @@
       const mesh = new THREE.Mesh(g, mat);
 
       // Position mesh at tile surface (accounting for dynamic topographic extrusion)
-      const outerR = (tile.currentOuterR !== undefined) ? tile.currentOuterR : (1.0 + tile.count * 0.04);
+      const outerR = (tile.currentOuterR !== undefined) ? tile.currentOuterR : (1.0 + tile.count * getStackHeightStep());
       mesh.position.copy(tile.center).normalize().multiplyScalar(outerR);
       // Quaternion will be set every frame by the render loop upright-tracking code
 
@@ -2651,7 +2651,7 @@
         let outerRadius = 1.0;
         let innerRadius = 0.97;
         if (t && t.revealed) {
-          outerRadius = t.currentOuterR !== undefined ? t.currentOuterR : 1.0 + t.count * 0.04;
+          outerRadius = t.currentOuterR !== undefined ? t.currentOuterR : 1.0 + t.count * getStackHeightStep();
         }
 
         const center = new THREE.Vector3();
@@ -2795,10 +2795,10 @@
     });
     
     let matRevealed = new THREE.MeshStandardMaterial({ 
-      color: 0x4a5565, 
+      color: 0xf8fafc, 
       side: THREE.DoubleSide,
-      roughness: 0.6,
-      metalness: 0.0
+      roughness: 0.5,
+      metalness: 0.05
     });
     
     let matFlag = new THREE.MeshStandardMaterial({ 
@@ -2885,9 +2885,9 @@
     });
 
     const matRevealedLand = new THREE.MeshStandardMaterial({
-      color: 0xd2b48c, // Tan/Sand
+      color: 0xedf2f7, // Bright White / Off-White
       side: THREE.DoubleSide,
-      roughness: 0.8,
+      roughness: 0.6,
       metalness: 0.0
     });
 
@@ -2947,6 +2947,24 @@
       }
       return matHidden;
     }
+
+    const countColorsHex = [
+      null,
+      '#2563eb', // 1 (Blue)
+      '#16a34a', // 2 (Green)
+      '#dc2626', // 3 (Red)
+      '#7c3aed', // 4 (Purple)
+      '#d97706', // 5 (Amber/Orange)
+      '#0891b2', // 6 (Cyan/Teal)
+      '#4b5563', // 7 (Charcoal)
+      '#9ca3af'  // 8 (Gray)
+    ];
+
+    const countMaterials = countColorsHex.map(hex => hex ? new THREE.MeshStandardMaterial({
+      color: new THREE.Color(hex),
+      roughness: 0.45,
+      metalness: 0.15
+    }) : null);
 
     function getRevealedMaterial(tile) {
       if (state.currentTheme === 'earth') {
@@ -3058,7 +3076,7 @@
 
 
 
-    const debugSettings = { initialRevealPercent: 3, emptyTilePercent: 30, mineRatio: 7, labelScale: 0.07 };
+    const debugSettings = { initialRevealPercent: 8, emptyTilePercent: 0, mineRatio: null, labelScale: 0.07 };
 
     function findSafeTile(){
       const revealed = new Set(state.tiles.map((t, i) => t.revealed ? i : -1).filter(i => i >= 0));
@@ -3480,7 +3498,7 @@
         t.mesh.material = getEmptyMaterial();
       } else {
         t.currentOuterR = 1.0;
-        setTileTargetOuterR(i, 1.0 + t.count * 0.04);
+        setTileTargetOuterR(i, 1.0 + t.count * getStackHeightStep());
         t.isInitialRaising = true;
         t.mesh.geometry.dispose();
         t.mesh.geometry = createPrismGeometry(state.polys[i], 0.97, 1.0);
@@ -3558,7 +3576,7 @@
               }
             } else {
               t.currentOuterR = 1.0;
-              setTileTargetOuterR(idx, 1.0 + t.count * 0.04);
+              setTileTargetOuterR(idx, 1.0 + t.count * getStackHeightStep());
               t.isInitialRaising = true;
               t.mesh.geometry.dispose();
               t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, 1.0);
@@ -3656,7 +3674,7 @@
             }
           } else {
             t.currentOuterR = 1.0;
-            setTileTargetOuterR(idx, 1.0 + t.count * 0.04);
+            setTileTargetOuterR(idx, 1.0 + t.count * getStackHeightStep());
             t.isInitialRaising = true;
             t.mesh.geometry.dispose();
             t.mesh.geometry = createPrismGeometry(state.polys[idx], 0.97, 1.0);
@@ -3731,7 +3749,7 @@
           // Reset scale to normal when revealed
           t.mesh.scale.set(1.0, 1.0, 1.0);
           t.currentOuterR = 1.0;
-          setTileTargetOuterR(i, 1.0 + t.count * 0.04);
+          setTileTargetOuterR(i, 1.0 + t.count * getStackHeightStep());
           t.isInitialRaising = true;
           t.mesh.geometry.dispose();
           t.mesh.geometry = createPrismGeometry(state.polys[i], 0.97, 1.0);
@@ -3784,6 +3802,20 @@
 
 
 
+    
+    function getTileScale() {
+      const f = (state && state.f) ? state.f : (5 + Math.floor(((state?.level || 1) - 1) / 2));
+      return Math.min(1.0, 5 / Math.max(1, f));
+    }
+
+    function getStackHeightStep() {
+      return 0.04 * Math.max(0.45, Math.pow(getTileScale(), 0.65));
+    }
+
+    function getParticleScale() {
+      return getTileScale();
+    }
+
     function setTileTargetOuterR(i, val) {
       const t = state.tiles[i];
       if (!t) return;
@@ -3803,12 +3835,12 @@
 
       if (t.isInitialRaising) {
         t.shouldLowerAfterRaise = isSatisfied;
-        setTileTargetOuterR(i, 1.0 + t.count * 0.04);
+        setTileTargetOuterR(i, 1.0 + t.count * getStackHeightStep());
       } else {
         if (isSatisfied) {
           setTileTargetOuterR(i, 1.0);
         } else {
-          setTileTargetOuterR(i, 1.0 + t.count * 0.04);
+          setTileTargetOuterR(i, 1.0 + t.count * getStackHeightStep());
         }
       }
     }
@@ -3896,7 +3928,10 @@
       if (!tile || !tile.center) return;
       const position = tile.center;
       const normal = position.clone().normalize();
-      const numParticles = 500; // Increased to 500 particles for high density with natural physics
+      const particleScale = getParticleScale();
+      const sizeScale = Math.max(0.35, Math.pow(particleScale, 0.7));
+      const spreadScale = Math.max(0.65, Math.sqrt(particleScale));
+      const numParticles = Math.round(500 * Math.max(0.45, Math.sqrt(particleScale))); // Dynamically scale particle density for higher levels
       
       // Determine the base color of the exploding tile
       const baseColor = (tile.mesh.material && tile.mesh.material.color) 
@@ -3904,7 +3939,7 @@
         : new THREE.Color(0x2d3643);
       
       for (let i = 0; i < numParticles; i++) {
-        const size = 0.003 + Math.random() * 0.008;
+        const size = (0.003 + Math.random() * 0.008) * sizeScale;
         const geom = Math.random() > 0.4 
           ? new THREE.BoxGeometry(size, size, size) 
           : new THREE.IcosahedronGeometry(size, 0);
@@ -3925,15 +3960,15 @@
         });
         
         const mesh = new THREE.Mesh(geom, mat);
-        mesh.position.copy(position).addScaledVector(normal, 0.002);
+        mesh.position.copy(position).addScaledVector(normal, 0.002 * sizeScale);
         
-        // Push particles outward with higher initial speed so they reach greater altitudes
-        const speed = 0.032 + Math.random() * 0.048;
+        // Push particles outward with wider velocity spread to scatter debris naturally onto neighbor tiles
+        const speed = (0.032 + Math.random() * 0.048) * spreadScale;
         const velocity = normal.clone()
           .add(new THREE.Vector3(
-            (Math.random() - 0.5) * 1.5,
-            (Math.random() - 0.5) * 1.5,
-            (Math.random() - 0.5) * 1.5
+            (Math.random() - 0.5) * 1.8,
+            (Math.random() - 0.5) * 1.8,
+            (Math.random() - 0.5) * 1.8
           ))
           .normalize()
           .multiplyScalar(speed);
@@ -4232,7 +4267,6 @@
       }
 
       document.getElementById('mineHuntPercent').textContent = `${mineHuntPercent}%`;
-
       document.getElementById('mineHuntValue').textContent = `${state.flags}/${state.totalMines}`;
 
       // Calculate total safe tiles excluding empty tiles (empty tiles are not part of the game)
@@ -4429,7 +4463,7 @@
       rotationVelocity.y = 0.006;
 
       // Auto-start: Place mines and do initial reveals
-      const ratio = debugSettings.mineRatio || (12.5 + Math.min(12.5, (state.level - 1) * 0.5));
+      const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : 17.5;
       const initialReveal = debugSettings.initialRevealPercent || 0;
       const emptyRatio = debugSettings.emptyTilePercent || 0;
       
