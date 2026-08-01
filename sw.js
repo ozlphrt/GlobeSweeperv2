@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.80-left-stats-panel';
+const CACHE_NAME = 'globesweeper-v1.3.81-move-left-stats-panel-down';
 const urlsToCache = [
   './',
   'index.html',
