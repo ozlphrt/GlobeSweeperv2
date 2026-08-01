@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.83-15pct-mines-lower-cluster';
+const CACHE_NAME = 'globesweeper-v1.3.84-add-mines-percent-badge';
 const urlsToCache = [
   './',
   'index.html',

@@ -943,6 +943,19 @@
       font-weight: 900;
     }
 
+    .red-badge {
+      border-left: 3px solid #ef4444;
+    }
+
+    .red-badge .badge-val {
+      color: #f87171;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .count-mine-item .count-label { color: #f87171; }
+    .count-mine-item .count-val { color: #f87171; }
+
     .badge-label {
       font-size: 10px;
       font-weight: 800;
@@ -1086,6 +1099,10 @@
         <span class="badge-label">WHITE (0s)</span>
         <span id="statWhitePercent" class="badge-val">0.0%</span>
       </div>
+      <div class="percent-badge red-badge">
+        <span class="badge-label">MINES</span>
+        <span id="statMinePercent" class="badge-val">0.0%</span>
+      </div>
     </div>
 
     <div class="stats-divider"></div>
@@ -1094,6 +1111,10 @@
       <div class="count-item count-green-item">
         <span class="count-label">Unrevealed</span>
         <span id="countGreen" class="count-val">0</span>
+      </div>
+      <div class="count-item count-mine-item">
+        <span class="count-label">Mines</span>
+        <span id="countMinesTotal" class="count-val">0</span>
       </div>
       <div class="count-item count-0">
         <span class="count-label">0 Mines</span>
@@ -4496,12 +4517,19 @@
 
       const greenPercent = totalPlayable > 0 ? ((unrevealedCount / totalPlayable) * 100).toFixed(1) : '0.0';
       const whitePercent = totalPlayable > 0 ? ((whiteZeroCount / totalPlayable) * 100).toFixed(1) : '0.0';
+      const minePercent = totalPlayable > 0 ? (((state.totalMines || 0) / totalPlayable) * 100).toFixed(1) : '0.0';
 
       const elGreenP = document.getElementById('statGreenPercent');
       if (elGreenP) elGreenP.textContent = `${greenPercent}%`;
 
       const elWhiteP = document.getElementById('statWhitePercent');
       if (elWhiteP) elWhiteP.textContent = `${whitePercent}%`;
+
+      const elMineP = document.getElementById('statMinePercent');
+      if (elMineP) elMineP.textContent = `${minePercent}%`;
+
+      const elCM = document.getElementById('countMinesTotal');
+      if (elCM) elCM.textContent = state.totalMines || 0;
 
       const elCG = document.getElementById('countGreen');
       if (elCG) elCG.textContent = unrevealedCount;
