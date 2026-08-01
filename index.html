@@ -3218,7 +3218,7 @@
       return revealed.size === totalSafe;
     }
 
-    function placeMines(excludeIndex, ratioPercent, initialRevealPercent = 0, emptyTilePercent = 0){
+    function placeMines(excludeIndex, ratioPercent, initialRevealPercent = 0, emptyTilePercent = 0, onComplete = null){
       const total = state.tiles.length; const playable = total - Math.floor(total * emptyTilePercent / 100); const mineTarget = Math.max(1, Math.floor(playable * ratioPercent/100));
 
       // Show loading overlay
@@ -3303,7 +3303,7 @@
 
         const tryGenerateBoard = () => {
           if (boardIsSolvable || attempts >= maxAttempts) {
-            continueBoardSetup(initialRevealPercent, emptyTilePercent);
+            continueBoardSetup(initialRevealPercent, emptyTilePercent, onComplete);
             return;
           }
 
@@ -3383,7 +3383,7 @@
             // Immediate next attempt on the event loop (avoiding layout/repaint frames)
             setTimeout(tryGenerateBoard, 0);
           } else {
-            continueBoardSetup(initialRevealPercent, emptyTilePercent);
+            continueBoardSetup(initialRevealPercent, emptyTilePercent, onComplete);
           }
         };
 
@@ -3393,7 +3393,7 @@
 
     let firstLaunch = !localStorage.getItem('globesweeper_welcome_done');
 
-    function continueBoardSetup(initialRevealPercent, emptyTilePercent) {
+    function continueBoardSetup(initialRevealPercent, emptyTilePercent, onComplete = null) {
       // Hide loading overlay
       const loadingOverlay = document.getElementById('loadingOverlay');
       if (loadingOverlay) {
@@ -3431,6 +3431,10 @@
       // Start revealing tiles one by one
       isInitialReveal = true;
       processRevealQueue();
+      
+      if (onComplete) {
+        onComplete();
+      }
       
       // Conditional welcome flow: show simple how-to-play welcome modal first time or on Level 1
       if (firstLaunch || state.level === 1) {
@@ -3725,27 +3729,15 @@
       revealNext();
     }
 
-    function reveal(i){
+        function doActualReveal(i){
       if (state.gameOver) return;
       
-      if (rightClickHandled || contextMenuHandled || touchFlagHandled) {
-        return;
-      }
-
-      if (state.firstClick) {
-        state.firstClick = false;
-        const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (8.5 + Math.min(9.0, (state.level - 1) * 0.35));
-        const emptyRatio = debugSettings.emptyTilePercent || 0;
-        placeMines(i, ratio, 0, emptyRatio);
-      }
-
       const t = state.tiles[i]; 
-      if (t.revealed || t.flagged || t.isEmpty) return;
+      if (!t || t.revealed || t.flagged || t.isEmpty) return;
 
       // If tile has a number (count > 0), reveal it directly without cascade
       if (t.count > 0) {
         if (t.mine) {
-
           t.mesh.material = matMine;
           if (!document.getElementById('debugImmortal')?.checked) {
             gameLost(i);
@@ -3788,9 +3780,29 @@
       }
     }
 
+    function reveal(i){
+      if (state.gameOver) return;
+      
+      if (rightClickHandled || contextMenuHandled || touchFlagHandled) {
+        return;
+      }
+
+      if (state.firstClick) {
+        state.firstClick = false;
+        const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (8.5 + Math.min(9.0, (state.level - 1) * 0.35));
+        const emptyRatio = debugSettings.emptyTilePercent || 0;
+        placeMines(i, ratio, 0, emptyRatio, () => {
+          doActualReveal(i);
+        });
+        return;
+      }
+
+      doActualReveal(i);
+    }
 
 
-    function addLabel(i, n){
+
+function addLabel(i, n){
 
       const t = state.tiles[i]; if (t.label) return;
 
