@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.84-add-mines-percent-badge';
+const CACHE_NAME = 'globesweeper-v1.3.85-remove-left-stats-panel';
 const urlsToCache = [
   './',
   'index.html',
