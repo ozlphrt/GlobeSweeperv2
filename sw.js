@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.71-restore-gap-tiles';
+const CACHE_NAME = 'globesweeper-v1.3.72-progressive-early-cascades';
 const urlsToCache = [
   './',
   'index.html',
