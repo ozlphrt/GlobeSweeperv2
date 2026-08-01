@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.77-cascade-first-reveal-fix';
+const CACHE_NAME = 'globesweeper-v1.3.78-lower-mine-ratio';
 const urlsToCache = [
   './',
   'index.html',
