@@ -3076,7 +3076,7 @@
 
 
 
-    const debugSettings = { initialRevealPercent: 8, emptyTilePercent: 15, mineRatio: null, labelScale: 0.07 };
+    const debugSettings = { initialRevealPercent: 0, emptyTilePercent: 15, mineRatio: null, labelScale: 0.07 };
 
     function findSafeTile(){
       const revealed = new Set(state.tiles.map((t, i) => t.revealed ? i : -1).filter(i => i >= 0));
@@ -3730,6 +3730,13 @@
       
       if (rightClickHandled || contextMenuHandled || touchFlagHandled) {
         return;
+      }
+
+      if (state.firstClick) {
+        state.firstClick = false;
+        const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (8.5 + Math.min(9.0, (state.level - 1) * 0.35));
+        const emptyRatio = debugSettings.emptyTilePercent || 0;
+        placeMines(i, ratio, 0, emptyRatio);
       }
 
       const t = state.tiles[i]; 
@@ -4462,21 +4469,12 @@
       rotationVelocity.x = 0.025;
       rotationVelocity.y = 0.006;
 
-      // Auto-start: Place mines and do initial reveals
-      const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (8.5 + Math.min(9.0, (state.level - 1) * 0.35));
-      const initialReveal = debugSettings.initialRevealPercent || 0;
-      const emptyRatio = debugSettings.emptyTilePercent || 0;
-      
-      // Pick a random starting tile (or use tile 0)
-      const startTile = Math.floor(Math.random() * state.tiles.length);
-      
-      // Reset reveal queue and state
+      // Reset state for first click
+      state.firstClick = true;
       revealQueue = [];
       revealQueueSet.clear();
       isRevealing = false;
       isInitialReveal = false;
-      
-      placeMines(startTile, ratio, initialReveal, emptyRatio);
 
       document.querySelectorAll('.heart').forEach(h => h.style.opacity = '1');
 
