@@ -3362,20 +3362,27 @@
 
           state.tiles.forEach((t,i)=>{ if (t.mine) return; let c=0; for (const nb of state.neighbors[i]) if (state.tiles[nb].mine) c++; t.count=c; });
 
-          // Reveal initial percentage of safe tiles at the start
+          // For initial reveal: prefer 0-tiles so the player sees a cascade from the start
+          const zeroTileIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty && state.tiles[i].count === 0);
           const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
           const revealCount = Math.max(1, Math.floor(safeIndices.length * initialRevealPercent / 100));
 
-          // Shuffle safe indices
+          // Shuffle indices - prioritize 0-tiles for cascade starts
+          for (let i = zeroTileIndices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [zeroTileIndices[i], zeroTileIndices[j]] = [zeroTileIndices[j], zeroTileIndices[i]];
+          }
           for (let i = safeIndices.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [safeIndices[i], safeIndices[j]] = [safeIndices[j], safeIndices[i]];
           }
+          // Use 0-tiles first, then fill with any safe tiles
+          const prioritizedIndices = [...zeroTileIndices, ...safeIndices.filter(i => state.tiles[i].count > 0)];
 
           // Reveal initial tiles for solvability check
           const initialRevealed = new Set();
-          for (let i = 0; i < revealCount && i < safeIndices.length; i++) {
-            initialRevealed.add(safeIndices[i]);
+          for (let i = 0; i < revealCount && i < prioritizedIndices.length; i++) {
+            initialRevealed.add(prioritizedIndices[i]);
           }
 
           // Check if board is solvable from this initial state
@@ -3428,12 +3435,15 @@
         [safeIndices[i], safeIndices[j]] = [safeIndices[j], safeIndices[i]];
       }
 
-      // Add to reveal queue
+      // Add to reveal queue - use 0-tiles first so initial reveal triggers cascade
+      const zeroTiles = safeIndices.filter(i => state.tiles[i].count === 0);
+      const numberedTiles = safeIndices.filter(i => state.tiles[i].count > 0);
+      const prioritized = [...zeroTiles, ...numberedTiles];
       revealQueue = [];
       revealQueueSet.clear();
-      for (let i = 0; i < revealCount && i < safeIndices.length; i++) {
-        revealQueue.push(safeIndices[i]);
-        revealQueueSet.add(safeIndices[i]);
+      for (let i = 0; i < revealCount && i < prioritized.length; i++) {
+        revealQueue.push(prioritized[i]);
+        revealQueueSet.add(prioritized[i]);
       }
 
       // Start revealing tiles one by one
@@ -3441,7 +3451,8 @@
       processRevealQueue();
       
       if (onComplete) {
-        onComplete();
+        // Delay so processRevealQueue can complete its synchronous setup first
+        setTimeout(onComplete, 50);
       }
       
       // Conditional welcome flow: show simple how-to-play welcome modal first time or on Level 1
@@ -3737,9 +3748,13 @@
       revealNext();
     }
 
-        function doActualReveal(i){
+    function reveal(i){
       if (state.gameOver) return;
       
+      if (rightClickHandled || contextMenuHandled || touchFlagHandled) {
+        return;
+      }
+
       const t = state.tiles[i]; 
       if (!t || t.revealed || t.flagged || t.isEmpty) return;
 
@@ -3753,7 +3768,6 @@
           }
         } else {
           t.revealed = true;
-          // Reset scale to normal when revealed
           t.mesh.scale.set(1.0, 1.0, 1.0);
           t.currentOuterR = 1.0;
           setTileTargetOuterR(i, 1.0 + t.count * getStackHeightStep());
@@ -3764,7 +3778,6 @@
           t.mesh.castShadow = renderer.shadowMap.enabled && (t.count > 0);
           state.safeRevealed++;
           updateTilePillarElevation(i);
-
           addLabel(i, t.count);
           playSound('reveal');
           updateCounters();
@@ -3774,7 +3787,7 @@
         return;
       }
 
-      // Only use cascade system for tiles with count 0 (no number)
+      // Tiles with count 0 trigger cascade via the reveal queue
       if (!isRevealing && revealQueue.length === 0){
         lifeLostInCurrentReveal = false;
         revealQueue.push(i);
@@ -3788,29 +3801,9 @@
       }
     }
 
-    function reveal(i){
-      if (state.gameOver) return;
-      
-      if (rightClickHandled || contextMenuHandled || touchFlagHandled) {
-        return;
-      }
-
-      if (state.firstClick) {
-        state.firstClick = false;
-        const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (8.5 + Math.min(9.0, (state.level - 1) * 0.35));
-        const emptyRatio = debugSettings.emptyTilePercent || 0;
-        placeMines(i, ratio, 0, emptyRatio, () => {
-          doActualReveal(i);
-        });
-        return;
-      }
-
-      doActualReveal(i);
-    }
 
 
-
-function addLabel(i, n){
+    function addLabel(i, n){
 
       const t = state.tiles[i]; if (t.label) return;
 
@@ -4489,12 +4482,18 @@ function addLabel(i, n){
       rotationVelocity.x = 0.025;
       rotationVelocity.y = 0.006;
 
-      // Reset state for first click
-      state.firstClick = true;
+      // Auto-start: Place mines and reveal initial tiles
+      const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (8.5 + Math.min(9.0, (state.level - 1) * 0.35));
+      const initialReveal = debugSettings.initialRevealPercent || 0;
+      const emptyRatio = debugSettings.emptyTilePercent || 0;
+      
+      // Pick a random starting 0-tile cluster to guarantee opening cascade
       revealQueue = [];
       revealQueueSet.clear();
       isRevealing = false;
       isInitialReveal = false;
+      
+      placeMines(-1, ratio, initialReveal, emptyRatio);
 
       document.querySelectorAll('.heart').forEach(h => h.style.opacity = '1');
 
