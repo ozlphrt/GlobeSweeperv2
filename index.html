@@ -3327,7 +3327,15 @@
             t.shouldLowerAfterRaise = false;
           });
 
-          const forbidden = excludeIndex >= 0 ? new Set([excludeIndex, ...state.neighbors[excludeIndex]]) : new Set();
+          const forbidden = new Set();
+          if (excludeIndex >= 0) {
+            forbidden.add(excludeIndex);
+            const ring1 = state.neighbors[excludeIndex] || [];
+            ring1.forEach(nb => forbidden.add(nb));
+            ring1.forEach(nb => {
+              (state.neighbors[nb] || []).forEach(nb2 => forbidden.add(nb2));
+            });
+          }
           const indices = [...state.tiles.keys()].filter(i=>!forbidden.has(i));
 
           // Handle empty tiles logically

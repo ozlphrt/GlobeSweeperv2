@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.75-async-first-click-cascade-fix';
+const CACHE_NAME = 'globesweeper-v1.3.76-ring2-buffer-cascade-sweep';
 const urlsToCache = [
   './',
   'index.html',
