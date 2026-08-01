@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.79-mine-clustering';
+const CACHE_NAME = 'globesweeper-v1.3.80-left-stats-panel';
 const urlsToCache = [
   './',
   'index.html',
