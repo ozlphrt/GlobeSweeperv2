@@ -3541,7 +3541,7 @@
 
           // Clustered mine placement: mines prefer to spawn adjacent to existing mines
           // This dramatically reduces isolated single mines and creates natural "mine fields"
-          const clusterFactor = 0.72; // 72% chance a new mine spawns adjacent to an existing mine
+          const clusterFactor = 0.50; // 50% chance a new mine spawns adjacent to an existing mine
           const availableSet = new Set(indices);
           let minesPlaced = 0;
           const mineBorderSet = new Set(); // Tracks tiles adjacent to existing mines
@@ -4767,7 +4767,7 @@
       rotationVelocity.y = 0.006;
 
       // Auto-start: Place mines and reveal initial tiles
-      const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (11.0 + Math.min(7.0, (state.level - 1) * 0.28));
+      const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (15.0 + Math.min(6.0, (state.level - 1) * 0.3));
       const initialReveal = debugSettings.initialRevealPercent || 0;
       const emptyRatio = debugSettings.emptyTilePercent || 0;
       
