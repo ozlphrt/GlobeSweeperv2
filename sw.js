@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.81-move-left-stats-panel-down';
+const CACHE_NAME = 'globesweeper-v1.3.82-raise-mine-ratio-11pct';
 const urlsToCache = [
   './',
   'index.html',
