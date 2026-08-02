@@ -4022,7 +4022,7 @@
       // Find candidate safe tiles outside forbidden set that do not have mines or empty
       const candidateIndices = state.tiles
         .map((t, i) => i)
-        .filter(i => !forbidden.has(i) && !state.tiles[i].mine && !state.tiles[i].isEmpty);
+        .filter(i => !forbidden.has(i) && !state.tiles[i].mine && !state.tiles[i].isEmpty && !state.tiles[i].revealed);
 
       // Shuffle candidates
       for (let i = candidateIndices.length - 1; i > 0; i--) {

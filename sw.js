@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.95-fix-vertex-hash-precision-1e6';
+const CACHE_NAME = 'globesweeper-v1.3.96-fix-mine-reloc-onto-revealed-tiles';
 const urlsToCache = [
   './',
   'index.html',
