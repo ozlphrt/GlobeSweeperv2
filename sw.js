@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.92-restore-60fps-optimal-adjacency';
+const CACHE_NAME = 'globesweeper-v1.3.93-fix-stale-label-forced-autoreveal-bugs';
 const urlsToCache = [
   './',
   'index.html',

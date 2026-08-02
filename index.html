@@ -3605,7 +3605,7 @@
           // For initial reveal: prefer 0-tiles so the player sees a cascade from the start
           const zeroTileIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty && state.tiles[i].count === 0);
           const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
-          const revealCount = Math.max(1, Math.floor(safeIndices.length * initialRevealPercent / 100));
+          const revealCount = Math.max(0, Math.floor(safeIndices.length * initialRevealPercent / 100));
 
           // Shuffle indices - prioritize 0-tiles for cascade starts
           for (let i = zeroTileIndices.length - 1; i > 0; i--) {
@@ -3668,7 +3668,7 @@
 
       // Add initial tiles to reveal queue for one-by-one processing
       const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
-      const revealCount = Math.max(1, Math.floor(safeIndices.length * initialRevealPercent / 100));
+      const revealCount = Math.max(0, Math.floor(safeIndices.length * initialRevealPercent / 100));
       
       // Shuffle safe indices for random initial reveal
       for (let i = safeIndices.length - 1; i > 0; i--) {
@@ -4038,11 +4038,19 @@
       // Recalculate all neighbor counts
       state.tiles.forEach((t, i) => {
         if (t.mine) return;
+        const oldCount = t.count;
         let c = 0;
         for (const nb of (state.neighbors[i] || [])) {
           if (state.tiles[nb].mine) c++;
         }
         t.count = c;
+        // Refresh stale visual label on already-revealed tiles whose count changed
+        if (t.revealed && t.count !== oldCount && t.label) {
+          tileGroup.remove(t.label);
+          if (t.label.geometry) t.label.geometry.dispose();
+          t.label = null;
+          if (t.count > 0) addLabel(i, t.count);
+        }
       });
     }
 
