@@ -3667,26 +3667,15 @@
       });
       rebuildWireframe();
 
-      // Add initial numbered tiles (count > 0) so board opens 95%+ GREEN without giant cascades
+      // Pick a 0-tile seed to start initial cascade (will be capped at ~80 tiles / ~30% white)
+      const zeroTiles = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty && state.tiles[i].count === 0);
       const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
-      const revealCount = Math.max(1, Math.min(4, Math.floor(safeIndices.length * initialRevealPercent / 100)));
-      
-      // Shuffle safe indices for random initial reveal
-      for (let i = safeIndices.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [safeIndices[i], safeIndices[j]] = [safeIndices[j], safeIndices[i]];
-      }
+      const seedList = zeroTiles.length > 0 ? zeroTiles : safeIndices;
+      const seedIdx = seedList[(Math.random() * seedList.length) | 0];
 
-      const numberedTiles = safeIndices.filter(i => state.tiles[i].count > 0);
-      const zeroTiles = safeIndices.filter(i => state.tiles[i].count === 0);
-      const prioritized = numberedTiles.length > 0 ? [...numberedTiles, ...zeroTiles] : safeIndices;
-
-      revealQueue = [];
+      revealQueue = [seedIdx];
       revealQueueSet.clear();
-      for (let i = 0; i < revealCount && i < prioritized.length; i++) {
-        revealQueue.push(prioritized[i]);
-        revealQueueSet.add(prioritized[i]);
-      }
+      revealQueueSet.add(seedIdx);
 
       // Start revealing tiles one by one
       isInitialReveal = true;
@@ -3814,9 +3803,15 @@
 
       isRevealing = true;
       
-      // Initial reveal: process all tiles synchronously at once (no sound)
+      // Initial reveal: process tiles synchronously at once, capped at ~80 tiles (~30% white opening)
       if (isInitialReveal) {
+        const maxInitialCap = 80;
         while (revealQueue.length > 0 && !state.gameOver) {
+          if (state.safeRevealed >= maxInitialCap) {
+            revealQueue.length = 0;
+            revealQueueSet.clear();
+            break;
+          }
           const idx = revealQueue.shift();
           if (idx === undefined) break;
           

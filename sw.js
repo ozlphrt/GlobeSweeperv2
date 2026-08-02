@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.4.05-fix-duplicate-revealCount-syntax-error';
+const CACHE_NAME = 'globesweeper-v1.4.06-capped-initial-reveal-cascade-80tiles';
 const urlsToCache = [
   './',
   'index.html',
