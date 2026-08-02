@@ -3667,20 +3667,27 @@
       });
       rebuildWireframe();
 
+      // Pre-reveal 15 starting NUMBERED tiles (count > 0) so the board has clue numbers (1s and 2s) to start from, without blank 0-tiles
+      const numberedIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty && state.tiles[i].count > 0);
+      const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
+      const prioritized = numberedIndices.length > 0 ? numberedIndices : safeIndices;
+      
+      // Shuffle prioritized indices
+      for (let i = prioritized.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [prioritized[i], prioritized[j]] = [prioritized[j], prioritized[i]];
+      }
+
       revealQueue = [];
       revealQueueSet.clear();
-
-      if (initialRevealPercent > 0) {
-        const zeroTiles = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty && state.tiles[i].count === 0);
-        const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
-        const seedList = zeroTiles.length > 0 ? zeroTiles : safeIndices;
-        const seedIdx = seedList[(Math.random() * seedList.length) | 0];
-
-        revealQueue = [seedIdx];
-        revealQueueSet.add(seedIdx);
-        isInitialReveal = true;
-        processRevealQueue();
+      const startHintCount = Math.min(15, prioritized.length);
+      for (let i = 0; i < startHintCount; i++) {
+        revealQueue.push(prioritized[i]);
+        revealQueueSet.add(prioritized[i]);
       }
+
+      isInitialReveal = true;
+      processRevealQueue();
       
       if (onComplete) {
         // Delay so processRevealQueue can complete its synchronous setup first

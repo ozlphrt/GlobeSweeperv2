@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.4.10-start-100pct-green-no-pre-revealed-whites';
+const CACHE_NAME = 'globesweeper-v1.4.11-pre-reveal-15-numbered-starting-clues';
 const urlsToCache = [
   './',
   'index.html',
