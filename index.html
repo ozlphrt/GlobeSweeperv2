@@ -3281,7 +3281,7 @@
 
 
 
-    const debugSettings = { initialRevealPercent: 3, emptyTilePercent: 15, mineRatio: null, labelScale: 0.07 };
+    const debugSettings = { initialRevealPercent: 0, emptyTilePercent: 15, mineRatio: null, labelScale: 0.07 };
 
     function findSafeTile(){
       const revealed = new Set(state.tiles.map((t, i) => t.revealed ? i : -1).filter(i => i >= 0));
@@ -3667,19 +3667,20 @@
       });
       rebuildWireframe();
 
-      // Pick a 0-tile seed to start initial cascade (will be capped at ~80 tiles / ~30% white)
-      const zeroTiles = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty && state.tiles[i].count === 0);
-      const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
-      const seedList = zeroTiles.length > 0 ? zeroTiles : safeIndices;
-      const seedIdx = seedList[(Math.random() * seedList.length) | 0];
-
-      revealQueue = [seedIdx];
+      revealQueue = [];
       revealQueueSet.clear();
-      revealQueueSet.add(seedIdx);
 
-      // Start revealing tiles one by one
-      isInitialReveal = true;
-      processRevealQueue();
+      if (initialRevealPercent > 0) {
+        const zeroTiles = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty && state.tiles[i].count === 0);
+        const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
+        const seedList = zeroTiles.length > 0 ? zeroTiles : safeIndices;
+        const seedIdx = seedList[(Math.random() * seedList.length) | 0];
+
+        revealQueue = [seedIdx];
+        revealQueueSet.add(seedIdx);
+        isInitialReveal = true;
+        processRevealQueue();
+      }
       
       if (onComplete) {
         // Delay so processRevealQueue can complete its synchronous setup first
