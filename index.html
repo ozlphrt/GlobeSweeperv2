@@ -3281,7 +3281,7 @@
 
 
 
-    const debugSettings = { initialRevealPercent: 6, emptyTilePercent: 15, mineRatio: null, labelScale: 0.07 };
+    const debugSettings = { initialRevealPercent: 3, emptyTilePercent: 15, mineRatio: null, labelScale: 0.07 };
 
     function findSafeTile(){
       const revealed = new Set(state.tiles.map((t, i) => t.revealed ? i : -1).filter(i => i >= 0));
