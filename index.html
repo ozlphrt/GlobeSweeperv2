@@ -3668,6 +3668,7 @@
         }
       });
       rebuildWireframe();
+      updateCounters();
 
       // Add initial tiles to reveal queue for one-by-one processing
       const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);

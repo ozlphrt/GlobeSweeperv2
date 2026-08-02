@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.89-precalculate-mines-relocate-first-click';
+const CACHE_NAME = 'globesweeper-v1.3.90-update-counters-on-board-setup-complete';
 const urlsToCache = [
   './',
   'index.html',
