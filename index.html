@@ -3667,9 +3667,9 @@
       });
       rebuildWireframe();
 
-      // Add initial tiles to reveal queue for one-by-one processing
+      // Add initial numbered tiles (count > 0) so board opens 95%+ GREEN without giant cascades
       const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
-      const revealCount = Math.max(1, Math.floor(safeIndices.length * initialRevealPercent / 100));
+      const revealCount = Math.max(1, Math.min(4, Math.floor(safeIndices.length * initialRevealPercent / 100)));
       
       // Shuffle safe indices for random initial reveal
       for (let i = safeIndices.length - 1; i > 0; i--) {
@@ -3677,11 +3677,9 @@
         [safeIndices[i], safeIndices[j]] = [safeIndices[j], safeIndices[i]];
       }
 
-      // Add initial numbered tiles (count > 0) so board opens 95%+ GREEN without giant cascades
       const numberedTiles = safeIndices.filter(i => state.tiles[i].count > 0);
       const zeroTiles = safeIndices.filter(i => state.tiles[i].count === 0);
       const prioritized = numberedTiles.length > 0 ? [...numberedTiles, ...zeroTiles] : safeIndices;
-      const revealCount = Math.max(1, Math.min(4, Math.floor(safeIndices.length * initialRevealPercent / 100)));
 
       revealQueue = [];
       revealQueueSet.clear();

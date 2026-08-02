@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.4.04-fix-initial-reveal-keep-board-95pct-green';
+const CACHE_NAME = 'globesweeper-v1.4.05-fix-duplicate-revealCount-syntax-error';
 const urlsToCache = [
   './',
   'index.html',
