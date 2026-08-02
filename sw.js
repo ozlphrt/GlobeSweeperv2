@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.93-fix-stale-label-forced-autoreveal-bugs';
+const CACHE_NAME = 'globesweeper-v1.3.94-restore-initial-reveal-6pct';
 const urlsToCache = [
   './',
   'index.html',
