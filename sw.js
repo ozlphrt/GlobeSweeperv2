@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.96-fix-mine-reloc-onto-revealed-tiles';
+const CACHE_NAME = 'globesweeper-v1.3.97-option3-noguess-plus-guess-protection';
 const urlsToCache = [
   './',
   'index.html',

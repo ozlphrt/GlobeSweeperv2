@@ -3353,15 +3353,15 @@
       const flagged = new Set(state.tiles.map((t, i) => t.flagged ? i : -1).filter(i => i >= 0));
       const totalSafe = state.tiles.filter(t => !t.mine && !t.isEmpty).length;
       
-      let foundNewSafe = true;
+      let foundNewAction = true;
       let iterations = 0;
-      const maxIterations = 1000;
+      const maxIterations = 500;
       
-      while (foundNewSafe && revealed.size < totalSafe && iterations < maxIterations) {
+      while (foundNewAction && revealed.size < totalSafe && iterations < maxIterations) {
         iterations++;
-        foundNewSafe = false;
+        foundNewAction = false;
         
-        // Cascade reveal all tiles with count 0
+        // 1. Cascade reveal all tiles with count 0
         let cascadeFound = true;
         let cascadeIterations = 0;
         while (cascadeFound && cascadeIterations < 100) {
@@ -3375,41 +3375,81 @@
                 if (!revealed.has(nb) && !flagged.has(nb) && !state.tiles[nb].isEmpty && !state.tiles[nb].mine) {
                   revealed.add(nb);
                   cascadeFound = true;
-                  foundNewSafe = true;
+                  foundNewAction = true;
                 }
               }
             }
           }
         }
-        
-        // Check each revealed tile for basic deductions
+
+        // 2. Direct deductions on revealed boundary tiles
+        const boundaryConstraints = [];
         for (const tileIdx of revealed) {
           const t = state.tiles[tileIdx];
           if (t.count === 0) continue;
           
           const neighbors = state.neighbors[tileIdx];
           const hiddenNeighbors = neighbors.filter(nb => !revealed.has(nb) && !flagged.has(nb) && !state.tiles[nb].isEmpty);
-          const flaggedNeighbors = neighbors.filter(nb => flagged.has(nb));
+          const flaggedCount = neighbors.filter(nb => flagged.has(nb)).length;
+          const remainingMines = t.count - flaggedCount;
           
-          const remainingMines = t.count - flaggedNeighbors.length;
-          const remainingHidden = hiddenNeighbors.length;
+          if (hiddenNeighbors.length === 0) continue;
           
-          // If all mines are flagged, remaining neighbors must be safe
-          if (remainingMines === 0 && remainingHidden > 0) {
-            foundNewSafe = true;
+          if (remainingMines === 0) {
             for (const nb of hiddenNeighbors) {
-              if (!state.tiles[nb].mine) {
+              if (!state.tiles[nb].mine && !revealed.has(nb)) {
                 revealed.add(nb);
+                foundNewAction = true;
               }
             }
+            continue;
           }
           
-          // If remaining hidden neighbors == remaining mines needed, all must be mines
-          if (remainingMines === remainingHidden && remainingHidden > 0) {
+          if (remainingMines === hiddenNeighbors.length) {
             for (const nb of hiddenNeighbors) {
               if (state.tiles[nb].mine && !flagged.has(nb)) {
                 flagged.add(nb);
-                foundNewSafe = true;
+                foundNewAction = true;
+              }
+            }
+            continue;
+          }
+
+          boundaryConstraints.push({ idx: tileIdx, hidden: new Set(hiddenNeighbors), mines: remainingMines });
+        }
+
+        // 3. Subset reduction solver (1-2-1, 1-2-2-1, overlapping constraint solver)
+        if (!foundNewAction && boundaryConstraints.length > 1) {
+          for (let a = 0; a < boundaryConstraints.length; a++) {
+            const cA = boundaryConstraints[a];
+            for (let b = 0; b < boundaryConstraints.length; b++) {
+              if (a === b) continue;
+              const cB = boundaryConstraints[b];
+              
+              let isSubset = true;
+              for (const elem of cA.hidden) {
+                if (!cB.hidden.has(elem)) { isSubset = false; break; }
+              }
+
+              if (isSubset && cB.hidden.size > cA.hidden.size) {
+                const diffHidden = [...cB.hidden].filter(x => !cA.hidden.has(x));
+                const diffMines = cB.mines - cA.mines;
+
+                if (diffMines === 0) {
+                  for (const nb of diffHidden) {
+                    if (!state.tiles[nb].mine && !revealed.has(nb)) {
+                      revealed.add(nb);
+                      foundNewAction = true;
+                    }
+                  }
+                } else if (diffMines === diffHidden.length) {
+                  for (const nb of diffHidden) {
+                    if (state.tiles[nb].mine && !flagged.has(nb)) {
+                      flagged.add(nb);
+                      foundNewAction = true;
+                    }
+                  }
+                }
               }
             }
           }
@@ -3417,6 +3457,144 @@
       }
       
       return revealed.size === totalSafe;
+    }
+
+    function canTileBeDucedAsMine(targetIdx) {
+      const neighbors = state.neighbors[targetIdx] || [];
+      // Direct deduction check
+      for (const nIdx of neighbors) {
+        const nTile = state.tiles[nIdx];
+        if (!nTile || !nTile.revealed || nTile.count === 0) continue;
+
+        const nNeighbors = state.neighbors[nIdx] || [];
+        let flaggedCount = 0;
+        const hiddenList = [];
+        for (const nb of nNeighbors) {
+          if (state.tiles[nb].flagged) flaggedCount++;
+          else if (!state.tiles[nb].revealed && !state.tiles[nb].isEmpty) {
+            hiddenList.push(nb);
+          }
+        }
+        const needed = nTile.count - flaggedCount;
+        if (needed > 0 && hiddenList.length === needed && hiddenList.includes(targetIdx)) {
+          return true;
+        }
+      }
+
+      // Subset reduction check
+      for (const aIdx of neighbors) {
+        const aTile = state.tiles[aIdx];
+        if (!aTile || !aTile.revealed || aTile.count === 0) continue;
+
+        const aNeighbors = state.neighbors[aIdx] || [];
+        let aFlagged = 0;
+        const aHidden = new Set();
+        for (const nb of aNeighbors) {
+          if (state.tiles[nb].flagged) aFlagged++;
+          else if (!state.tiles[nb].revealed && !state.tiles[nb].isEmpty) aHidden.add(nb);
+        }
+        const aNeeded = aTile.count - aFlagged;
+        if (aNeeded <= 0 || !aHidden.has(targetIdx)) continue;
+
+        for (const bIdx of aNeighbors) {
+          if (bIdx === aIdx) continue;
+          const bTile = state.tiles[bIdx];
+          if (!bTile || !bTile.revealed || bTile.count === 0) continue;
+
+          const bNeighbors = state.neighbors[bIdx] || [];
+          let bFlagged = 0;
+          const bHidden = new Set();
+          for (const nb of bNeighbors) {
+            if (state.tiles[nb].flagged) bFlagged++;
+            else if (!state.tiles[nb].revealed && !state.tiles[nb].isEmpty) bHidden.add(nb);
+          }
+          const bNeeded = bTile.count - bFlagged;
+          if (bNeeded <= 0) continue;
+
+          let isSubset = true;
+          for (const h of aHidden) {
+            if (!bHidden.has(h)) { isSubset = false; break; }
+          }
+          if (isSubset) {
+            const diffHidden = [...bHidden].filter(h => !aHidden.has(h));
+            const diffNeeded = bNeeded - aNeeded;
+            if (diffNeeded > 0 && diffHidden.length === diffNeeded && diffHidden.includes(targetIdx)) {
+              return true;
+            }
+          }
+        }
+      }
+
+      return false;
+    }
+
+    function showGuessProtectionToast() {
+      let toast = document.getElementById('guessProtectionToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'guessProtectionToast';
+        toast.style.position = 'fixed';
+        toast.style.top = '70px';
+        toast.style.left = '50%';
+        toast.style.transform = 'translateX(-50%)';
+        toast.style.background = 'rgba(15, 23, 42, 0.88)';
+        toast.style.backdropFilter = 'blur(12px)';
+        toast.style.webkitBackdropFilter = 'blur(12px)';
+        toast.style.border = '1px solid rgba(59, 130, 246, 0.4)';
+        toast.style.boxShadow = '0 10px 25px -5px rgba(59, 130, 246, 0.3)';
+        toast.style.color = '#60a5fa';
+        toast.style.padding = '10px 20px';
+        toast.style.borderRadius = '24px';
+        toast.style.fontSize = '14px';
+        toast.style.fontWeight = '600';
+        toast.style.zIndex = '99999';
+        toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        toast.style.pointerEvents = 'none';
+        toast.style.display = 'flex';
+        toast.style.alignItems = 'center';
+        toast.style.gap = '8px';
+        toast.innerHTML = '🛡️ <span style="color:#ffffff;">Guess Protected</span> — mine relocated from ambiguous tile!';
+        document.body.appendChild(toast);
+      }
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0px)';
+      if (toast._timer) clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(-10px)';
+      }, 2500);
+    }
+
+    function relocateMineOnGuess(mineIdx) {
+      const candidateIndices = state.tiles
+        .map((t, i) => i)
+        .filter(i => i !== mineIdx && !state.tiles[i].mine && !state.tiles[i].isEmpty && !state.tiles[i].revealed && !state.tiles[i].flagged);
+
+      if (candidateIndices.length === 0) return false;
+
+      const newMineIdx = candidateIndices[(Math.random() * candidateIndices.length) | 0];
+
+      state.tiles[mineIdx].mine = false;
+      state.tiles[newMineIdx].mine = true;
+
+      state.tiles.forEach((t, i) => {
+        if (t.mine) return;
+        const oldCount = t.count;
+        let c = 0;
+        for (const nb of (state.neighbors[i] || [])) {
+          if (state.tiles[nb].mine) c++;
+        }
+        t.count = c;
+        if (t.revealed && t.count !== oldCount && t.label) {
+          tileGroup.remove(t.label);
+          if (t.label.geometry) t.label.geometry.dispose();
+          t.label = null;
+          if (t.count > 0) addLabel(i, t.count);
+        }
+      });
+
+      showGuessProtectionToast();
+      return true;
     }
 
     function placeMines(excludeIndex, ratioPercent, initialRevealPercent = 0, emptyTilePercent = 0, onComplete = null){
@@ -3829,16 +4007,19 @@
             t.mesh.scale.set(1.0, 1.0, 1.0);
             
             if (t.mine) {
-              t.mesh.material = matMine;
-              if (!document.getElementById('debugImmortal')?.checked) {
-                isRevealing = false;
-                isInitialReveal = false;
-                revealQueue.length = 0;
-                revealQueueSet.clear();
-                gameLost(idx);
-                return;
+              if (canTileBeDucedAsMine(idx) || !relocateMineOnGuess(idx)) {
+                t.mesh.material = matMine;
+                if (!document.getElementById('debugImmortal')?.checked) {
+                  isRevealing = false;
+                  isInitialReveal = false;
+                  revealQueue.length = 0;
+                  revealQueueSet.clear();
+                  gameLost(idx);
+                  return;
+                }
               }
-            } else {
+            }
+            if (!t.mine) {
               t.currentOuterR = 1.0;
               setTileTargetOuterR(idx, 1.0 + t.count * getStackHeightStep());
               t.isInitialRaising = true;
@@ -3928,15 +4109,18 @@
           
           // Update material
           if (t.mine) {
-            t.mesh.material = matMine;
-            if (!document.getElementById('debugImmortal')?.checked) {
-              isRevealing = false;
-              revealQueue.length = 0;
-              revealQueueSet.clear();
-              gameLost(idx);
-              return;
+            if (canTileBeDucedAsMine(idx) || !relocateMineOnGuess(idx)) {
+              t.mesh.material = matMine;
+              if (!document.getElementById('debugImmortal')?.checked) {
+                isRevealing = false;
+                revealQueue.length = 0;
+                revealQueueSet.clear();
+                gameLost(idx);
+                return;
+              }
             }
-          } else {
+          }
+          if (!t.mine) {
             t.currentOuterR = 1.0;
             setTileTargetOuterR(idx, 1.0 + t.count * getStackHeightStep());
             t.isInitialRaising = true;
@@ -4073,12 +4257,15 @@
       // If tile has a number (count > 0), reveal it directly without cascade
       if (t.count > 0) {
         if (t.mine) {
-          t.mesh.material = matMine;
-          if (!document.getElementById('debugImmortal')?.checked) {
-            gameLost(i);
-            return;
+          if (canTileBeDucedAsMine(i) || !relocateMineOnGuess(i)) {
+            t.mesh.material = matMine;
+            if (!document.getElementById('debugImmortal')?.checked) {
+              gameLost(i);
+              return;
+            }
           }
-        } else {
+        }
+        if (!t.mine) {
           t.revealed = true;
           t.mesh.scale.set(1.0, 1.0, 1.0);
           t.currentOuterR = 1.0;
