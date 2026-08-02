@@ -3886,6 +3886,9 @@
         return;
       }
       
+      let currentClickCount = 0;
+      const MAX_CASCADE_PER_CLICK = 35;
+      
       // Normal cascade: process tiles one by one with 10ms delay between each
       function revealNext(){
         if (revealQueue.length === 0 || state.gameOver){
@@ -3952,24 +3955,19 @@
               addLabel(idx, t.count);
             }
             
-            // Only cascade if this tile has count 0 (no adjacent mines)
-            // Tiles with count > 0 should not trigger cascades
-            if (t.count === 0 && state.neighbors[idx]) {
+            // Only cascade if this tile has count 0 and we haven't reached the per-click cascade cap
+            if (t.count === 0 && state.neighbors[idx] && currentClickCount < MAX_CASCADE_PER_CLICK) {
               for (const nb of state.neighbors[idx]) {
                 // Validate neighbor index is within bounds
                 if (nb < 0 || nb >= state.tiles.length) continue;
                 
                 const neighbor = state.tiles[nb];
-                // Only add safe, non-empty, non-flagged, non-revealed neighbors
-                // CRITICAL: Only add neighbors that share an edge (are actually adjacent)
-                // Double-check that this neighbor is actually in our neighbors list
                 if (neighbor && !neighbor.revealed && !neighbor.flagged && !neighbor.isEmpty && !neighbor.mine) {
-                  // Verify this is a valid neighbor by checking reverse adjacency
-                  // A tile should only be added if it's directly adjacent (shares an edge)
                   if (state.neighbors[nb] && state.neighbors[nb].includes(idx)) {
-                  if (!revealQueueSet.has(nb)) {
-                    revealQueue.push(nb);
-                    revealQueueSet.add(nb);
+                    if (!revealQueueSet.has(nb)) {
+                      revealQueue.push(nb);
+                      revealQueueSet.add(nb);
+                      currentClickCount++;
                     }
                   }
                 }
