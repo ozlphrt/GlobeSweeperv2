@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.85-remove-left-stats-panel';
+const CACHE_NAME = 'globesweeper-v1.3.86-toggle-left-stats-shortcut';
 const urlsToCache = [
   './',
   'index.html',
