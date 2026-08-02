@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.4.01-reduce-mine-density-to-8to12pct';
+const CACHE_NAME = 'globesweeper-v1.4.02-further-reduce-mine-density-to-5.5to9pct';
 const urlsToCache = [
   './',
   'index.html',

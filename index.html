@@ -4805,7 +4805,7 @@
       rotationVelocity.y = 0.006;
 
       // Auto-start: Place mines and reveal initial tiles
-      const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (8.0 + Math.min(4.0, (state.level - 1) * 0.20));
+      const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (5.5 + Math.min(3.5, (state.level - 1) * 0.18));
       const initialReveal = debugSettings.initialRevealPercent || 0;
       const emptyRatio = debugSettings.emptyTilePercent || 0;
       
