@@ -3814,9 +3814,9 @@
 
       isRevealing = true;
       
-      // Initial reveal: process tiles synchronously at once, capped at ~350 tiles (~40% white opening)
+      // Initial reveal: process tiles synchronously at once, capped at ~240 tiles (~40% white opening)
       if (isInitialReveal) {
-        const maxInitialCap = 130;
+        const maxInitialCap = 240;
         while (revealQueue.length > 0 && !state.gameOver) {
           if (state.safeRevealed >= maxInitialCap) {
             revealQueue.length = 0;

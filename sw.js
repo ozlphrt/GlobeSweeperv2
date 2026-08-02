@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.4.13-open-2to3-starting-bays-130tiles';
+const CACHE_NAME = 'globesweeper-v1.4.14-increase-initial-reveal-to-240tiles';
 const urlsToCache = [
   './',
   'index.html',
