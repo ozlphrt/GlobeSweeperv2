@@ -3565,10 +3565,24 @@
       }, 2500);
     }
 
+    function hasRevealedNeighbor(idx) {
+      const neighbors = state.neighbors[idx] || [];
+      return neighbors.some(nb => state.tiles[nb] && state.tiles[nb].revealed);
+    }
+
     function relocateMineOnGuess(mineIdx) {
-      const candidateIndices = state.tiles
+      // Prefer candidate tiles that do NOT touch any already-revealed tiles
+      // This prevents altering neighbor mine counts of tiles the player has already seen
+      let candidateIndices = state.tiles
         .map((t, i) => i)
-        .filter(i => i !== mineIdx && !state.tiles[i].mine && !state.tiles[i].isEmpty && !state.tiles[i].revealed && !state.tiles[i].flagged);
+        .filter(i => i !== mineIdx && !state.tiles[i].mine && !state.tiles[i].isEmpty && !state.tiles[i].revealed && !state.tiles[i].flagged && !hasRevealedNeighbor(i));
+
+      // Fallback if all covered tiles touch a revealed tile
+      if (candidateIndices.length === 0) {
+        candidateIndices = state.tiles
+          .map((t, i) => i)
+          .filter(i => i !== mineIdx && !state.tiles[i].mine && !state.tiles[i].isEmpty && !state.tiles[i].revealed && !state.tiles[i].flagged);
+      }
 
       if (candidateIndices.length === 0) return false;
 
@@ -3585,10 +3599,12 @@
           if (state.tiles[nb].mine) c++;
         }
         t.count = c;
-        if (t.revealed && t.count !== oldCount && t.label) {
-          tileGroup.remove(t.label);
-          if (t.label.geometry) t.label.geometry.dispose();
-          t.label = null;
+        if (t.revealed && t.count !== oldCount) {
+          if (t.label) {
+            tileGroup.remove(t.label);
+            if (t.label.geometry) t.label.geometry.dispose();
+            t.label = null;
+          }
           if (t.count > 0) addLabel(i, t.count);
         }
       });
@@ -4204,9 +4220,15 @@
       });
 
       // Find candidate safe tiles outside forbidden set that do not have mines or empty
-      const candidateIndices = state.tiles
+      let candidateIndices = state.tiles
         .map((t, i) => i)
-        .filter(i => !forbidden.has(i) && !state.tiles[i].mine && !state.tiles[i].isEmpty && !state.tiles[i].revealed);
+        .filter(i => !forbidden.has(i) && !state.tiles[i].mine && !state.tiles[i].isEmpty && !state.tiles[i].revealed && !hasRevealedNeighbor(i));
+
+      if (candidateIndices.length === 0) {
+        candidateIndices = state.tiles
+          .map((t, i) => i)
+          .filter(i => !forbidden.has(i) && !state.tiles[i].mine && !state.tiles[i].isEmpty && !state.tiles[i].revealed);
+      }
 
       // Shuffle candidates
       for (let i = candidateIndices.length - 1; i > 0; i--) {
@@ -4316,6 +4338,21 @@
 
       tileGroup.add(s); t.label = s;
       forceLabelUpdate = true;
+
+      // Immediately orient label decal facing outward
+      if (t.center && camera) {
+        const tempInvQuat = tileGroup.quaternion.clone().invert();
+        const toCameraLocal = camera.position.clone().normalize().applyQuaternion(tempInvQuat);
+        const _lNormal = t.center.clone().normalize();
+        const camUpLocal = camera.up.clone().applyQuaternion(tempInvQuat);
+        const _lUp = camUpLocal.clone().addScaledVector(_lNormal, -camUpLocal.dot(_lNormal));
+        if (_lUp.lengthSq() > 1e-6) {
+          _lUp.normalize();
+          const _lRight = new THREE.Vector3().crossVectors(_lUp, _lNormal).normalize();
+          const rotMatrix = new THREE.Matrix4().makeBasis(_lRight, _lUp, _lNormal);
+          s.quaternion.setFromRotationMatrix(rotMatrix);
+        }
+      }
 
     }
 

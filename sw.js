@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.98-reduce-mine-density-to-9to13pct';
+const CACHE_NAME = 'globesweeper-v1.3.99-isolate-relocated-mines-from-revealed-tiles';
 const urlsToCache = [
   './',
   'index.html',
