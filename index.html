@@ -3667,24 +3667,27 @@
       });
       rebuildWireframe();
 
-      // Pre-reveal 15 starting NUMBERED tiles (count > 0) so the board has clue numbers (1s and 2s) to start from, without blank 0-tiles
-      const numberedIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty && state.tiles[i].count > 0);
+      // Pick 2-3 distinct 0-tile seeds to open clean starting bays (~120 white tiles total / ~25% White, 75% Green)
+      const zeroTiles = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty && state.tiles[i].count === 0);
       const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
-      const prioritized = numberedIndices.length > 0 ? numberedIndices : safeIndices;
+      const seedPool = zeroTiles.length > 0 ? zeroTiles : safeIndices;
       
-      // Shuffle prioritized indices
-      for (let i = prioritized.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [prioritized[i], prioritized[j]] = [prioritized[j], prioritized[i]];
+      // Pick up to 3 seeds spaced out across the globe
+      const seeds = [];
+      for (let i = 0; i < 3 && seedPool.length > 0; i++) {
+        const rIdx = (Math.random() * seedPool.length) | 0;
+        seeds.push(seedPool[rIdx]);
+        seedPool.splice(rIdx, 1);
       }
 
       revealQueue = [];
       revealQueueSet.clear();
-      const startHintCount = Math.min(75, prioritized.length);
-      for (let i = 0; i < startHintCount; i++) {
-        revealQueue.push(prioritized[i]);
-        revealQueueSet.add(prioritized[i]);
-      }
+      seeds.forEach(s => {
+        if (!revealQueueSet.has(s)) {
+          revealQueue.push(s);
+          revealQueueSet.add(s);
+        }
+      });
 
       isInitialReveal = true;
       processRevealQueue();
@@ -3813,7 +3816,7 @@
       
       // Initial reveal: process tiles synchronously at once, capped at ~350 tiles (~40% white opening)
       if (isInitialReveal) {
-        const maxInitialCap = 350;
+        const maxInitialCap = 130;
         while (revealQueue.length > 0 && !state.gameOver) {
           if (state.safeRevealed >= maxInitialCap) {
             revealQueue.length = 0;
