@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.97-option3-noguess-plus-guess-protection';
+const CACHE_NAME = 'globesweeper-v1.3.98-reduce-mine-density-to-9to13pct';
 const urlsToCache = [
   './',
   'index.html',
