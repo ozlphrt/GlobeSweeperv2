@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.4.08-rollback-to-sat-aug1-0248-build';
+const CACHE_NAME = 'globesweeper-v1.4.09-initial-reveal-cap-350tiles';
 const urlsToCache = [
   './',
   'index.html',
