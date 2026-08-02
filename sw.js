@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.91-fix-duplicate-neighbor-mine-count-bug';
+const CACHE_NAME = 'globesweeper-v1.3.92-restore-60fps-optimal-adjacency';
 const urlsToCache = [
   './',
   'index.html',

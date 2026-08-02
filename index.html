@@ -1723,47 +1723,38 @@
 
 
     function buildAdjacency(polys) {
-
       const vertId = new Map();
-
-      const idOf = (v)=>{
-
-        const s=1e6; const key = `${Math.round(v.x*s)}_${Math.round(v.y*s)}_${Math.round(v.z*s)}`;
-
-        let id = vertId.get(key); if (id===undefined){ id = vertId.size; vertId.set(key,id);} return id;
-
+      const idOf = (v) => {
+        const s = 1e5;
+        const key = `${Math.round(v.x * s)}_${Math.round(v.y * s)}_${Math.round(v.z * s)}`;
+        let id = vertId.get(key);
+        if (id === undefined) {
+          id = vertId.size;
+          vertId.set(key, id);
+        }
+        return id;
       };
 
       const edgeMap = new Map();
+      const neigh = polys.map(() => new Set());
 
-      const neigh = polys.map(()=> new Set());
-
-      polys.forEach((poly, pi)=>{
-
+      polys.forEach((poly, pi) => {
         const ids = poly.map(idOf);
-
         const n = ids.length;
-
-        for (let i=0;i<n;i++){
-
-          const a = ids[i], b = ids[(i+1)%n];
-
-          const k = a<b ? `${a}_${b}` : `${b}_${a}`;
-
-          let others = edgeMap.get(k);
-          if (others === undefined) {
-            edgeMap.set(k, [pi]);
+        for (let i = 0; i < n; i++) {
+          const a = ids[i], b = ids[(i + 1) % n];
+          const k = a < b ? `${a}_${b}` : `${b}_${a}`;
+          const prev = edgeMap.get(k);
+          if (prev === undefined) {
+            edgeMap.set(k, pi);
           } else {
-            others.forEach(prev => { neigh[pi].add(prev); neigh[prev].add(pi); });
-            others.push(pi);
+            neigh[pi].add(prev);
+            neigh[prev].add(pi);
           }
-
         }
-
       });
 
-      return neigh.map(set=>Array.from(set));
-
+      return neigh.map(set => Array.from(set));
     }
 
 
