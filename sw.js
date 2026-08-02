@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.99-isolate-relocated-mines-from-revealed-tiles';
+const CACHE_NAME = 'globesweeper-v1.4.00-revert-to-clean-stable-build';
 const urlsToCache = [
   './',
   'index.html',
