@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.4.11-pre-reveal-15-numbered-starting-clues';
+const CACHE_NAME = 'globesweeper-v1.4.12-pre-reveal-75-numbered-starting-clues';
 const urlsToCache = [
   './',
   'index.html',
