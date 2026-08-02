@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.86-toggle-left-stats-shortcut';
+const CACHE_NAME = 'globesweeper-v1.3.87-cap-high-level-mine-ratio-16.5';
 const urlsToCache = [
   './',
   'index.html',
