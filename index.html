@@ -1725,7 +1725,7 @@
     function buildAdjacency(polys) {
       const vertId = new Map();
       const idOf = (v) => {
-        const s = 1e5;
+        const s = 1e6;
         const key = `${Math.round(v.x * s)}_${Math.round(v.y * s)}_${Math.round(v.z * s)}`;
         let id = vertId.get(key);
         if (id === undefined) {
