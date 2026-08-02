@@ -3281,7 +3281,7 @@
 
 
 
-    const debugSettings = { initialRevealPercent: 0, emptyTilePercent: 15, mineRatio: null, labelScale: 0.07 };
+    const debugSettings = { initialRevealPercent: 6, emptyTilePercent: 15, mineRatio: null, labelScale: 0.07 };
 
     function findSafeTile(){
       const revealed = new Set(state.tiles.map((t, i) => t.revealed ? i : -1).filter(i => i >= 0));
@@ -4805,7 +4805,7 @@
       rotationVelocity.y = 0.006;
 
       // Auto-start: Place mines and reveal initial tiles
-      const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (15.0 + Math.min(6.0, (state.level - 1) * 0.3));
+      const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (8.0 + Math.min(4.0, (state.level - 1) * 0.20));
       const initialReveal = debugSettings.initialRevealPercent || 0;
       const emptyRatio = debugSettings.emptyTilePercent || 0;
       
