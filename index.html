@@ -3992,6 +3992,64 @@
       revealNext();
     }
 
+    
+    function safeMineRelocate(clickedIdx) {
+      if (clickedIdx < 0 || clickedIdx >= state.tiles.length) return;
+
+      // Build 2-ring forbidden set around clickedIdx
+      const forbidden = new Set();
+      forbidden.add(clickedIdx);
+      const ring1 = state.neighbors[clickedIdx] || [];
+      ring1.forEach(nb => forbidden.add(nb));
+      ring1.forEach(nb => {
+        (state.neighbors[nb] || []).forEach(nb2 => forbidden.add(nb2));
+      });
+
+      // Find any mines that fall inside the forbidden 2-ring buffer
+      const minesToRemove = [];
+      forbidden.forEach(idx => {
+        if (state.tiles[idx] && state.tiles[idx].mine) {
+          minesToRemove.push(idx);
+        }
+      });
+
+      if (minesToRemove.length === 0 && state.tiles[clickedIdx].count === 0) {
+        return; // Already 100% safe 0-tile with 2-ring buffer
+      }
+
+      // Remove mines from forbidden set
+      minesToRemove.forEach(idx => {
+        state.tiles[idx].mine = false;
+      });
+
+      // Find candidate safe tiles outside forbidden set that do not have mines or empty
+      const candidateIndices = state.tiles
+        .map((t, i) => i)
+        .filter(i => !forbidden.has(i) && !state.tiles[i].mine && !state.tiles[i].isEmpty);
+
+      // Shuffle candidates
+      for (let i = candidateIndices.length - 1; i > 0; i--) {
+        const j = (Math.random() * (i + 1)) | 0;
+        [candidateIndices[i], candidateIndices[j]] = [candidateIndices[j], candidateIndices[i]];
+      }
+
+      // Move mines to new candidate tiles
+      for (let i = 0; i < minesToRemove.length && i < candidateIndices.length; i++) {
+        state.tiles[candidateIndices[i]].mine = true;
+      }
+
+      // Recalculate all neighbor counts
+      state.tiles.forEach((t, i) => {
+        if (t.mine) return;
+        let c = 0;
+        for (const nb of (state.neighbors[i] || [])) {
+          if (state.tiles[nb].mine) c++;
+        }
+        t.count = c;
+      });
+    }
+
+
     function reveal(i){
       if (state.gameOver) return;
       
@@ -4001,10 +4059,7 @@
 
       if (state.firstClick) {
         state.firstClick = false;
-        const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (12.0 + Math.min(4.5, (state.level - 1) * 0.23));
-        const initialReveal = debugSettings.initialRevealPercent || 0;
-        const emptyRatio = debugSettings.emptyTilePercent || 0;
-        placeMines(i, ratio, initialReveal, emptyRatio);
+        safeMineRelocate(i);
       }
 
       const t = state.tiles[i]; 
@@ -4824,6 +4879,7 @@
       isInitialReveal = false;
       
       state.firstClick = true;
+      placeMines(-1, ratio, initialReveal, emptyRatio);
 
       document.querySelectorAll('.heart').forEach(h => h.style.opacity = '1');
 

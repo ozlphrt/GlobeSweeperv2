@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.88-first-click-guaranteed-opening-cascade';
+const CACHE_NAME = 'globesweeper-v1.3.89-precalculate-mines-relocate-first-click';
 const urlsToCache = [
   './',
   'index.html',
