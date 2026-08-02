@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.3.90-update-counters-on-board-setup-complete';
+const CACHE_NAME = 'globesweeper-v1.3.91-fix-duplicate-neighbor-mine-count-bug';
 const urlsToCache = [
   './',
   'index.html',

@@ -1728,7 +1728,7 @@
 
       const idOf = (v)=>{
 
-        const s=1e5; const key = `${Math.round(v.x*s)}_${Math.round(v.y*s)}_${Math.round(v.z*s)}`;
+        const s=1e6; const key = `${Math.round(v.x*s)}_${Math.round(v.y*s)}_${Math.round(v.z*s)}`;
 
         let id = vertId.get(key); if (id===undefined){ id = vertId.size; vertId.set(key,id);} return id;
 
@@ -1750,9 +1750,13 @@
 
           const k = a<b ? `${a}_${b}` : `${b}_${a}`;
 
-          const prev = edgeMap.get(k);
-
-          if (prev===undefined) edgeMap.set(k, pi); else { neigh[pi].add(prev); neigh[prev].add(pi); }
+          let others = edgeMap.get(k);
+          if (others === undefined) {
+            edgeMap.set(k, [pi]);
+          } else {
+            others.forEach(prev => { neigh[pi].add(prev); neigh[prev].add(pi); });
+            others.push(pi);
+          }
 
         }
 
@@ -1761,6 +1765,7 @@
       return neigh.map(set=>Array.from(set));
 
     }
+
 
 
 
