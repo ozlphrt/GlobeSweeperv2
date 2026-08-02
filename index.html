@@ -3999,6 +3999,14 @@
         return;
       }
 
+      if (state.firstClick) {
+        state.firstClick = false;
+        const ratio = (debugSettings.mineRatio !== null && debugSettings.mineRatio !== undefined) ? debugSettings.mineRatio : (12.0 + Math.min(4.5, (state.level - 1) * 0.23));
+        const initialReveal = debugSettings.initialRevealPercent || 0;
+        const emptyRatio = debugSettings.emptyTilePercent || 0;
+        placeMines(i, ratio, initialReveal, emptyRatio);
+      }
+
       const t = state.tiles[i]; 
       if (!t || t.revealed || t.flagged || t.isEmpty) return;
 
@@ -4815,7 +4823,7 @@
       isRevealing = false;
       isInitialReveal = false;
       
-      placeMines(-1, ratio, initialReveal, emptyRatio);
+      state.firstClick = true;
 
       document.querySelectorAll('.heart').forEach(h => h.style.opacity = '1');
 
