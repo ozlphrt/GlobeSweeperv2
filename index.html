@@ -3606,22 +3606,20 @@
 
           state.tiles.forEach((t,i)=>{ if (t.mine) return; let c=0; for (const nb of state.neighbors[i]) if (state.tiles[nb].mine) c++; t.count=c; });
 
-          // For initial reveal: prefer 0-tiles so the player sees a cascade from the start
-          const zeroTileIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty && state.tiles[i].count === 0);
+          // For initial reveal: prefer numbered tiles (count > 0) so board stays 95%+ green on load without giant cascades
+          const numberedIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty && state.tiles[i].count > 0);
           const safeIndices = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].mine && !state.tiles[i].isEmpty);
-          const revealCount = Math.max(1, Math.floor(safeIndices.length * initialRevealPercent / 100));
+          const revealCount = Math.max(1, Math.min(5, Math.floor(safeIndices.length * initialRevealPercent / 100)));
 
-          // Shuffle indices - prioritize 0-tiles for cascade starts
-          for (let i = zeroTileIndices.length - 1; i > 0; i--) {
+          for (let i = numberedIndices.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [zeroTileIndices[i], zeroTileIndices[j]] = [zeroTileIndices[j], zeroTileIndices[i]];
+            [numberedIndices[i], numberedIndices[j]] = [numberedIndices[j], numberedIndices[i]];
           }
           for (let i = safeIndices.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [safeIndices[i], safeIndices[j]] = [safeIndices[j], safeIndices[i]];
           }
-          // Use 0-tiles first, then fill with any safe tiles
-          const prioritizedIndices = [...zeroTileIndices, ...safeIndices.filter(i => state.tiles[i].count > 0)];
+          const prioritizedIndices = numberedIndices.length > 0 ? [...numberedIndices, ...safeIndices] : safeIndices;
 
           // Reveal initial tiles for solvability check
           const initialRevealed = new Set();
@@ -3679,10 +3677,12 @@
         [safeIndices[i], safeIndices[j]] = [safeIndices[j], safeIndices[i]];
       }
 
-      // Add to reveal queue - use 0-tiles first so initial reveal triggers cascade
-      const zeroTiles = safeIndices.filter(i => state.tiles[i].count === 0);
+      // Add initial numbered tiles (count > 0) so board opens 95%+ GREEN without giant cascades
       const numberedTiles = safeIndices.filter(i => state.tiles[i].count > 0);
-      const prioritized = [...zeroTiles, ...numberedTiles];
+      const zeroTiles = safeIndices.filter(i => state.tiles[i].count === 0);
+      const prioritized = numberedTiles.length > 0 ? [...numberedTiles, ...zeroTiles] : safeIndices;
+      const revealCount = Math.max(1, Math.min(4, Math.floor(safeIndices.length * initialRevealPercent / 100)));
+
       revealQueue = [];
       revealQueueSet.clear();
       for (let i = 0; i < revealCount && i < prioritized.length; i++) {

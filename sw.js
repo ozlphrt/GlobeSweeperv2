@@ -1,5 +1,5 @@
 // Service Worker for GlobeSweeper PWA
-const CACHE_NAME = 'globesweeper-v1.4.03-reduce-initial-reveal-to-3pct';
+const CACHE_NAME = 'globesweeper-v1.4.04-fix-initial-reveal-keep-board-95pct-green';
 const urlsToCache = [
   './',
   'index.html',
